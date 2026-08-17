@@ -1,0 +1,33 @@
+<!--
+  Static-build replacement for the contact form.
+
+  The Bun server accepts POST /api/contact and stores submissions, but GitHub
+  Pages serves static files only and cannot accept a POST. On the static build
+  scripts/build-static.ts swaps the form card out for this one, which points at
+  the same Google Form referenced by data/leasing-info.json.
+-->
+<div class="form-card">
+  <h3>Send us a message</h3>
+  <p>
+    Tell us which listing you're interested in, your move-in timing, and anything
+    you'd like to know. Our form collects your name, phone, email, and comments,
+    and we reply within one business day.
+  </p>
+  <a class="btn btn-primary btn-block" id="contact-form-link" href="#" target="_blank" rel="noopener">
+    Open the contact form
+  </a>
+  <p class="fine" style="margin-top:12px">
+    Prefer email or a call? Reach out to our leasing team directly and we'll pick
+    it up from there.
+  </p>
+</div>
+<script>
+  // Same application/contact form URL the rest of the site uses, so it stays in
+  // one place (data/leasing-info.json) rather than being duplicated in markup.
+  fetch("/api/leasing-info")
+    .then((r) => r.json())
+    .then((info) => {
+      document.getElementById("contact-form-link").href = info.application.url;
+    })
+    .catch(() => {});
+</script>

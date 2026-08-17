@@ -1,0 +1,12 @@
+logs/
+dist/
+node_modules/
+
+# Private source data — exact street addresses and coordinates for homes that
+# are mostly occupied. The site only ever publishes the anonymized payload in
+# data/portfolio-map.json, regenerated from these by scripts/gen-map.ts.
+address.txt
+data/geo.json
+
+# Contact form submissions (server.ts) — contains names, phones and emails.
+data/submissions.json

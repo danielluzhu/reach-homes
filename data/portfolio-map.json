@@ -1,0 +1,214 @@
+{
+  "stats": {
+    "properties": 27,
+    "units": 65,
+    "neighborhoods": 8,
+    "cities": 3
+  },
+  "areas": [
+    {
+      "neighborhood": "University District",
+      "properties": 8,
+      "units": 41
+    },
+    {
+      "neighborhood": "Bryant",
+      "properties": 5,
+      "units": 5
+    },
+    {
+      "neighborhood": "Ravenna",
+      "properties": 5,
+      "units": 5
+    },
+    {
+      "neighborhood": "Bellevue",
+      "properties": 3,
+      "units": 3
+    },
+    {
+      "neighborhood": "Capitol Hill",
+      "properties": 2,
+      "units": 6
+    },
+    {
+      "neighborhood": "Roosevelt",
+      "properties": 2,
+      "units": 2
+    },
+    {
+      "neighborhood": "Kenmore",
+      "properties": 1,
+      "units": 1
+    },
+    {
+      "neighborhood": "Wedgwood",
+      "properties": 1,
+      "units": 2
+    }
+  ],
+  "pins": [
+    {
+      "lat": 47.608,
+      "lng": -122.196,
+      "neighborhood": "Bellevue",
+      "units": 1
+    },
+    {
+      "lat": 47.621,
+      "lng": -122.201,
+      "neighborhood": "Bellevue",
+      "units": 1
+    },
+    {
+      "lat": 47.607,
+      "lng": -122.136,
+      "neighborhood": "Bellevue",
+      "units": 1
+    },
+    {
+      "lat": 47.671,
+      "lng": -122.291,
+      "neighborhood": "Bryant",
+      "units": 1
+    },
+    {
+      "lat": 47.668,
+      "lng": -122.288,
+      "neighborhood": "Bryant",
+      "units": 1
+    },
+    {
+      "lat": 47.67,
+      "lng": -122.295,
+      "neighborhood": "Bryant",
+      "units": 1
+    },
+    {
+      "lat": 47.671,
+      "lng": -122.29,
+      "neighborhood": "Bryant",
+      "units": 1
+    },
+    {
+      "lat": 47.672,
+      "lng": -122.291,
+      "neighborhood": "Bryant",
+      "units": 1
+    },
+    {
+      "lat": 47.619,
+      "lng": -122.317,
+      "neighborhood": "Capitol Hill",
+      "units": 5
+    },
+    {
+      "lat": 47.625,
+      "lng": -122.297,
+      "neighborhood": "Capitol Hill",
+      "units": 1
+    },
+    {
+      "lat": 47.777,
+      "lng": -122.267,
+      "neighborhood": "Kenmore",
+      "units": 1
+    },
+    {
+      "lat": 47.669,
+      "lng": -122.309,
+      "neighborhood": "Ravenna",
+      "units": 1
+    },
+    {
+      "lat": 47.67,
+      "lng": -122.307,
+      "neighborhood": "Ravenna",
+      "units": 1
+    },
+    {
+      "lat": 47.669,
+      "lng": -122.306,
+      "neighborhood": "Ravenna",
+      "units": 1
+    },
+    {
+      "lat": 47.669,
+      "lng": -122.305,
+      "neighborhood": "Ravenna",
+      "units": 1
+    },
+    {
+      "lat": 47.668,
+      "lng": -122.304,
+      "neighborhood": "Ravenna",
+      "units": 1
+    },
+    {
+      "lat": 47.679,
+      "lng": -122.315,
+      "neighborhood": "Roosevelt",
+      "units": 1
+    },
+    {
+      "lat": 47.675,
+      "lng": -122.315,
+      "neighborhood": "Roosevelt",
+      "units": 1
+    },
+    {
+      "lat": 47.662,
+      "lng": -122.306,
+      "neighborhood": "University District",
+      "units": 31
+    },
+    {
+      "lat": 47.664,
+      "lng": -122.304,
+      "neighborhood": "University District",
+      "units": 4
+    },
+    {
+      "lat": 47.667,
+      "lng": -122.306,
+      "neighborhood": "University District",
+      "units": 1
+    },
+    {
+      "lat": 47.667,
+      "lng": -122.309,
+      "neighborhood": "University District",
+      "units": 1
+    },
+    {
+      "lat": 47.668,
+      "lng": -122.305,
+      "neighborhood": "University District",
+      "units": 1
+    },
+    {
+      "lat": 47.669,
+      "lng": -122.31,
+      "neighborhood": "University District",
+      "units": 1
+    },
+    {
+      "lat": 47.671,
+      "lng": -122.314,
+      "neighborhood": "University District",
+      "units": 1
+    },
+    {
+      "lat": 47.671,
+      "lng": -122.314,
+      "neighborhood": "University District",
+      "units": 1
+    },
+    {
+      "lat": 47.66,
+      "lng": -122.289,
+      "neighborhood": "Wedgwood",
+      "units": 2
+    }
+  ]
+}

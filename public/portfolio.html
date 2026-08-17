@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Portfolio — Reach Homes</title>
+<meta name="description" content="A map of the properties Reach Homes owns and manages across Seattle and the Eastside." />
+<link rel="stylesheet" href="/vendor/leaflet.css" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<!--HEADER-->
+
+<main>
+  <div class="section-heading">
+    <h2>Our Portfolio</h2>
+  </div>
+  <p class="lede">
+    We own and manage properties across Seattle and the Eastside, clustered tightly around
+    the University District, Ravenna, and Bryant. That density is deliberate — it's why our
+    maintenance team can reach any building quickly. See <a href="/">current listings</a>
+    for what's available to rent right now.
+  </p>
+
+  <div class="stats-strip" id="portfolio-stats"></div>
+
+  <div class="map-wrap">
+    <div id="map" role="img" aria-label="Map of Reach Homes properties across Seattle and the Eastside"></div>
+    <div class="map-legend">
+      <span class="legend-item"><span class="legend-dot legend-sm"></span> Single home</span>
+      <span class="legend-item"><span class="legend-dot legend-md"></span> 2–4 units</span>
+      <span class="legend-item"><span class="legend-dot legend-lg"></span> 5+ units</span>
+    </div>
+  </div>
+  <p class="map-note">
+    Pins show approximate locations at block level. We don't publish street addresses for
+    occupied homes.
+  </p>
+
+  <div class="section-heading" style="margin-top:44px">
+    <h2>Where We Operate</h2>
+  </div>
+  <div class="area-grid" id="area-grid"></div>
+</main>
+
+<!--FOOTER-->
+
+<script src="/vendor/leaflet.js"></script>
+<script src="/site.js"></script>
+<script>
+function radiusFor(units) {
+  if (units >= 5) return 13;
+  if (units >= 2) return 10;
+  return 7;
+}
+
+fetch("/api/portfolio/map")
+  .then((r) => r.json())
+  .then((data) => {
+    const { stats, areas, pins } = data;
+
+    document.getElementById("portfolio-stats").innerHTML = [
+      [stats.properties, "Properties"],
+      [stats.units, "Total units"],
+      [stats.neighborhoods, "Neighborhoods"],
+      [stats.cities, "Cities"],
+    ]
+      .map(([n, label]) => `<div class="stat"><div class="num">${n}</div><div class="label">${label}</div></div>`)
+      .join("");
+
+    document.getElementById("area-grid").innerHTML = areas
+      .map(
+        (a) => `
+        <div class="area-card">
+          <div class="area-name">${escapeHtml(a.neighborhood)}</div>
+          <div class="area-count">${a.properties} ${a.properties === 1 ? "property" : "properties"}</div>
+          <div class="area-units">${a.units} ${a.units === 1 ? "unit" : "units"}</div>
+        </div>`,
+      )
+      .join("");
+
+    const map = L.map("map", { scrollWheelZoom: false });
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 18,
+    }).addTo(map);
+
+    const markers = pins.map((p) =>
+      L.circleMarker([p.lat, p.lng], {
+        radius: radiusFor(p.units),
+        color: "#0f766e",
+        weight: 2,
+        fillColor: "#14958a",
+        fillOpacity: 0.55,
+      })
+        .bindTooltip(
+          `${escapeHtml(p.neighborhood)} · ${p.units} ${p.units === 1 ? "unit" : "units"}`,
+          { direction: "top" },
+        )
+        .addTo(map),
+    );
+
+    if (markers.length) {
+      map.fitBounds(L.featureGroup(markers).getBounds(), { padding: [40, 40] });
+    } else {
+      map.setView([47.66, -122.31], 12);
+    }
+  })
+  .catch(() => {
+    document.getElementById("map").innerHTML =
+      '<div class="empty-state">Couldn\'t load the map right now. Please refresh.</div>';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "application": {
+    "url": "https://forms.gle/BxFBiGMLKtDVT8Po8",
+    "fee": 40,
+    "intro": "The application is how we get to know you and confirm you'll be a good fit. It asks for basic personal information, proof of ID, and proof of finances.",
+    "notes": [
+      "We work with a lot of students — we're flexible about what counts as proof of finances.",
+      "A student ID is accepted as one of your two forms of ID."
+    ]
+  },
+  "faq": [
+    {
+      "q": "What do I pay up front?",
+      "a": "One month's rent as a security deposit plus fees. 90% is the refundable security deposit, returned when you move out; the remaining 10% is a nonrefundable screening fee."
+    },
+    {
+      "q": "Are utilities included?",
+      "a": "It depends on the exact unit — some are a flat rate per person and others are billed based on usage. Please ask our staff directly about the unit you're interested in and we'll walk you through exactly what's included and what it typically runs."
+    },
+    {
+      "q": "How do maintenance requests work?",
+      "a": "Text or call our team any time and we'll send a technician out. Tenants are responsible for issues they cause; the landlord covers everything else."
+    },
+    {
+      "q": "Who handles cleaning and landscaping?",
+      "a": "Both are professionally done between leases. During a lease, tenants renting an entire building are responsible for keeping up cleanliness and landscaping."
+    },
+    {
+      "q": "Do you allow pets?",
+      "a": "Yes. There's a $500 pet deposit per pet, capped at 25% of one month's rent. For an emotional support animal we ask for a letter from a licensed healthcare provider confirming the disability and need for the animal (online certificate registries don't qualify), proof of compliance with local laws including vaccines, and that the animal is home-trained."
+    },
+    {
+      "q": "Can I sublet?",
+      "a": "Sublets are fine as long as the subletter submits an approved application. We don't handle the security deposit exchange between you and your subletter."
+    },
+    {
+      "q": "What happens if I need to break my lease?",
+      "a": "We handle these case by case. Generally you forfeit the deposit and remain responsible for rent until we find a replacement tenant."
+    },
+    {
+      "q": "What happens when my lease expires?",
+      "a": "We can almost always do a fixed-term renewal on a 12-month term. We don't offer month-to-month leases."
+    },
+    {
+      "q": "Can I hang pictures, paint, or garden?",
+      "a": "You're welcome to, but you're liable for any damage. Paint and gardening done well generally aren't treated as damage — it depends on the quality of the work."
+    },
+    {
+      "q": "How much notice do I get before someone visits?",
+      "a": "Local law requires 1 day of notice for tours and 2 days for maintenance and all other visits."
+    },
+    {
+      "q": "Do you inspect the property?",
+      "a": "We do occasional inspections, somewhere between quarterly and annually."
+    }
+  ]
+}
