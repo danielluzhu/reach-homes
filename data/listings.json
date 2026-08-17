@@ -1,0 +1,227 @@
+[
+  {
+    "id": "4544-20th-ave-ne",
+    "title": "4544 20th Ave NE",
+    "subtitle": "New-build studio apartments",
+    "neighborhood": "University District",
+    "address": "4544 20th Ave NE, Seattle, WA 98105",
+    "beds": 0,
+    "bedsLabel": "Studio",
+    "baths": 1,
+    "sqftFrom": 225,
+    "sqftTo": 300,
+    "rentFrom": 1200,
+    "rentTo": 1300,
+    "available": "2026-08-08",
+    "availableLabel": "Multiple units, Aug–Sep 2026",
+    "status": "available",
+    "zillow": "https://www.zillow.com/b/4544-20th-ave-ne-seattle-wa-62r4yK/",
+    "image": "/images/listing-4544-20th-ave-ne.svg",
+    "promo": "1 month free on a new lease",
+    "summary": "Brand-new studio building steps from UW and the light rail. 31 units, each with a private bathroom and kitchenette, and free furnishing available.",
+    "building": [
+      "Built 2026 — first leasing season",
+      "31 studio units across ground level through 4th floor",
+      "Walking distance to UW and the light rail station",
+      "Shared laundry room and bike storage room",
+      "Street parking only"
+    ],
+    "unit": [
+      "Private bathroom in every unit",
+      "Kitchenette in every unit",
+      "Furnishing available at no extra cost"
+    ],
+    "layouts": [
+      {
+        "name": "Hallway studio",
+        "sqft": 225,
+        "rent": "$1,200 (1st floor) / $1,250 (upper floors)",
+        "notes": "North- or south-facing"
+      },
+      {
+        "name": "Corner studio",
+        "sqft": 250,
+        "rent": "$1,300",
+        "notes": "One per corner on each floor"
+      },
+      {
+        "name": "Ground-level studio",
+        "sqft": 300,
+        "rent": "$1,300",
+        "notes": "Private entry and ADA bathroom"
+      }
+    ],
+    "lease": [
+      "9- or 12-month lease",
+      "Start dates between July and September",
+      "Furnished at no extra cost",
+      "Utilities: $100 flat per person",
+      "Internet: $40 flat"
+    ],
+    "upcomingUnits": [
+      { "unit": "101", "available": "2026-07-30", "label": "Available now" },
+      { "unit": "004", "available": "2026-08-08" },
+      { "unit": "406", "available": "2026-08-10" },
+      { "unit": "403", "available": "2026-08-16" },
+      { "unit": "201", "available": "2026-08-22" },
+      { "unit": "404", "available": "2026-08-23" },
+      { "unit": "402", "available": "2026-09-18" },
+      { "unit": "401", "available": "2026-09-22" }
+    ]
+  },
+  {
+    "id": "2120-ne-54th-st",
+    "title": "2120 NE 54th St",
+    "subtitle": "10-bedroom house — full building or by floor",
+    "neighborhood": "Ravenna",
+    "address": "2120 NE 54th St, Seattle, WA 98105",
+    "beds": 10,
+    "bedsLabel": "10 bd",
+    "baths": 6,
+    "sqft": 3000,
+    "rentFrom": 3000,
+    "rentTo": 9000,
+    "available": "2026-09-01",
+    "availableLabel": "Early September 2026",
+    "status": "available",
+    "zillow": "https://www.zillow.com/homedetails/2120-NE-54th-St-Seattle-WA-98105/48786784_zpid/",
+    "image": "/images/listing-2120-ne-54th-st.svg",
+    "summary": "A 3,000 sqft, 10 bed / 6 bath house a short walk from Ravenna Park. Lease the whole building or take a floor on its own.",
+    "building": [
+      "10 bed / 6 bath across three floors, 3,000 sqft",
+      "Lower floor: 3 bed, 2 bath, kitchen, living room, garage and laundry room",
+      "Middle floor: 5 bed, 3 bath, kitchen and living room",
+      "Top floor: 2 bed, 1 bath",
+      "Garage plus driveway — ample parking",
+      "Very close to Ravenna Park"
+    ],
+    "leaseOptions": [
+      { "name": "Entire building", "detail": "10 bed / 6 bath", "rent": 9000 },
+      { "name": "7 bedrooms", "detail": "Leased as a separate floor plan", "rent": 7000 },
+      { "name": "3 bedrooms", "detail": "Leased as a separate floor plan", "rent": 3000 }
+    ],
+    "lease": [
+      "Available starting early September",
+      "Floors can be leased separately"
+    ]
+  },
+  {
+    "id": "1714-ne-55th-pl",
+    "title": "1714 NE 55th Pl",
+    "subtitle": "8-bedroom house with a large yard",
+    "neighborhood": "Ravenna",
+    "address": "1714 NE 55th Pl, Seattle, WA 98105",
+    "beds": 8,
+    "bedsLabel": "8 bd",
+    "baths": 3,
+    "sqft": 2600,
+    "rent": 7600,
+    "available": "2026-09-01",
+    "availableLabel": "Early September 2026",
+    "status": "available",
+    "zillow": "https://www.zillow.com/homedetails/1714-NE-55th-St-Seattle-WA-98105/2070436980_zpid/",
+    "image": "/images/listing-1714-ne-55th-pl.svg",
+    "summary": "An 8 bed / 3 bath, 2,600 sqft house tucked into a private alleyway off the main road, with a huge back yard and parking for four to five cars.",
+    "building": [
+      "8 bed / 3 bath, 2,600 sqft",
+      "Huge back yard",
+      "Parking for 4–5 cars depending on size",
+      "Located on a private alleyway off the main road"
+    ],
+    "lease": [
+      "Whole-building lease available starting early September"
+    ]
+  },
+  {
+    "id": "4316-36th-ave-ne-l",
+    "title": "4316 36th Ave NE — Lower Unit",
+    "subtitle": "4-bedroom lower half of a duplex",
+    "neighborhood": "Bryant",
+    "address": "4316 36th Ave NE, Seattle, WA 98105",
+    "beds": 4,
+    "bedsLabel": "4 bd",
+    "baths": 1.5,
+    "sqft": 1200,
+    "rent": 4000,
+    "available": "2026-09-01",
+    "availableLabel": "Early September 2026",
+    "status": "available",
+    "zillow": "https://www.zillow.com/homedetails/4316-36th-Ave-NE-L-Seattle-WA-98105/2072279403_zpid/",
+    "image": "/images/listing-4316-36th-ave-ne-l.svg",
+    "summary": "The lower half of a duplex — 4 bed / 1.5 bath, 1,200 sqft, with its own private entry and no internal connection to the unit upstairs.",
+    "building": [
+      "Duplex: 6 bedrooms upstairs, 4 downstairs",
+      "Separate private entry — no internal connection between units",
+      "Upstairs is currently occupied",
+      "Large backyard area, co-maintained between units"
+    ],
+    "unit": [
+      "4 bed / 1.5 bath, 1,200 sqft"
+    ],
+    "lease": [
+      "Available starting early September"
+    ]
+  },
+  {
+    "id": "4735-22nd-ave-ne",
+    "title": "4735 22nd Ave NE",
+    "subtitle": "3-bedroom apartments — two units available",
+    "neighborhood": "University District",
+    "address": "4735 22nd Ave NE, Seattle, WA 98105",
+    "beds": 3,
+    "bedsLabel": "3 bd",
+    "baths": 1,
+    "sqft": 1000,
+    "rent": 2900,
+    "available": "2026-09-01",
+    "availableLabel": "September 2026",
+    "status": "available",
+    "zillow": "https://www.zillow.com/homedetails/4735-22nd-Ave-NE-APT-4-Seattle-WA-98105/2059934895_zpid/",
+    "image": "/images/listing-4735-22nd-ave-ne.svg",
+    "summary": "Two 3 bed / 1 bath units in a small four-unit building, 1,000 sqft each, available furnished at no extra cost.",
+    "building": [
+      "Four-unit apartment building",
+      "Two 2-bedroom units and two 3-bedroom units",
+      "Garage and driveway parking available for $150/month per unit (1 space remaining)"
+    ],
+    "unit": [
+      "3 bed / 1 bath, 1,000 sqft",
+      "Units 3 and 4 are both available"
+    ],
+    "lease": [
+      "Both 3-bedroom units available starting September",
+      "Furnishing available at no extra cost"
+    ]
+  },
+  {
+    "id": "121-12th-ave-e-310",
+    "title": "121 12th Ave E #310",
+    "subtitle": "Capitol Hill condo with rooftop views",
+    "neighborhood": "Capitol Hill",
+    "address": "121 12th Ave E, Seattle, WA 98102",
+    "beds": 1,
+    "bedsLabel": "1 bd",
+    "baths": 1,
+    "sqft": 632,
+    "rent": 2350,
+    "available": "2026-08-10",
+    "availableLabel": "August 10, 2026",
+    "status": "pending",
+    "zillow": "https://www.zillow.com/homedetails/121-12th-Ave-E-310-Seattle-WA-98102/332974643_zpid/?view=public",
+    "image": "/images/listing-121-12th-ave-e-310.svg",
+    "summary": "A 1 bed / 1 bath condo on Capitol Hill with a rooftop deck looking out over downtown, the Space Needle, and Mt. Rainier on a clear day.",
+    "building": [
+      "Condo building on Capitol Hill",
+      "Rooftop deck with views of downtown, the Space Needle, and Mt. Rainier on a clear day",
+      "Study room on the 3rd floor",
+      "Bike storage on the 4th floor"
+    ],
+    "unit": [
+      "1 bed / 1 bath, 632 sqft"
+    ],
+    "lease": [
+      "Available Saturday, August 10, 2026",
+      "Leases up to one year — six months or longer preferred"
+    ]
+  }
+]

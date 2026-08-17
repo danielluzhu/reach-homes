@@ -1,0 +1,12 @@
+{
+  "name": "cascade-property-group-site",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "bun run server.ts",
+    "dev": "bun --watch server.ts",
+    "gen-images": "bun scripts/gen-images.js",
+    "gen-map": "bun scripts/gen-map.ts",
+    "build": "bun scripts/build-static.ts"
+  }
+}

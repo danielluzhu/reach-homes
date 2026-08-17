@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Leasing &amp; FAQ — Reach Homes</title>
+<meta name="description" content="How to apply, what you pay up front, utilities, pets, subletting, maintenance, and other common questions." />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<!--HEADER-->
+
+<main>
+  <div class="section-heading">
+    <h2>Applying</h2>
+  </div>
+
+  <div class="apply-card" id="apply-card"></div>
+
+  <div class="section-heading" style="margin-top:48px">
+    <h2>Frequently Asked Questions</h2>
+  </div>
+  <div class="faq-list" id="faq-list"><div class="empty-state">Loading…</div></div>
+
+  <section class="cta-panel" style="margin-top:48px">
+    <div>
+      <h3>Still have a question?</h3>
+      <p>Send us a note and we'll get back to you — usually within one business day.</p>
+    </div>
+    <div class="cta-actions">
+      <a class="btn btn-primary" href="/contact">Contact us</a>
+    </div>
+  </section>
+</main>
+
+<!--FOOTER-->
+
+<script src="/site.js"></script>
+<script>
+fetch("/api/leasing-info")
+  .then((r) => r.json())
+  .then((info) => {
+    const app = info.application;
+    document.getElementById("apply-card").innerHTML = `
+      <p class="lede">${escapeHtml(app.intro)}</p>
+      <ul class="detail-list">${app.notes.map((n) => `<li>${escapeHtml(n)}</li>`).join("")}</ul>
+      <div class="apply-actions">
+        <a class="btn btn-primary" href="${escapeHtml(app.url)}" target="_blank" rel="noopener">Start your application</a>
+        <span class="fee-note">Application fee: ${money(app.fee)}</span>
+      </div>`;
+
+    document.getElementById("faq-list").innerHTML = info.faq.map((f) => `
+      <details class="faq-item">
+        <summary>${escapeHtml(f.q)}</summary>
+        <p>${escapeHtml(f.a)}</p>
+      </details>`).join("");
+  })
+  .catch(() => {
+    document.getElementById("faq-list").innerHTML =
+      '<div class="empty-state">Couldn\'t load this page right now. Please refresh.</div>';
+  });
+</script>
+</body>
+</html>

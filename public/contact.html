@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Contact Us — Reach Homes</title>
+<meta name="description" content="Ask about a listing, request a tour, or get help with an application." />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<!--HEADER-->
+
+<main>
+  <div class="section-heading">
+    <h2>Get in Touch</h2>
+  </div>
+
+  <div class="contact-layout">
+    <!--FORM-START-->
+    <div class="form-card">
+      <form id="contact-form">
+        <div class="form-row">
+          <div class="field">
+            <label for="name">Full name</label>
+            <input type="text" id="name" name="name" required autocomplete="name" />
+          </div>
+          <div class="field">
+            <label for="phone">Phone number</label>
+            <input type="tel" id="phone" name="phone" required autocomplete="tel" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" name="email" required autocomplete="email" />
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label for="occupation">Occupation <span class="optional">(optional)</span></label>
+            <input type="text" id="occupation" name="occupation" placeholder="e.g. UW student, software engineer" />
+          </div>
+          <div class="field">
+            <label for="listing">Listing you're interested in <span class="optional">(optional)</span></label>
+            <select id="listing" name="listing">
+              <option value="">Select a listing…</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="comment">Comment</label>
+          <textarea id="comment" name="comment" placeholder="Tell us what you're looking for, your move-in timing, or any questions you have." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Send Message</button>
+        <div id="form-status"></div>
+      </form>
+    </div>
+    <!--FORM-END-->
+
+    <div class="info-card">
+      <h3>What happens next</h3>
+      <div class="row">
+        <div>
+          <strong>We reply within one business day</strong>
+          Usually sooner. We'll answer your questions and can set up a tour.
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <strong>Tours need 1 day's notice</strong>
+          Local law requires a day's notice before we can show an occupied unit.
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <strong>Ready to move faster?</strong>
+          You can submit an application any time — it's the step that actually holds a unit.
+        </div>
+      </div>
+      <a class="btn btn-secondary btn-block" id="apply-link" href="/leasing" style="margin-top:8px">Start an application</a>
+    </div>
+  </div>
+</main>
+
+<!--FOOTER-->
+
+<script src="/site.js"></script>
+<script>
+/*FORM-JS-START*/
+const listingSelect = document.getElementById("listing");
+const preselect = new URLSearchParams(location.search).get("listing") || "";
+
+fetch("/api/listings")
+  .then((r) => r.json())
+  .then((listings) => {
+    for (const l of listings) {
+      const opt = document.createElement("option");
+      opt.value = l.id;
+      opt.textContent = `${l.title} — ${l.neighborhood}` +
+        (isAvailable(l) ? "" : ` (${statusLabel(l).toLowerCase()})`);
+      if (l.id === preselect) opt.selected = true;
+      listingSelect.appendChild(opt);
+    }
+  })
+  .catch(() => {});
+/*FORM-JS-END*/
+
+fetch("/api/leasing-info")
+  .then((r) => r.json())
+  .then((info) => {
+    const a = document.getElementById("apply-link");
+    a.href = info.application.url;
+    a.target = "_blank";
+    a.rel = "noopener";
+  })
+  .catch(() => {});
+
+/*FORM-JS-START*/
+const form = document.getElementById("contact-form");
+const status = document.getElementById("form-status");
+const submitBtn = document.getElementById("submit-btn");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  status.className = "";
+  status.textContent = "";
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Sending…";
+
+  const payload = Object.fromEntries(new FormData(form).entries());
+
+  try {
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error("Request failed");
+
+    status.className = "ok";
+    status.textContent = "Thanks! We've received your message and will get back to you within one business day.";
+    form.reset();
+  } catch (err) {
+    status.className = "err";
+    status.textContent = "Something went wrong sending your message. Please try again in a moment.";
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Send Message";
+  }
+});
+/*FORM-JS-END*/
+</script>
+</body>
+</html>

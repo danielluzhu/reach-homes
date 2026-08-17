@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Seattle Rentals — Reach Homes</title>
+<meta name="description" content="Current apartment and house rentals near UW in Seattle's University District, Ravenna, Bryant, and Capitol Hill." />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<!--HEADER-->
+
+<section class="hero">
+  <img src="/images/hero.svg" alt="" />
+  <div class="hero-overlay">
+    <h1>Houses and apartments near UW, managed by a local team.</h1>
+    <p>We rent studios, apartments, and large houses across the University District, Ravenna, Bryant, and Capitol Hill — including new-build studios steps from the light rail. Browse what's available below.</p>
+    <div class="trust-badges">
+      <span class="badge">27 properties across Seattle &amp; Bellevue</span>
+      <span class="badge">Student-friendly applications</span>
+      <span class="badge">In-house maintenance</span>
+    </div>
+  </div>
+</section>
+
+<main>
+  <div class="section-heading">
+    <h2>Available Now</h2>
+    <p class="count" id="listing-count"></p>
+  </div>
+
+  <div class="filter-bar" id="filter-bar" hidden></div>
+
+  <div class="listing-grid" id="listing-grid">
+    <div class="empty-state">Loading listings…</div>
+  </div>
+
+  <section class="cta-panel">
+    <div>
+      <h3>Ready to apply?</h3>
+      <p>Our application asks for basic personal info, proof of ID, and proof of finances. We work with a lot of students, so we're flexible about what counts.</p>
+    </div>
+    <div class="cta-actions">
+      <a class="btn btn-primary" id="apply-link" href="/leasing">Start an application</a>
+      <a class="btn btn-secondary" href="/leasing">Leasing terms &amp; FAQ</a>
+    </div>
+  </section>
+</main>
+
+<!--FOOTER-->
+
+<script src="/site.js"></script>
+<script>
+let ALL = [];
+
+function card(l) {
+  const sqft = sqftLabel(l);
+  const stats = [
+    `<span><strong>${escapeHtml(l.bedsLabel)}</strong></span>`,
+    `<span><strong>${l.baths}</strong> ba</span>`,
+    sqft ? `<span><strong>${escapeHtml(sqft)}</strong></span>` : "",
+  ].filter(Boolean).join("");
+
+  return `
+    <article class="card">
+      <div class="photo">
+        <img src="${escapeHtml(l.image)}" alt="${escapeHtml(l.title)}" loading="lazy" />
+        ${l.promo ? `<span class="promo-flag">${escapeHtml(l.promo)}</span>` : ""}
+        ${statusLabel(l) ? `<span class="status-flag">${escapeHtml(statusLabel(l))}</span>` : ""}
+      </div>
+      <div class="card-body">
+        <div class="neighborhood">${escapeHtml(l.neighborhood)}</div>
+        <h3><a href="/listing?id=${encodeURIComponent(l.id)}">${escapeHtml(l.title)}</a></h3>
+        <div class="address">${escapeHtml(l.subtitle)}</div>
+        <div class="stat-row">${stats}</div>
+        <p class="desc">${escapeHtml(l.summary)}</p>
+        <div class="card-footer">
+          <div class="price">${rentLabel(l)}</div>
+          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(l.availableLabel)}</div>
+        </div>
+        <div class="card-actions">
+          <a class="btn btn-primary" style="flex:1" href="/listing?id=${encodeURIComponent(l.id)}">View details</a>
+          <a class="btn btn-secondary" style="flex:1" href="${escapeHtml(l.zillow)}" target="_blank" rel="noopener">Zillow</a>
+        </div>
+      </div>
+    </article>`;
+}
+
+function render(filter) {
+  const grid = document.getElementById("listing-grid");
+  const shown = filter ? ALL.filter((l) => l.neighborhood === filter) : ALL;
+  grid.innerHTML = shown.length
+    ? shown.map(card).join("")
+    : '<div class="empty-state">No listings in that neighborhood right now.</div>';
+}
+
+fetch("/api/listings")
+  .then((r) => r.json())
+  .then((listings) => {
+    // Available first, pending after — original order preserved within each group.
+    ALL = [...listings].sort((a, b) => Number(isAvailable(b)) - Number(isAvailable(a)));
+
+    const openCount = listings.filter(isAvailable).length;
+    const pendingCount = listings.length - openCount;
+    document.getElementById("listing-count").textContent =
+      openCount + (openCount === 1 ? " property" : " properties") + " available" +
+      (pendingCount ? ` · ${pendingCount} pending` : "");
+
+    const hoods = [...new Set(listings.map((l) => l.neighborhood))].sort();
+    const bar = document.getElementById("filter-bar");
+    bar.hidden = false;
+    bar.innerHTML =
+      `<button class="chip active" data-hood="">All</button>` +
+      hoods.map((h) => `<button class="chip" data-hood="${escapeHtml(h)}">${escapeHtml(h)}</button>`).join("");
+
+    bar.addEventListener("click", (e) => {
+      const btn = e.target.closest(".chip");
+      if (!btn) return;
+      bar.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
+      btn.classList.add("active");
+      render(btn.dataset.hood);
+    });
+
+    render("");
+  })
+  .catch(() => {
+    document.getElementById("listing-grid").innerHTML =
+      '<div class="empty-state">Couldn\'t load listings right now. Please refresh, or <a href="/contact">contact us</a>.</div>';
+  });
+
+fetch("/api/leasing-info")
+  .then((r) => r.json())
+  .then((info) => {
+    const a = document.getElementById("apply-link");
+    a.href = info.application.url;
+    a.target = "_blank";
+    a.rel = "noopener";
+  })
+  .catch(() => {});
+</script>
+</body>
+</html>

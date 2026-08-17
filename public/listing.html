@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Listing — Reach Homes</title>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<!--HEADER-->
+
+<main>
+  <a class="back-link" href="/">← All listings</a>
+  <div id="detail"><div class="empty-state">Loading…</div></div>
+</main>
+
+<!--FOOTER-->
+
+<script src="/site.js"></script>
+<script>
+const id = new URLSearchParams(location.search).get("id");
+
+function list(items) {
+  return `<ul class="detail-list">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`;
+}
+
+function section(title, body) {
+  return body ? `<section class="detail-section"><h3>${escapeHtml(title)}</h3>${body}</section>` : "";
+}
+
+function layoutTable(layouts) {
+  return `<div class="table-scroll"><table class="data-table">
+    <thead><tr><th>Layout</th><th>Size</th><th>Rent</th><th>Notes</th></tr></thead>
+    <tbody>${layouts.map((l) => `<tr>
+      <td><strong>${escapeHtml(l.name)}</strong></td>
+      <td>${l.sqft.toLocaleString()} sqft</td>
+      <td>${escapeHtml(l.rent)}</td>
+      <td>${escapeHtml(l.notes || "")}</td>
+    </tr>`).join("")}</tbody>
+  </table></div>`;
+}
+
+function leaseOptionTable(options) {
+  return `<div class="table-scroll"><table class="data-table">
+    <thead><tr><th>Option</th><th>Details</th><th>Rent</th></tr></thead>
+    <tbody>${options.map((o) => `<tr>
+      <td><strong>${escapeHtml(o.name)}</strong></td>
+      <td>${escapeHtml(o.detail)}</td>
+      <td>${money(o.rent)}/mo</td>
+    </tr>`).join("")}</tbody>
+  </table></div>`;
+}
+
+function unitTable(units) {
+  return `<div class="table-scroll"><table class="data-table">
+    <thead><tr><th>Unit</th><th>Available</th></tr></thead>
+    <tbody>${units.map((u) => `<tr>
+      <td><strong>${escapeHtml(u.unit)}</strong></td>
+      <td>${u.label ? `<span class="pill-now">${escapeHtml(u.label)}</span>` : fmtDate(u.available)}</td>
+    </tr>`).join("")}</tbody>
+  </table></div>`;
+}
+
+fetch("/api/listings")
+  .then((r) => r.json())
+  .then((listings) => {
+    const l = listings.find((x) => x.id === id);
+    const el = document.getElementById("detail");
+
+    if (!l) {
+      el.innerHTML = '<div class="empty-state">That listing wasn\'t found. <a href="/">See all listings</a>.</div>';
+      return;
+    }
+
+    document.title = l.title + " — Reach Homes";
+    const sqft = sqftLabel(l);
+
+    el.innerHTML = `
+      <div class="detail-hero">
+        <img src="${escapeHtml(l.image)}" alt="${escapeHtml(l.title)}" />
+        ${l.promo ? `<span class="promo-flag">${escapeHtml(l.promo)}</span>` : ""}
+        ${statusLabel(l) ? `<span class="status-flag">${escapeHtml(statusLabel(l))}</span>` : ""}
+      </div>
+
+      <div class="detail-head">
+        <div>
+          <div class="neighborhood">${escapeHtml(l.neighborhood)}</div>
+          <h1>${escapeHtml(l.title)}</h1>
+          <p class="detail-sub">${escapeHtml(l.subtitle)}</p>
+          <p class="address">${escapeHtml(l.address)}</p>
+        </div>
+        <div class="detail-price">
+          <div class="price">${rentLabel(l)}</div>
+          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(l.availableLabel)}</div>
+          ${isAvailable(l) ? "" : `<p class="status-note">An application is in progress on this unit. We're still taking inquiries in case it falls through.</p>`}
+        </div>
+      </div>
+
+      <div class="spec-row">
+        <div class="spec"><div class="spec-val">${escapeHtml(l.bedsLabel)}</div><div class="spec-key">Bedrooms</div></div>
+        <div class="spec"><div class="spec-val">${l.baths}</div><div class="spec-key">Bathrooms</div></div>
+        ${sqft ? `<div class="spec"><div class="spec-val">${escapeHtml(sqft)}</div><div class="spec-key">Size</div></div>` : ""}
+      </div>
+
+      <p class="detail-summary">${escapeHtml(l.summary)}</p>
+
+      <div class="detail-actions">
+        <a class="btn btn-primary" href="/contact?listing=${encodeURIComponent(l.id)}">Inquire about this listing</a>
+        <a class="btn btn-secondary" href="${escapeHtml(l.zillow)}" target="_blank" rel="noopener">View on Zillow</a>
+      </div>
+
+      ${section("The building", l.building ? list(l.building) : "")}
+      ${section("The unit", l.unit ? list(l.unit) : "")}
+      ${section("Floor plans & pricing", l.layouts ? layoutTable(l.layouts) : "")}
+      ${section("Lease options", l.leaseOptions ? leaseOptionTable(l.leaseOptions) : "")}
+      ${section("Lease terms", l.lease ? list(l.lease) : "")}
+      ${section("Upcoming availability", l.upcomingUnits ? unitTable(l.upcomingUnits) : "")}
+    `;
+  })
+  .catch(() => {
+    document.getElementById("detail").innerHTML =
+      '<div class="empty-state">Couldn\'t load this listing. Please refresh, or <a href="/contact">contact us</a>.</div>';
+  });
+</script>
+</body>
+</html>
