@@ -18,16 +18,16 @@
     <h2>About Us</h2>
   </div>
   <p class="lede">
-    We're a local, owner-operated rental business managing 27 properties around Seattle — concentrated
+    We're a local, owner-operated rental business managing houses and apartments around Seattle — concentrated
     in the University District, Ravenna, and Bryant, with a few on Capitol Hill and the Eastside.
     We own the buildings we rent, so when something needs fixing you're talking to the people who
     can actually approve it.
   </p>
 
   <div class="stats-strip">
-    <div class="stat"><div class="num">27</div><div class="label">Properties managed</div></div>
-    <div class="stat"><div class="num">8</div><div class="label">Neighborhoods</div></div>
-    <div class="stat"><div class="num">100+</div><div class="label">Units and bedrooms</div></div>
+    <div class="stat"><div class="num" data-stat="units">65</div><div class="label">Doors</div></div>
+    <div class="stat"><div class="num" data-stat="neighborhoods">8</div><div class="label">Neighborhoods</div></div>
+    <div class="stat"><div class="num is-text">Seattle &amp; the Eastside</div><div class="label">Service area</div></div>
   </div>
 
   <div class="section-heading">
@@ -73,5 +73,16 @@
 </main>
 
 <!--FOOTER-->
+<script>
+fetch("/api/portfolio/map")
+  .then((r) => r.json())
+  .then(({ stats }) => {
+    for (const el of document.querySelectorAll("[data-stat]")) {
+      const v = stats[el.dataset.stat];
+      if (v != null) el.textContent = v;
+    }
+  })
+  .catch(() => {});
+</script>
 </body>
 </html>

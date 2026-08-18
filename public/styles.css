@@ -386,7 +386,15 @@ main {
 .stat {
   min-width: 120px;
 }
-.stat .num { font-size: 1.8rem; font-weight: 400; color: var(--brand-800); }
+.stat .num {
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: var(--brand-800);
+  min-height: 2.2rem;
+  display: flex;
+  align-items: flex-end;
+}
+.stat .num.is-text { font-size: 1.15rem; line-height: 1.3; }
 .stat .label { color: var(--muted); font-size: 0.85rem; }
 
 /* Contact page */
@@ -873,7 +881,7 @@ main {
   margin: 0 auto;
   padding: 30px 24px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 
@@ -895,6 +903,14 @@ main {
   font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1.1;
+  min-height: 2.35rem;
+  display: flex;
+  align-items: flex-end;
+}
+
+.stat-num.is-text {
+  font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+  line-height: 1.25;
 }
 
 .stat-label {
@@ -960,14 +976,14 @@ main {
 
 @media (max-width: 860px) {
   .stat-band-inner {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 22px 20px;
+    grid-template-columns: 1fr;
+    gap: 0;
   }
-  /* With two columns, only the right-hand cell of each row takes a rule. */
-  .stat + .stat { padding-left: 0; border-left: 0; }
-  .stat:nth-child(even) {
-    padding-left: 20px;
-    border-left: 1px solid rgba(255,255,255,0.18);
+  .stat + .stat {
+    padding: 16px 0 0;
+    margin-top: 16px;
+    border-left: 0;
+    border-top: 1px solid rgba(255,255,255,0.18);
   }
 }
 
