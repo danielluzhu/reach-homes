@@ -1,5 +1,7 @@
 # Reach Homes
 
+**Live site: https://danielluzhu.github.io/reach-homes/**
+
 Site for a property management company with listings across Seattle, aimed at
 prospective tenants who want to learn about the company and see that it's legit.
 
@@ -24,12 +26,13 @@ are appended to `data/submissions.json`.
 
 ## Deployment
 
-The live site is a static build published to GitHub Pages by
-`.github/workflows/pages.yml` on every push to `main`.
+The live site — https://danielluzhu.github.io/reach-homes/ — is a static build
+published to GitHub Pages by `.github/workflows/pages.yml` on every push to
+`main`.
 
 ```sh
 bun run build                    # -> dist/, for a custom domain or user site
-BASE_PATH=/reach bun run build   # -> dist/, for a project site at /<repo>/
+BASE_PATH=/reach-homes bun run build   # -> dist/, for a project site at /<repo>/
 ```
 
 `scripts/build-static.ts` does at build time what the server does per request:
