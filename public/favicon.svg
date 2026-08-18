@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Reach Homes">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9c2c47"/>
+      <stop offset="100%" stop-color="#5c1428"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="15" fill="url(#bg)"/>
+
+  <!-- Roof, pitched well past the walls so the mark still reads as a house at
+       16px, where the walls are only a few pixels tall. -->
+  <path d="M32 13 7 33h6v18a3 3 0 0 0 3 3h32a3 3 0 0 0 3-3V33h6z"
+        fill="#ffffff"/>
+
+  <!-- Lit window: the one warm note, and what makes it read as a home rather
+       than a generic building. -->
+  <rect x="20" y="36" width="11" height="11" rx="2.5" fill="#f0a92f"/>
+
+  <!-- Door, arched. -->
+  <path d="M37 54V42.5a4.5 4.5 0 0 1 9 0V54z" fill="#7b1e35"/>
+  <circle cx="39.6" cy="48.4" r="1.15" fill="#f0a92f"/>
+
+  <!-- Chimney with a curl of smoke — the "fun" bit. -->
+  <rect x="43" y="17" width="6" height="9" rx="1.6" fill="#ffffff"/>
+  <path d="M46 15.5c2.6-1.1 2.6-3.6 0-4.7s-2.6-3.6 0-4.7"
+        fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity="0.75"/>
+</svg>
