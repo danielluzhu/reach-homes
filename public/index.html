@@ -29,8 +29,9 @@
 
 <section class="stat-band" id="stat-band">
   <div class="stat-band-inner">
-    <div class="stat"><span class="stat-num" data-stat="units">65</span><span class="stat-label">Doors</span></div>
-    <div class="stat"><span class="stat-num is-text">Seattle &amp; the Eastside</span><span class="stat-label">Service area &middot; <span data-stat="neighborhoods">8</span> neighborhoods</span></div>
+    <div class="stat"><span class="stat-num" data-fact="units">70</span><span class="stat-label">Units</span></div>
+    <div class="stat"><span class="stat-num" data-fact="doors">200+</span><span class="stat-label">Doors</span></div>
+    <div class="stat"><span class="stat-num is-text" data-fact="serviceArea">Seattle &amp; the Eastside</span><span class="stat-label">Service area &middot; <span data-stat="neighborhoods">8</span> neighborhoods</span></div>
     <div class="stat"><span class="stat-num is-text">In-house</span><span class="stat-label">Leasing &amp; maintenance</span></div>
   </div>
 </section>
@@ -204,6 +205,16 @@ fetch("/api/portfolio/map")
   .then(({ stats }) => {
     for (const el of document.querySelectorAll("[data-stat]")) {
       const v = stats[el.dataset.stat];
+      if (v != null) el.textContent = v;
+    }
+  })
+  .catch(() => {});
+
+fetch("/api/site-facts")
+  .then((r) => r.json())
+  .then((facts) => {
+    for (const el of document.querySelectorAll("[data-fact]")) {
+      const v = facts[el.dataset.fact];
       if (v != null) el.textContent = v;
     }
   })

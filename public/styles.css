@@ -881,7 +881,7 @@ main {
   margin: 0 auto;
   padding: 30px 24px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
 }
 
@@ -909,7 +909,7 @@ main {
 }
 
 .stat-num.is-text {
-  font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+  font-size: clamp(0.98rem, 1.35vw, 1.15rem);
   line-height: 1.25;
 }
 
