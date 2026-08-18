@@ -56,6 +56,7 @@ function rewriteUrls(text: string): string {
     // GET endpoints become static JSON documents.
     .replace(/fetch\("\/api\/listings"\)/g, `fetch("${BASE}/api/listings.json")`)
     .replace(/fetch\("\/api\/leasing-info"\)/g, `fetch("${BASE}/api/leasing-info.json")`)
+    .replace(/fetch\("\/api\/site-facts"\)/g, `fetch("${BASE}/api/site-facts.json")`)
     .replace(/fetch\("\/api\/portfolio\/map"\)/g, `fetch("${BASE}/api/portfolio-map.json")`);
 
   if (BASE) {
@@ -65,6 +66,13 @@ function rewriteUrls(text: string): string {
     out = out.replace(/url\((['"]?)\/(?!\/)/g, `url($1${BASE}/`);
   }
   return out;
+}
+
+/** Drops "_"-prefixed keys, which are maintainer notes rather than page data. */
+function stripNotes<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([k]) => !k.startsWith("_")),
+  ) as Partial<T>;
 }
 
 /** Root-relative paths inside JSON data (listing images) need the same prefix. */
@@ -177,6 +185,10 @@ async function build() {
   await write(
     `${DIST}/api/leasing-info.json`,
     JSON.stringify(await file(`${DATA_DIR}/leasing-info.json`).json()),
+  );
+  await write(
+    `${DIST}/api/site-facts.json`,
+    JSON.stringify(stripNotes(await file(`${DATA_DIR}/site-facts.json`).json())),
   );
   await write(`${DIST}/api/portfolio-map.json`, JSON.stringify(await loadMapPayload()));
 

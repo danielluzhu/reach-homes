@@ -5,6 +5,7 @@ const PORT = Number(process.env.PORT ?? 3000);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
 const LISTINGS_PATH = `${import.meta.dir}/data/listings.json`;
 const LEASING_INFO_PATH = `${import.meta.dir}/data/leasing-info.json`;
+const SITE_FACTS_PATH = `${import.meta.dir}/data/site-facts.json`;
 const ADDRESS_PATH = `${import.meta.dir}/address.txt`;
 const GEO_PATH = `${import.meta.dir}/data/geo.json`;
 const SUBMISSIONS_PATH = `${import.meta.dir}/data/submissions.json`;
@@ -95,6 +96,14 @@ const server = Bun.serve({
 
     if (pathname === "/api/leasing-info" && req.method === "GET") {
       return json(await file(LEASING_INFO_PATH).json());
+    }
+
+    // Headline figures the business states directly. Kept apart from the
+    // portfolio payload below, which is derived from address.txt.
+    if (pathname === "/api/site-facts" && req.method === "GET") {
+      const facts: Record<string, unknown> = await file(SITE_FACTS_PATH).json();
+      // "_"-prefixed keys are maintainer notes, not page data.
+      return json(Object.fromEntries(Object.entries(facts).filter(([k]) => !k.startsWith("_"))));
     }
 
     // Public map data only. Street addresses are intentionally NOT exposed here —

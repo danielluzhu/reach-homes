@@ -1,0 +1,6 @@
+{
+  "units": "70",
+  "doors": "200+",
+  "serviceArea": "Seattle & the Eastside",
+  "_note": "Headline figures stated by the business. Unlike data/portfolio-map.json these are NOT derived from address.txt, which currently describes 27 buildings and 65 doors. Edit here and every page follows."
+}

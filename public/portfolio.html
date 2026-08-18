@@ -57,13 +57,17 @@ function radiusFor(units) {
   return 7;
 }
 
-fetch("/api/portfolio/map")
-  .then((r) => r.json())
-  .then((data) => {
+Promise.all([
+  fetch("/api/portfolio/map").then((r) => r.json()),
+  // Stated headline figures; the rest of this page is derived from the map data.
+  fetch("/api/site-facts").then((r) => r.json()).catch(() => ({})),
+])
+  .then(([data, FACTS]) => {
     const { stats, areas, pins } = data;
 
     document.getElementById("portfolio-stats").innerHTML = [
-      [stats.units, "Doors"],
+      [FACTS.units ?? stats.properties, "Units"],
+      [FACTS.doors ?? stats.units, "Doors"],
       [stats.neighborhoods, "Neighborhoods"],
       [stats.cities, "Cities"],
     ]
