@@ -61,6 +61,8 @@ function rewriteUrls(text: string): string {
   if (BASE) {
     // href="/..." and src="/...", but never protocol-relative "//host/...".
     out = out.replace(/\b(href|src)="\/(?!\/)/g, `$1="${BASE}/`);
+    // url(/...) in stylesheets, quoted or bare.
+    out = out.replace(/url\((['"]?)\/(?!\/)/g, `url($1${BASE}/`);
   }
   return out;
 }

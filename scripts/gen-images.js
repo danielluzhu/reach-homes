@@ -21,8 +21,8 @@ const listingImage = (label, from, to) => `<svg xmlns="http://www.w3.org/2000/sv
   </defs>
   <rect width="400" height="250" fill="url(#g)"/>
   ${building("#1f2937")}
-  <text x="200" y="222" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="600" fill="#ffffff" text-anchor="middle" opacity="0.92">${label}</text>
-  <text x="200" y="240" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-weight="500" fill="#ffffff" text-anchor="middle" opacity="0.7" letter-spacing="0.5">PHOTO COMING SOON</text>
+  <text x="200" y="222" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="400" fill="#ffffff" text-anchor="middle" opacity="0.92">${label}</text>
+  <text x="200" y="240" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-weight="400" fill="#ffffff" text-anchor="middle" opacity="0.7" letter-spacing="0.5">PHOTO COMING SOON</text>
 </svg>`;
 
 const avatar = (initials, from, to) => `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
@@ -33,18 +33,18 @@ const avatar = (initials, from, to) => `<svg xmlns="http://www.w3.org/2000/svg" 
     </linearGradient>
   </defs>
   <rect width="320" height="320" rx="160" fill="url(#g)"/>
-  <text x="160" y="185" font-family="'Segoe UI', Arial, sans-serif" font-size="110" font-weight="700" fill="#ffffff" text-anchor="middle">${initials}</text>
+  <text x="160" y="185" font-family="'Segoe UI', Arial, sans-serif" font-size="110" font-weight="400" fill="#ffffff" text-anchor="middle">${initials}</text>
 </svg>`;
 
 const hero = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="700" viewBox="0 0 1600 700">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0f766e"/>
-      <stop offset="100%" stop-color="#134e4a"/>
+      <stop offset="0%" stop-color="#7b1e35"/>
+      <stop offset="100%" stop-color="#4d1122"/>
     </linearGradient>
   </defs>
   <rect width="1600" height="700" fill="url(#sky)"/>
-  <g opacity="0.5" fill="#0b2a27">
+  <g opacity="0.5" fill="#25080f">
     <rect x="80" y="380" width="120" height="220"/>
     <rect x="220" y="320" width="90" height="280"/>
     <rect x="330" y="420" width="140" height="180"/>
@@ -57,7 +57,7 @@ const hero = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="700" 
     <ellipse cx="1320" cy="170" rx="100" ry="45"/>
     <ellipse cx="350" cy="120" rx="120" ry="50"/>
   </g>
-  <g fill="#065f46">
+  <g fill="#5c1428">
     <polygon points="700,600 800,380 900,600"/>
     <polygon points="620,600 700,460 780,600" opacity="0.85"/>
     <polygon points="820,600 900,460 980,600" opacity="0.85"/>
