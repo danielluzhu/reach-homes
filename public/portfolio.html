@@ -63,8 +63,7 @@ fetch("/api/portfolio/map")
     const { stats, areas, pins } = data;
 
     document.getElementById("portfolio-stats").innerHTML = [
-      [stats.properties, "Properties"],
-      [stats.units, "Total units"],
+      [stats.units, "Doors"],
       [stats.neighborhoods, "Neighborhoods"],
       [stats.cities, "Cities"],
     ]
