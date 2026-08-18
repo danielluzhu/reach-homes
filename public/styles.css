@@ -267,7 +267,7 @@ main {
 }
 
 /* Pending listings keep the same layout, but the availability pill drops the
-   "open for rent" teal so the date doesn't read as an invitation. */
+   "open for rent" maroon so the date doesn't read as an invitation. */
 .availability-pending {
   background: #f1f2f1;
   color: var(--muted);
