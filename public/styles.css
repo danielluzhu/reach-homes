@@ -86,6 +86,9 @@ nav.links a.active { background: var(--teal-700); color: #fff; }
   position: relative;
   color: #fff;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  min-height: min(78vh, 660px);
 }
 
 .hero img {
@@ -97,18 +100,41 @@ nav.links a.active { background: var(--teal-700); color: #fff; }
   z-index: 0;
 }
 
+/* Scrim sits between the photo and the copy: the photo is a real unit, so it
+   varies in brightness, and the text needs a guaranteed contrast floor. */
+.hero-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(100deg, rgba(15,47,44,0.94) 0%, rgba(15,47,44,0.78) 42%, rgba(15,47,44,0.34) 100%),
+    linear-gradient(0deg, rgba(15,47,44,0.55) 0%, rgba(15,47,44,0) 55%);
+}
+
 .hero-overlay {
   position: relative;
   z-index: 1;
   max-width: 1120px;
   margin: 0 auto;
-  padding: 64px 24px 56px;
+  padding: clamp(72px, 11vw, 132px) 24px clamp(64px, 9vw, 112px);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.78);
+  margin: 0 0 18px;
 }
 
 .hero h1 {
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  margin: 0 0 12px;
-  max-width: 34ch;
+  font-size: clamp(2rem, 4.6vw, 3.25rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 0 0 18px;
+  max-width: 20ch;
+  text-wrap: balance;
 }
 
 .hero p {
@@ -118,20 +144,17 @@ nav.links a.active { background: var(--teal-700); color: #fff; }
   margin: 0 0 20px;
 }
 
-.trust-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 8px;
+.hero-sub {
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  line-height: 1.6;
+  color: rgba(255,255,255,0.88);
+  margin: 0 0 30px;
 }
 
-.badge {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.28);
-  padding: 7px 14px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  backdrop-filter: blur(2px);
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 main {
@@ -219,8 +242,11 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 12px;
   margin-top: 4px;
+  /* A wide rent range plus a long availability label can't share one line in a
+     card this narrow; let the label drop to its own row instead of overflowing. */
+  flex-wrap: wrap;
 }
 
 .price { font-weight: 700; font-size: 1.15rem; }
@@ -233,7 +259,6 @@ main {
   background: var(--teal-100);
   color: var(--teal-800);
   font-weight: 600;
-  white-space: nowrap;
 }
 
 /* Pending listings keep the same layout, but the availability pill drops the
@@ -280,6 +305,25 @@ main {
 .btn-secondary:hover { border-color: var(--teal-700); }
 
 .btn-block { width: 100%; }
+
+.btn-lg {
+  padding: 13px 26px;
+  font-size: 1rem;
+}
+
+/* Secondary action on top of the hero photo, where a light-filled button would
+   compete with the primary one. */
+.btn-ghost {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.45);
+  backdrop-filter: blur(3px);
+}
+
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.75);
+}
 
 /* Team page */
 .team-grid {
@@ -541,6 +585,11 @@ main {
   gap: 24px;
   flex-wrap: wrap;
 }
+
+/* Text column flexes; the buttons keep their intrinsic width and stay on the
+   right, instead of the pair overflowing by a few px and wrapping. */
+.cta-panel > :first-child { flex: 1 1 340px; }
+.cta-actions { flex: 0 0 auto; }
 
 .cta-panel h3 { margin: 0 0 6px; }
 .cta-panel p { margin: 0; color: rgba(255,255,255,0.82); max-width: 60ch; font-size: 0.95rem; }
@@ -805,3 +854,148 @@ main {
 }
 .faq-item[open] summary::after { content: "−"; }
 .faq-item p { margin: 0 0 16px; color: var(--muted); max-width: 78ch; }
+
+
+/* --- Portfolio scale, directly under the hero ------------------------------ */
+
+.stat-band {
+  background: var(--teal-800);
+  color: #fff;
+}
+
+.stat-band-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 30px 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Divider rules rather than borders on the cells, so the first one has no rule
+   and the row still collapses cleanly at narrow widths. */
+.stat + .stat {
+  padding-left: 24px;
+  border-left: 1px solid rgba(255,255,255,0.18);
+}
+
+.stat-num {
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.76);
+}
+
+/* --- What renting with us looks like --------------------------------------- */
+
+.value-section {
+  margin-top: 72px;
+}
+
+.value-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.value-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 26px 24px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.value-card:hover {
+  border-color: var(--teal-600);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.value-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  background: var(--teal-100);
+  color: var(--teal-700);
+  margin-bottom: 16px;
+}
+
+.value-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.value-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.08rem;
+  letter-spacing: -0.01em;
+}
+
+.value-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 860px) {
+  .stat-band-inner {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px 20px;
+  }
+  /* With two columns, only the right-hand cell of each row takes a rule. */
+  .stat + .stat { padding-left: 0; border-left: 0; }
+  .stat:nth-child(even) {
+    padding-left: 20px;
+    border-left: 1px solid rgba(255,255,255,0.18);
+  }
+}
+
+@media (max-width: 560px) {
+  .hero { min-height: 0; }
+  .hero-actions .btn { width: 100%; justify-content: center; }
+  .value-section { margin-top: 52px; }
+}
+
+
+/* --- Header on small screens ------------------------------------------------
+   Five nav links don't fit beside the wordmark on a phone; without this the row
+   overflows and Contact is pushed off-screen entirely. Wrap to a second row so
+   every link stays reachable. */
+
+@media (max-width: 720px) {
+  .nav-wrap {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  nav.links {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  nav.links a {
+    white-space: nowrap;
+    padding: 7px 11px;
+    font-size: 0.9rem;
+  }
+}
