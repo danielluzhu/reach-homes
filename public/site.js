@@ -61,19 +61,35 @@ function statusLabel(l) {
  * entries carrying no status. Null for listings without per-unit data.
  */
 function unitsRemaining(l) {
-  if (!l.upcomingUnits || l.totalUnits == null) return null;
+  if (!l.upcomingUnits) return null;
   return l.upcomingUnits.filter((u) => !u.status).length;
 }
 
 /**
- * Availability line for a card or detail page. Where we can count units, it
- * leads with how many are left, so the figure tracks the unit statuses instead
- * of being restated by hand every time one changes.
+ * How many of a building's units are on the market. Derived from the unit table
+ * where there is one, so it can't fall out of step with the unit statuses;
+ * otherwise taken from a stated unitsAvailable.
+ */
+function unitCounts(l) {
+  if (l.totalUnits == null) return null;
+  const available = l.unitsAvailable != null ? l.unitsAvailable : unitsRemaining(l);
+  return available == null ? null : { available: available, total: l.totalUnits };
+}
+
+/** Compact count for listing cards, e.g. "4/31 available". */
+function unitCountLabel(l) {
+  const c = unitCounts(l);
+  return c ? c.available + "/" + c.total + " available" : null;
+}
+
+/**
+ * Availability line for the detail page: the count, where we have one, plus the
+ * timing that the card doesn't have room for.
  */
 function availabilityLabel(l) {
-  const left = unitsRemaining(l);
-  if (left == null) return l.availableLabel;
-  return left + " of " + l.totalUnits + " units \u00b7 " + l.availableLabel;
+  const c = unitCounts(l);
+  if (!c) return l.availableLabel;
+  return c.available + " of " + c.total + " units \u00b7 " + l.availableLabel;
 }
 
 function fmtDate(iso) {
