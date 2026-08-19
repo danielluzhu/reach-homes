@@ -146,7 +146,7 @@ function card(l) {
         <p class="desc">${escapeHtml(l.summary)}</p>
         <div class="card-footer">
           <div class="price">${rentLabel(l)}</div>
-          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(l.availableLabel)}</div>
+          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(availabilityLabel(l))}</div>
         </div>
         <div class="card-actions">
           <a class="btn btn-primary" style="flex:1" href="/listing?id=${encodeURIComponent(l.id)}">View details</a>

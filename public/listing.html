@@ -108,7 +108,7 @@ fetch("/api/listings")
         </div>
         <div class="detail-price">
           <div class="price">${rentLabel(l)}</div>
-          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(l.availableLabel)}</div>
+          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(availabilityLabel(l))}</div>
           ${isAvailable(l) ? "" : `<p class="status-note">An application is in progress on this unit. We're still taking inquiries in case it falls through.</p>`}
         </div>
       </div>
