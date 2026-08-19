@@ -56,6 +56,26 @@ function statusLabel(l) {
   return STATUS_LABELS[l.status] || null;
 }
 
+/**
+ * Units still open in a listing that tracks them individually: upcomingUnits
+ * entries carrying no status. Null for listings without per-unit data.
+ */
+function unitsRemaining(l) {
+  if (!l.upcomingUnits || l.totalUnits == null) return null;
+  return l.upcomingUnits.filter((u) => !u.status).length;
+}
+
+/**
+ * Availability line for a card or detail page. Where we can count units, it
+ * leads with how many are left, so the figure tracks the unit statuses instead
+ * of being restated by hand every time one changes.
+ */
+function availabilityLabel(l) {
+  const left = unitsRemaining(l);
+  if (left == null) return l.availableLabel;
+  return left + " of " + l.totalUnits + " units \u00b7 " + l.availableLabel;
+}
+
 function fmtDate(iso) {
   if (!iso) return "";
   return new Date(iso + "T00:00:00").toLocaleDateString(undefined, {

@@ -13,7 +13,8 @@
     "rentFrom": 1200,
     "rentTo": 1300,
     "available": "2026-08-08",
-    "availableLabel": "Multiple units, Aug–Sep 2026",
+    "availableLabel": "Aug–Sep 2026",
+    "totalUnits": 31,
     "status": "available",
     "zillow": "https://www.zillow.com/b/4544-20th-ave-ne-seattle-wa-62r4yK/",
     "image": "/images/listing-4544-20th-ave-ne.svg",
@@ -165,7 +166,7 @@
   {
     "id": "4735-22nd-ave-ne",
     "title": "4735 22nd Ave NE",
-    "subtitle": "3-bedroom apartments — two units available",
+    "subtitle": "3-bedroom apartments — one of two units still open",
     "neighborhood": "University District",
     "address": "4735 22nd Ave NE, Seattle, WA 98105",
     "beds": 3,
@@ -178,7 +179,7 @@
     "status": "available",
     "zillow": "https://www.zillow.com/homedetails/4735-22nd-Ave-NE-APT-4-Seattle-WA-98105/2059934895_zpid/",
     "image": "/images/listing-4735-22nd-ave-ne.svg",
-    "summary": "Two 3 bed / 1 bath units in a small four-unit building, 1,000 sqft each, available furnished at no extra cost.",
+    "summary": "Two 3 bed / 1 bath units in a small four-unit building, 1,000 sqft each, available furnished at no extra cost. One of the two has an application pending.",
     "building": [
       "Four-unit apartment building",
       "Two 2-bedroom units and two 3-bedroom units",
@@ -186,10 +187,10 @@
     ],
     "unit": [
       "3 bed / 1 bath, 1,000 sqft",
-      "Units 3 and 4 are both available"
+      "Units 3 and 4 — one has an application pending"
     ],
     "lease": [
-      "Both 3-bedroom units available starting September",
+      "3-bedroom units available starting September",
       "Furnishing available at no extra cost"
     ]
   },
