@@ -57,10 +57,19 @@ function leaseOptionTable(options) {
 function unitTable(units) {
   return `<div class="table-scroll"><table class="data-table">
     <thead><tr><th>Unit</th><th>Available</th></tr></thead>
-    <tbody>${units.map((u) => `<tr>
+    <tbody>${units.map((u) => {
+      const status = unitStatusLabel(u);
+      // A taken unit's date says nothing useful, so the status replaces it.
+      const when = status
+        ? `<span class="pill-muted">${escapeHtml(status)}</span>`
+        : u.label
+          ? `<span class="pill-now">${escapeHtml(u.label)}</span>`
+          : fmtDate(u.available);
+      return `<tr${u.status ? ' class="row-muted"' : ""}>
       <td><strong>${escapeHtml(u.unit)}</strong></td>
-      <td>${u.label ? `<span class="pill-now">${escapeHtml(u.label)}</span>` : fmtDate(u.available)}</td>
-    </tr>`).join("")}</tbody>
+      <td>${when}</td>
+    </tr>`;
+    }).join("")}</tbody>
   </table></div>`;
 }
 

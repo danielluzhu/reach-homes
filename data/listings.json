@@ -60,11 +60,11 @@
     ],
     "upcomingUnits": [
       { "unit": "101", "available": "2026-07-30", "label": "Available now" },
-      { "unit": "004", "available": "2026-08-08" },
-      { "unit": "406", "available": "2026-08-10" },
+      { "unit": "004", "available": "2026-08-08", "status": "pending" },
+      { "unit": "406", "available": "2026-08-10", "status": "unavailable" },
       { "unit": "403", "available": "2026-08-16" },
-      { "unit": "201", "available": "2026-08-22" },
-      { "unit": "404", "available": "2026-08-23" },
+      { "unit": "201", "available": "2026-08-22", "status": "pending" },
+      { "unit": "404", "available": "2026-08-23", "status": "unavailable" },
       { "unit": "402", "available": "2026-09-18" },
       { "unit": "401", "available": "2026-09-22" }
     ]

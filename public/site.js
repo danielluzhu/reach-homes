@@ -35,6 +35,19 @@ const STATUS_LABELS = {
   pending: "Application pending",
 };
 
+/**
+ * Per-unit states within a multi-unit building. A unit with no status is open,
+ * and shows its availability date instead of a label.
+ */
+const UNIT_STATUS_LABELS = {
+  pending: "Application pending",
+  unavailable: "Not available",
+};
+
+function unitStatusLabel(u) {
+  return UNIT_STATUS_LABELS[u.status] || null;
+}
+
 function isAvailable(l) {
   return (l.status || "available") === "available";
 }

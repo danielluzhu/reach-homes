@@ -694,6 +694,19 @@ main {
   border-radius: 999px;
 }
 
+/* Units that are spoken for: still listed, so the building's inventory reads
+   honestly, but visibly set back from the ones you can actually rent. */
+.pill-muted {
+  background: #f1f2f1;
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.data-table tr.row-muted td:first-child { color: var(--muted); }
+
 /* ---- Portfolio map ---- */
 
 .map-wrap {
