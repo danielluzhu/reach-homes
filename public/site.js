@@ -37,11 +37,11 @@ const STATUS_LABELS = {
 
 /**
  * Per-unit states within a multi-unit building. A unit with no status is open,
- * and shows its availability date instead of a label.
+ * and shows its availability date instead of a label. Units marked
+ * "unavailable" carry no label because they aren't listed at all.
  */
 const UNIT_STATUS_LABELS = {
   pending: "Application pending",
-  unavailable: "Not available",
 };
 
 function unitStatusLabel(u) {

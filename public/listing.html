@@ -54,7 +54,12 @@ function leaseOptionTable(options) {
   </table></div>`;
 }
 
-function unitTable(units) {
+function unitTable(allUnits) {
+  // Units that are off the market are dropped rather than listed as taken:
+  // this table is what a renter can actually act on.
+  const units = allUnits.filter((u) => u.status !== "unavailable");
+  if (!units.length) return "";
+
   return `<div class="table-scroll"><table class="data-table">
     <thead><tr><th>Unit</th><th>Available</th></tr></thead>
     <tbody>${units.map((u) => {
