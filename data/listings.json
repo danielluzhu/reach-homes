@@ -166,7 +166,7 @@
   {
     "id": "4735-22nd-ave-ne",
     "title": "4735 22nd Ave NE",
-    "subtitle": "3-bedroom apartments — one of two units still open",
+    "subtitle": "3-bedroom apartments — two units, one pending",
     "neighborhood": "University District",
     "address": "4735 22nd Ave NE, Seattle, WA 98105",
     "beds": 3,
@@ -176,6 +176,8 @@
     "rent": 2900,
     "available": "2026-09-01",
     "availableLabel": "September 2026",
+    "totalUnits": 4,
+    "unitsAvailable": 2,
     "status": "available",
     "zillow": "https://www.zillow.com/homedetails/4735-22nd-Ave-NE-APT-4-Seattle-WA-98105/2059934895_zpid/",
     "image": "/images/listing-4735-22nd-ave-ne.svg",
