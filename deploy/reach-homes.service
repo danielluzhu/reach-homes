@@ -1,0 +1,55 @@
+# Runs the Bun server under systemd.
+#
+# This replaces both scripts/serve.sh and scripts/tmux-up.sh: Restart=always
+# does what the shell restart loop did, and journald does what the tee-to-file
+# did, with rotation handled for you.
+#
+#   sudo cp deploy/reach-homes.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now reach-homes
+#   systemctl status reach-homes
+#   journalctl -u reach-homes -f        # what you used to get by attaching
+#
+# Adjust User and WorkingDirectory to match the box you deploy on.
+
+[Unit]
+Description=Reach Homes site (Bun)
+Documentation=https://github.com/danielluzhu/reach-homes
+# network-online, not just network: the listener wants a routable address.
+After=network-online.target
+Wants=network-online.target
+# Don't give up after the default 5 attempts; a box rebooting behind a slow
+# network shouldn't leave the site down permanently. (This is a [Unit] key --
+# systemd ignores it in [Service].)
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/srv/reach-homes
+
+Environment=PORT=3000
+# systemd starts with an empty environment, so bun must be found explicitly.
+Environment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ubuntu/.bun/bin/bun run server.ts
+
+Restart=always
+RestartSec=2
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=reach-homes
+
+# The process only needs to read the site and append to data/submissions.json.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/srv/reach-homes/data /srv/reach-homes/logs
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target
