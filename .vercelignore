@@ -1,0 +1,8 @@
+# server.ts calls Bun.serve() — a long-running listener that cannot work as a
+# serverless function. It is not needed to build the static site, so it is kept
+# out of the deployment entirely rather than risking it being run there.
+server.ts
+
+# Not needed by the build.
+logs/
+data/submissions.json

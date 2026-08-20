@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "bun scripts/build-static.ts",
+  "framework": null,
+  "buildCommand": "bun scripts/build-static.ts || npx --yes bun scripts/build-static.ts",
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false
