@@ -1,0 +1,46 @@
+# Variant: runs the server inside a tmux session so you can attach to a live
+# terminal (`tmux attach -t reach-homes`).
+#
+# Prefer reach-homes.service unless you specifically need that. systemd cannot
+# supervise a process inside tmux, and you give up three things:
+#
+#   1. Crash restarts. tmux new-session -d forks and exits immediately, so the
+#      PID systemd tracks is not the server. If bun dies, the unit still looks
+#      "active" and nothing restarts it. Restart=always cannot help here.
+#   2. Logs. Output goes to tmux scrollback, which is memory-only, capped, and
+#      gone on reboot -- not journald, so no journalctl, no rotation.
+#   3. Clean shutdown. tmux sessions share one tmux server per user. systemd's
+#      default KillMode=control-group would take that whole server down on
+#      stop, killing unrelated sessions. Hence KillMode=process below, which in
+#      turn means a stop can leave the server running.
+#
+#   sudo cp deploy/reach-homes-tmux.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now reach-homes-tmux
+#   tmux attach -t reach-homes          # ctrl-b d to detach
+
+[Unit]
+Description=Reach Homes site (Bun, inside tmux)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# oneshot + RemainAfterExit: the ExecStart command legitimately exits once the
+# session is created. Type=forking would have systemd hunt for a main PID that
+# belongs to the tmux server, not to us.
+Type=oneshot
+RemainAfterExit=yes
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/srv/reach-homes
+
+Environment=PORT=3000
+Environment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
+
+ExecStart=/usr/bin/tmux new-session -d -s reach-homes -c /srv/reach-homes /home/ubuntu/.bun/bin/bun run server.ts
+ExecStop=/usr/bin/tmux kill-session -t reach-homes
+
+# Only kill what we started, not the user's whole tmux server.
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

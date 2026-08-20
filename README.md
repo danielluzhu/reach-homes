@@ -24,6 +24,25 @@ bun run dev      # http://localhost:3000, with reload
 serves the JSON the pages fetch. Contact submissions POST to `/api/contact` and
 are appended to `data/submissions.json`.
 
+## Hosting the server
+
+`deploy/reach-homes.service` runs `server.ts` under systemd. It supersedes
+`scripts/serve.sh` and `scripts/tmux-up.sh`: `Restart=always` replaces the
+shell restart loop and journald replaces the tee-to-file, with rotation.
+
+```sh
+sudo cp deploy/reach-homes.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now reach-homes
+journalctl -u reach-homes -f
+```
+
+`deploy/reach-homes-tmux.service` is a variant that runs the server inside a
+tmux session, if you want to attach to a live terminal. It is the weaker
+option: systemd cannot see a process inside tmux, so a crash leaves the unit
+reporting `active` while the site is down, and output goes to tmux scrollback
+rather than the journal. The header of that file explains the tradeoffs.
+
 ## Deployment
 
 The live site — https://danielluzhu.github.io/reach-homes/ — is a static build
