@@ -35,6 +35,16 @@ bun run build                    # -> dist/, for a custom domain or user site
 BASE_PATH=/reach-homes bun run build   # -> dist/, for a project site at /<repo>/
 ```
 
+### Vercel
+
+`vercel.json` builds the same static output and serves it from the domain
+root, so no `BASE_PATH` is needed. Import the repo at vercel.com/new and it
+deploys as-is; the build needs Bun, which Vercel's build image provides.
+
+Vercel can also run the contact form for real, which Pages cannot — that
+needs `POST /api/contact` reimplemented as a serverless function writing to
+somewhere other than the filesystem, which is ephemeral there.
+
 `scripts/build-static.ts` does at build time what the server does per request:
 prerenders each route to `<route>/index.html`, and writes the `GET /api/*`
 responses to `dist/api/*.json`.
