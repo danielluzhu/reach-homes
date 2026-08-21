@@ -1,0 +1,76 @@
+name: Sync 4544 availability
+
+# The Blue Ocean building site is the source of truth for which studios at
+# 4544 20th Ave NE are open. It changes faster than this repo does, so rather
+# than copying it across by hand, pull it once a day.
+
+on:
+  schedule:
+    # 14:20 UTC daily (~07:20 Seattle). GitHub runs scheduled jobs on a delay
+    # under load, so treat this as "some time that morning", not to the minute.
+    - cron: "20 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Never let two syncs race on the same file.
+concurrency:
+  group: sync-availability
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.sync.outputs.changed }}
+      sha: ${{ steps.sync.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Pull availability
+        id: sync
+        shell: bash
+        run: |
+          set -o pipefail
+          # A non-zero exit means the fetch failed or the page didn't parse.
+          # The script leaves the data untouched in that case; fail loudly so
+          # it shows up rather than silently going stale.
+          bun scripts/sync-availability.ts | tee sync.log
+
+          {
+            echo '### Availability sync'
+            echo '```'
+            cat sync.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if git diff --quiet data/listings.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Sync 4544 availability from the Blue Ocean units page" data/listings.json
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  # Only when something actually moved. Deploys the commit the sync just made,
+  # which the push itself cannot trigger.
+  deploy:
+    needs: sync
+    if: needs.sync.outputs.changed == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
+    with:
+      ref: ${{ needs.sync.outputs.sha }}

@@ -4,6 +4,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Callable so the availability sync can deploy the commit it just pushed.
+  # A push made with GITHUB_TOKEN does not start a new workflow run, so this
+  # cannot be left to the push trigger above.
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit to build. Defaults to the triggering commit.
+        type: string
+        required: false
+        default: ""
 
 # Allow the deploy job to publish to Pages.
 permissions:
@@ -21,6 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
       - uses: oven-sh/setup-bun@v2
         with:
