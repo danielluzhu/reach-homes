@@ -77,6 +77,27 @@ Two things differ from the local server, because Pages serves static files only:
   so root-relative URLs need that prefix. CI passes it via `BASE_PATH`, taken
   from the repo's Pages settings.
 
+## Availability sync
+
+The studios at 4544 20th Ave NE are also listed on the building's own site,
+which is the source of truth for which are open and moves faster than this
+repo does. `.github/workflows/sync-availability.yml` pulls it once a day and
+commits any change; `scripts/sync-availability.ts` does the work and can be
+run by hand:
+
+```sh
+bun run sync-availability            # apply
+bun run sync-availability -- --check # report only, exit 1 if stale
+```
+
+It syncs status only. That page gives coarse phrases ("Late September") while
+`data/listings.json` holds exact dates, so a unit already listed here keeps
+its date. A newly vacant unit has no date yet and is added with the source's
+phrase in `availableText` until someone sets a real one.
+
+If the fetch fails or the table doesn't parse, it writes nothing and exits
+non-zero, so a redesign of that page can't blank out availability quietly.
+
 ## Private data
 
 `address.txt` and `data/geo.json` hold exact street addresses and coordinates

@@ -69,7 +69,10 @@ function unitTable(allUnits) {
         ? `<span class="pill-muted">${escapeHtml(status)}</span>`
         : u.label
           ? `<span class="pill-now">${escapeHtml(u.label)}</span>`
-          : fmtDate(u.available);
+          : u.available
+            ? fmtDate(u.available)
+            // A unit the sync added has the source's phrase, not a date yet.
+            : escapeHtml(u.availableText || "");
       return `<tr${u.status ? ' class="row-muted"' : ""}>
       <td><strong>${escapeHtml(u.unit)}</strong></td>
       <td>${when}</td>
