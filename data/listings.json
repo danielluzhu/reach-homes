@@ -66,7 +66,7 @@
       { "unit": "403", "available": "2026-08-16", "status": "unavailable" },
       { "unit": "201", "available": "2026-08-22", "status": "unavailable" },
       { "unit": "404", "available": "2026-08-23", "status": "unavailable" },
-      { "unit": "402", "available": "2026-09-18", "status": "pending" },
+      { "unit": "402", "available": "2026-09-18", "status": "unavailable" },
       { "unit": "401", "available": "2026-09-22" }
     ]
   },
