@@ -71,17 +71,20 @@
     {
       "name": "Ravenna Park",
       "distance": "About a block",
-      "note": "The ravine's edge is a couple of minutes' walk east."
+      "note": "The ravine's edge is a couple of minutes' walk east.",
+      "destination": "Ravenna Park, Seattle, WA"
     },
     {
       "name": "Burke-Gilman Trail",
       "distance": "0.2 mi",
-      "note": "Roughly a five-minute walk to the nearest access point."
+      "note": "Roughly a five-minute walk to the nearest access point.",
+      "destination": "47.66581,-122.30194"
     },
     {
       "name": "University of Washington",
-      "distance": "0.9 mi",
-      "note": "About 20 minutes on foot to central campus, or six by bike."
+      "distance": "0.6 mi",
+      "note": "To the north edge of campus at NE 45th St \u2014 about 15 minutes on foot, or five by bike.",
+      "destination": "Burke Museum, Seattle, WA"
     }
   ]
 }

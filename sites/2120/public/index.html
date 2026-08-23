@@ -181,11 +181,20 @@ Promise.all([
     "https://maps.google.com/maps?q=" + encodeURIComponent(property.mapQuery) + "&z=15&output=embed";
   document.getElementById("maps-link").href =
     "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(property.mapQuery);
+  // Each one opens walking directions from the house to that landmark.
+  const dirUrl = (dest) =>
+    "https://www.google.com/maps/dir/?api=1&travelmode=walking&origin=" +
+    encodeURIComponent(property.mapQuery) +
+    "&destination=" + encodeURIComponent(dest);
+
   document.getElementById("nearby").innerHTML = property.nearby
     .map(
       (n) => `<li>
-        <div class="nearby-head"><span>${escapeHtml(n.name)}</span><span class="nearby-dist">${escapeHtml(n.distance)}</span></div>
-        <p>${escapeHtml(n.note)}</p>
+        <a href="${escapeHtml(dirUrl(n.destination))}" target="_blank" rel="noopener">
+          <div class="nearby-head"><span>${escapeHtml(n.name)}</span><span class="nearby-dist">${escapeHtml(n.distance)}</span></div>
+          <p>${escapeHtml(n.note)}</p>
+          <span class="nearby-cta">Walking directions →</span>
+        </a>
       </li>`,
     )
     .join("");
