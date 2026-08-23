@@ -12,7 +12,7 @@
     "rent": 800,
     "bath": "Shared bathroom with L2",
     "private": false,
-    "photo": null
+    "photo": "l1.jpg"
   },
   {
     "id": "l2",
@@ -27,7 +27,7 @@
     "rent": 800,
     "bath": "Shared bathroom with L1",
     "private": false,
-    "photo": null
+    "photo": "l2.jpg"
   },
   {
     "id": "l3",
@@ -54,7 +54,7 @@
       "M1"
     ],
     "beds": 1,
-    "rent": 800,
+    "rent": 825,
     "bath": "Shared bathroom with M2",
     "private": false,
     "photo": "m1.jpg"
@@ -69,10 +69,10 @@
       "M2"
     ],
     "beds": 1,
-    "rent": 800,
+    "rent": 825,
     "bath": "Shared bathroom with M1",
     "private": false,
-    "photo": null
+    "photo": "m2.jpg"
   },
   {
     "id": "m3",
@@ -193,8 +193,8 @@
       "M2"
     ],
     "beds": 2,
-    "rent": 1550,
-    "separately": 1600,
+    "rent": 1600,
+    "separately": 1650,
     "blurb": "Two main-floor bedrooms sharing a bathroom, on the floor with the main living room and kitchen.",
     "photo": "m1.jpg"
   },
@@ -228,8 +228,8 @@
       "M5"
     ],
     "beds": 5,
-    "rent": 4100,
-    "separately": 4300,
+    "rent": 4200,
+    "separately": 4350,
     "blurb": "The entire main floor: five bedrooms, three bathrooms, and the house's principal living room and kitchen.",
     "photo": "kitchen.jpg"
   },
@@ -265,8 +265,8 @@
       "U2"
     ],
     "beds": 7,
-    "rent": 5800,
-    "separately": 6200,
+    "rent": 5900,
+    "separately": 6250,
     "blurb": "Seven bedrooms across the main and upper floors, with the main living room and kitchen.",
     "photo": "living.jpg"
   },
@@ -290,7 +290,7 @@
     ],
     "beds": 10,
     "rent": 8000,
-    "separately": 8800,
+    "separately": 8850,
     "blurb": "All ten bedrooms, six bathrooms and both kitchens across three floors.",
     "photo": "front.jpg"
   }
