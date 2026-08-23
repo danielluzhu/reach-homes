@@ -7,7 +7,6 @@
   "sqft": 3000,
   "utilitiesPerPerson": 100,
   "utilitiesNote": "Flat $100 per person each month, internet included.",
-  "zillow": "https://www.zillow.com/homedetails/2120-NE-54th-St-Seattle-WA-98105/48784372_zpid/",
   "levels": [
     {
       "id": "L",
@@ -61,5 +60,10 @@
       "Desk"
     ],
     "note": "Every room can be furnished at no extra cost with a bed and a desk. Take it furnished or bring your own \u2014 either way the rent is the same."
+  },
+  "contact": {
+    "email": "reach.seattle.homes@gmail.com",
+    "phone": "5103961242",
+    "phoneDisplay": "(510) 396-1242"
   }
 }

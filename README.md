@@ -89,6 +89,14 @@ cd sites/2120 && bun run server.ts     # http://localhost:2120
 
 `deploy/reach-2120.service` runs it under systemd alongside the main site.
 
+It also publishes as part of the main static build, at `/2120` under the main
+site, so it has a link of its own without a second host or repo:
+
+    https://danielluzhu.github.io/reach-homes/2120/
+
+`sites/2120/build.ts` produces that output and is called by
+`scripts/build-static.ts`; it can also be run standalone into `sites/2120/dist`.
+
 Its rates are the source for the "Lease options" table on the main site's
 2120 listing; `data/listings.json` there mirrors them, so change a rate in
 `sites/2120/data/listings.json` and update the listing to match.

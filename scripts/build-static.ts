@@ -19,6 +19,7 @@
 import { file, write } from "bun";
 import { mkdir, rm, cp } from "node:fs/promises";
 import { loadPortfolio, toMapPayload } from "../lib/portfolio";
+import { build2120 } from "../sites/2120/build";
 
 const ROOT = `${import.meta.dir}/..`;
 const PUBLIC_DIR = `${ROOT}/public`;
@@ -194,6 +195,10 @@ async function build() {
 
   // Pages serves 404.html for unknown paths; send them to the listings page.
   await write(`${DIST}/404.html`, await renderPage("/", "index.html"));
+
+  // The 2120 microsite publishes at /2120 under this one, so it gets a link of
+  // its own without needing a second host or repo.
+  await build2120(`${DIST}/2120`, `${BASE}/2120`);
 
   // Skip Jekyll, which would otherwise ignore files and folders beginning "_".
   await write(`${DIST}/.nojekyll`, "");

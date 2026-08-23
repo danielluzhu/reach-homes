@@ -58,18 +58,19 @@ function bundleCard(b) {
 }
 
 /**
- * The "or take the whole floor" option, shown at the end of that floor's row of
- * rooms. Deliberately styled apart from the room cards beside it: it isn't a
- * room, it's the alternative to renting them one at a time.
+ * A combination offered within a floor's row: either a pair of its rooms or the
+ * whole floor. Styled apart from the room cards beside it because it isn't a
+ * room, it's the alternative to taking them one at a time.
  */
-function floorCard(b, roomCount) {
+function comboCard(b, roomsOnFloor) {
+  const whole = b.rooms.length === roomsOnFloor;
   const saves = b.separately - b.rent;
   return `
-    <article class="card card-whole">
+    <article class="card card-whole${whole ? " card-floor" : ""}">
       <div class="card-body">
-        <span class="tag tag-whole">All ${roomCount} rooms</span>
-        <h4>Take the whole floor</h4>
-        <span class="bath">${escapeHtml(b.label)}</span>
+        <span class="tag tag-whole">${whole ? `All ${roomsOnFloor} rooms` : "Pair"}</span>
+        <h4>${whole ? "Take the whole floor" : escapeHtml(b.label)}</h4>
+        <span class="bath">${escapeHtml(whole ? b.label : b.blurb)}</span>
         <div class="price-row">
           <span class="price">${money(b.rent)}<small>/mo</small></span>
           ${saves > 0

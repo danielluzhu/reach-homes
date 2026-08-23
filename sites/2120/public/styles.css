@@ -173,4 +173,13 @@ table.rates td.num { text-align: right; white-space: nowrap; }
    from their image. */
 .card-whole .card-body { justify-content: center; min-height: 190px; }
 
-.tag-whole { background: var(--brand-700); color: #fff; }
+.tag-whole { background: var(--brand-600); color: #fff; }
+/* The whole-floor option reads a step above the pairs beside it. */
+.card-floor { border-color: var(--brand-700); }
+.card-floor .tag-whole { background: var(--brand-800); }
+
+
+.contact-lines { margin-top: 12px !important; font-size: 0.95rem; }
+.contact-lines a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.contact-lines a:hover { color: var(--brand-100); }
+.site-footer a { color: rgba(255,255,255,0.9); }

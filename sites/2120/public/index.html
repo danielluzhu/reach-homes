@@ -18,12 +18,13 @@
     <h1>Ten bedrooms, six baths, two kitchens — rented one room at a time.</h1>
     <p>
       Take a single bedroom from $800, pair up with a friend, claim a floor with its
-      own kitchen, or lease the whole house. Utilities are a flat $100 per person,
-      internet included.
+      own kitchen, or lease the whole house. Every room can be furnished free with a
+      bed and desk. Leases run 3 to 12 months, and utilities are a flat $100 per
+      person with internet included.
     </p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="#rooms">See the ten rooms</a>
-      <a class="btn btn-ghost" href="#groups">Groups &amp; whole floors</a>
+      <a class="btn btn-ghost" href="#groups">Whole floors &amp; house</a>
     </div>
   </div>
 </section>
@@ -42,15 +43,15 @@
   <section class="section" id="rooms">
     <div class="section-heading">
       <h2>Rent a single bedroom</h2>
-      <p>Ten rooms across three floors. Each rate is per room, per month, and any room can be furnished free with a bed and desk.</p>
+      <p>Ten rooms across three floors, with the pairs and whole-floor rates alongside them. Any room can be furnished free with a bed and desk.</p>
     </div>
     <div id="floors"></div>
   </section>
 
   <section class="section" id="groups">
     <div class="section-heading">
-      <h2>Take a pair, a floor, or the house</h2>
-      <p>Renting together costs less than the same rooms taken separately.</p>
+      <h2>Take more than one floor</h2>
+      <p>Pairs and single floors are listed with their rooms above. These span the house.</p>
     </div>
     <div class="grid" id="bundle-grid"></div>
   </section>
@@ -89,10 +90,14 @@
     <div>
       <h3>Interested in a room?</h3>
       <p>Tell us which room or floor you're after and your move-in timing, and we'll get back to you within one business day.</p>
+      <p class="contact-lines">
+        <a id="email-line" href="#"></a><br />
+        <a id="phone-line" href="#"></a>
+      </p>
     </div>
     <div class="hero-actions">
       <a class="btn btn-primary" id="inquire-link" href="#">Inquire about a room</a>
-      <a class="btn btn-secondary" id="zillow-link" href="#" target="_blank" rel="noopener">View on Zillow</a>
+      <a class="btn btn-secondary" id="call-link" href="#">Call or text</a>
     </div>
   </section>
 </main>
@@ -112,10 +117,11 @@ Promise.all([
   document.getElementById("floors").innerHTML = property.levels
     .map((lvl) => {
       const onFloor = rooms.filter((r) => r.levelId === lvl.id);
-      // The bundle covering exactly this floor, shown alongside its rooms.
-      const whole = bundles.find(
-        (b) => b.levelId === lvl.id && b.rooms.length === onFloor.length,
-      );
+      // Every combination confined to this floor: its pairs, then the whole
+      // floor last, so the options read smallest to largest across the row.
+      const combos = bundles
+        .filter((b) => b.levelId === lvl.id)
+        .sort((a, b) => a.rooms.length - b.rooms.length);
       return `
         <div class="floor">
           <div class="floor-head">
@@ -124,13 +130,15 @@ Promise.all([
           </div>
           <div class="grid">
             ${onFloor.map(roomCard).join("")}
-            ${whole ? floorCard(whole, onFloor.length) : ""}
+            ${combos.map((b) => comboCard(b, onFloor.length)).join("")}
           </div>
         </div>`;
     })
     .join("");
 
-  document.getElementById("bundle-grid").innerHTML = bundles.map(bundleCard).join("");
+  // Only the combinations that cross floors; the rest sit with their rooms.
+  const multiFloor = bundles.filter((b) => b.levelId.length > 1);
+  document.getElementById("bundle-grid").innerHTML = multiFloor.map(bundleCard).join("");
 
   document.getElementById("layout-rows").innerHTML = property.levels
     .map((lvl) => {
@@ -149,9 +157,18 @@ Promise.all([
   document.getElementById("utilities-note").textContent = property.utilitiesNote;
   document.getElementById("lease-note").textContent = property.leaseTerms.note;
   document.getElementById("furnishing-note").textContent = property.furnishing.note;
-  document.getElementById("zillow-link").href = property.zillow;
-  document.getElementById("inquire-link").href =
-    "mailto:?subject=" + encodeURIComponent("Inquiry — 2120 NE 54th St");
+  const { email, phone, phoneDisplay } = property.contact;
+  const mailto = "mailto:" + email + "?subject=" + encodeURIComponent("Inquiry — 2120 NE 54th St");
+  document.getElementById("inquire-link").href = mailto;
+  document.getElementById("call-link").href = "tel:+1" + phone;
+
+  const emailLine = document.getElementById("email-line");
+  emailLine.href = mailto;
+  emailLine.textContent = email;
+
+  const phoneLine = document.getElementById("phone-line");
+  phoneLine.href = "tel:+1" + phone;
+  phoneLine.textContent = phoneDisplay;
 });
 </script>
 </body>
