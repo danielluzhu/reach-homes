@@ -160,3 +160,17 @@ table.rates td.num { text-align: right; white-space: nowrap; }
   .facts-inner { grid-template-columns: 1fr; }
   .fact:nth-child(even) { padding-left: 0; border-left: 0; }
 }
+
+
+/* --- "Take the whole floor" card, inline with that floor's rooms ------------- */
+
+.card-whole {
+  border-color: var(--brand-600);
+  background: linear-gradient(180deg, var(--brand-100) 0%, var(--card) 55%);
+}
+
+/* No photo on this card, so its body carries the height the room cards get
+   from their image. */
+.card-whole .card-body { justify-content: center; min-height: 190px; }
+
+.tag-whole { background: var(--brand-700); color: #fff; }

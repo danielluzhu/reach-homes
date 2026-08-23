@@ -112,13 +112,20 @@ Promise.all([
   document.getElementById("floors").innerHTML = property.levels
     .map((lvl) => {
       const onFloor = rooms.filter((r) => r.levelId === lvl.id);
+      // The bundle covering exactly this floor, shown alongside its rooms.
+      const whole = bundles.find(
+        (b) => b.levelId === lvl.id && b.rooms.length === onFloor.length,
+      );
       return `
         <div class="floor">
           <div class="floor-head">
             <h3>${escapeHtml(lvl.name)} floor</h3>
             <span class="floor-note">${escapeHtml(lvl.note)}</span>
           </div>
-          <div class="grid">${onFloor.map(roomCard).join("")}</div>
+          <div class="grid">
+            ${onFloor.map(roomCard).join("")}
+            ${whole ? floorCard(whole, onFloor.length) : ""}
+          </div>
         </div>`;
     })
     .join("");
