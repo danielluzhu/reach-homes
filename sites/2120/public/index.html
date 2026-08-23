@@ -42,7 +42,7 @@
   <section class="section" id="rooms">
     <div class="section-heading">
       <h2>Rent a single bedroom</h2>
-      <p>Ten rooms across three floors. Each rate is per room, per month.</p>
+      <p>Ten rooms across three floors. Each rate is per room, per month, and any room can be furnished free with a bed and desk.</p>
     </div>
     <div id="floors"></div>
   </section>
@@ -77,6 +77,10 @@
       <div class="note-card">
         <h3>Lease length</h3>
         <p id="lease-note"></p>
+      </div>
+      <div class="note-card">
+        <h3>Furnishing</h3>
+        <p id="furnishing-note"></p>
       </div>
     </div>
   </section>
@@ -137,6 +141,7 @@ Promise.all([
 
   document.getElementById("utilities-note").textContent = property.utilitiesNote;
   document.getElementById("lease-note").textContent = property.leaseTerms.note;
+  document.getElementById("furnishing-note").textContent = property.furnishing.note;
   document.getElementById("zillow-link").href = property.zillow;
   document.getElementById("inquire-link").href =
     "mailto:?subject=" + encodeURIComponent("Inquiry — 2120 NE 54th St");

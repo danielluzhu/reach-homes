@@ -54,5 +54,12 @@
     "min": 3,
     "max": 12,
     "note": "Leases run from 3 to 12 months, so a quarter, a school year, or a full year all work."
+  },
+  "furnishing": {
+    "included": [
+      "Bed",
+      "Desk"
+    ],
+    "note": "Every room can be furnished at no extra cost with a bed and a desk. Take it furnished or bring your own \u2014 either way the rent is the same."
   }
 }
