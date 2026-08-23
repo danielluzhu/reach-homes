@@ -73,21 +73,21 @@
   {
     "id": "2120-ne-54th-st",
     "title": "2120 NE 54th St",
-    "subtitle": "10-bedroom house — full building or by floor",
+    "subtitle": "10-bedroom house — by the room, by the floor, or whole",
     "neighborhood": "Ravenna",
     "address": "2120 NE 54th St, Seattle, WA 98105",
     "beds": 10,
     "bedsLabel": "10 bd",
     "baths": 6,
     "sqft": 3000,
-    "rentFrom": 3000,
-    "rentTo": 9000,
+    "rentFrom": 800,
+    "rentTo": 8000,
     "available": "2026-09-01",
     "availableLabel": "Early September 2026",
     "status": "available",
     "zillow": "https://www.zillow.com/homedetails/2120-NE-54th-St-Seattle-WA-98105/48786784_zpid/",
     "image": "/images/listing-2120-ne-54th-st.svg",
-    "summary": "A 3,000 sqft, 10 bed / 6 bath house a short walk from Ravenna Park. Lease the whole building or take a floor on its own.",
+    "summary": "A 3,000 sqft, 10 bed / 6 bath house with two kitchens, a short walk from Ravenna Park. Rooms go individually from $800, in pairs, by the floor, or the whole house at $8,000. Utilities are a flat $100 per person including internet.",
     "photos": [
       "/images/photos/2120-ne-54th-st/front.jpg",
       "/images/photos/2120-ne-54th-st/living.jpg",
@@ -110,10 +110,23 @@
       "Garage plus driveway — ample parking",
       "Very close to Ravenna Park"
     ],
+    "unit": [
+      "Ten bedrooms let individually: L1–L3 lower, M1–M5 main, U1–U2 upper",
+      "Lower: L1 and L2 share a bathroom, L3 has its own",
+      "Main: M1/M2 share, M3/M4 share, M5 has its own",
+      "Upper: U1 and U2 share a bathroom",
+      "Lower floor has a second living room and kitchen of its own"
+    ],
     "leaseOptions": [
-      { "name": "Entire building", "detail": "10 bed / 6 bath", "rent": 9000 },
-      { "name": "7 bedrooms", "detail": "Leased as a separate floor plan", "rent": 7000 },
-      { "name": "3 bedrooms", "detail": "Leased as a separate floor plan", "rent": 3000 }
+      { "name": "Single bedroom", "detail": "Any of the ten rooms, shared or private bath", "rent": 800, "rentLabel": "$800–$1,000/mo" },
+      { "name": "L1 + L2", "detail": "Two lower bedrooms sharing a bath", "rent": 1600 },
+      { "name": "Lower floor", "detail": "L1–L3, with its own living room and kitchen", "rent": 2500 },
+      { "name": "M1 + M2", "detail": "Two main-floor bedrooms sharing a bath", "rent": 1600 },
+      { "name": "M3 + M4", "detail": "Two main-floor bedrooms sharing a bath", "rent": 1600 },
+      { "name": "Main floor", "detail": "M1–M5, with the main living room and kitchen", "rent": 4200 },
+      { "name": "U1 + U2", "detail": "Both upper bedrooms, sharing a bath", "rent": 1850 },
+      { "name": "Main + Upper floors", "detail": "Seven bedrooms across two floors", "rent": 5900 },
+      { "name": "Entire house", "detail": "All 10 bedrooms, 6 baths, 2 kitchens", "rent": 8000 }
     ],
     "lease": [
       "Leases run 3 to 12 months",

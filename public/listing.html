@@ -49,7 +49,7 @@ function leaseOptionTable(options) {
     <tbody>${options.map((o) => `<tr>
       <td><strong>${escapeHtml(o.name)}</strong></td>
       <td>${escapeHtml(o.detail)}</td>
-      <td>${money(o.rent)}/mo</td>
+      <td>${o.rentLabel ? escapeHtml(o.rentLabel) : money(o.rent) + "/mo"}</td>
     </tr>`).join("")}</tbody>
   </table></div>`;
 }

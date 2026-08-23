@@ -16,7 +16,7 @@ User=ubuntu
 Group=ubuntu
 WorkingDirectory=/srv/reach-homes/sites/2120
 
-Environment=PORT=3100
+Environment=PORT=2120
 Environment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/home/ubuntu/.bun/bin/bun run server.ts
 

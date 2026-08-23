@@ -77,6 +77,22 @@ Two things differ from the local server, because Pages serves static files only:
   so root-relative URLs need that prefix. CI passes it via `BASE_PATH`, taken
   from the repo's Pages settings.
 
+## The 2120 microsite
+
+`sites/2120/` is a separate site for 2120 NE 54th St, whose ten bedrooms are
+let individually, in pairs, by the floor, or as a whole house — more detail
+than one listing card can carry. It runs on its own port:
+
+```sh
+cd sites/2120 && bun run server.ts     # http://localhost:2120
+```
+
+`deploy/reach-2120.service` runs it under systemd alongside the main site.
+
+Its rates are the source for the "Lease options" table on the main site's
+2120 listing; `data/listings.json` there mirrors them, so change a rate in
+`sites/2120/data/listings.json` and update the listing to match.
+
 ## Availability sync
 
 The studios at 4544 20th Ave NE are also listed on the building's own site,

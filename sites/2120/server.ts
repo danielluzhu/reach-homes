@@ -3,12 +3,12 @@
  * individually or in groups. Runs on its own port so it can sit alongside the
  * main Reach Homes server.
  *
- *   PORT=3100 bun run server.ts
+ *   PORT=2120 bun run server.ts
  */
 
 import { file } from "bun";
 
-const PORT = Number(process.env.PORT ?? 3100);
+const PORT = Number(process.env.PORT ?? 2120);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
 const DATA_DIR = `${import.meta.dir}/data`;
 
