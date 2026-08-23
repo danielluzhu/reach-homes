@@ -14,7 +14,7 @@
   <img src="/images/front.jpg" alt="" />
   <div class="hero-scrim"></div>
   <div class="hero-inner">
-    <p class="eyebrow">Ravenna &middot; Seattle &middot; a short walk from Ravenna Park</p>
+    <p class="eyebrow">2120 NE 54th St &middot; Ravenna, Seattle</p>
     <h1>Ten bedrooms, six baths, two kitchens — rented one room at a time.</h1>
     <p>
       Take a single bedroom from $800, pair up with a friend, claim a floor with its
@@ -54,6 +54,28 @@
       <p>Pairs and single floors are listed with their rooms above. These span the house.</p>
     </div>
     <div class="grid" id="bundle-grid"></div>
+  </section>
+
+  <section class="section" id="location">
+    <div class="section-heading">
+      <h2>Where it is</h2>
+      <p id="address-line"></p>
+    </div>
+
+    <div class="location-layout">
+      <div class="map-frame">
+        <iframe
+          id="map"
+          title="Map of 2120 NE 54th St, Seattle"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen></iframe>
+      </div>
+      <div class="nearby-col">
+        <ul class="nearby" id="nearby"></ul>
+        <a class="btn btn-secondary btn-block" id="maps-link" href="#" target="_blank" rel="noopener">Open in Google Maps</a>
+      </div>
+    </div>
   </section>
 
   <section class="section" id="house">
@@ -152,6 +174,20 @@ Promise.all([
         <td class="num">${whole ? money(whole.rent) : "—"}</td>
       </tr>`;
     })
+    .join("");
+
+  document.getElementById("address-line").textContent = property.address;
+  document.getElementById("map").src =
+    "https://maps.google.com/maps?q=" + encodeURIComponent(property.mapQuery) + "&z=15&output=embed";
+  document.getElementById("maps-link").href =
+    "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(property.mapQuery);
+  document.getElementById("nearby").innerHTML = property.nearby
+    .map(
+      (n) => `<li>
+        <div class="nearby-head"><span>${escapeHtml(n.name)}</span><span class="nearby-dist">${escapeHtml(n.distance)}</span></div>
+        <p>${escapeHtml(n.note)}</p>
+      </li>`,
+    )
     .join("");
 
   document.getElementById("utilities-note").textContent = property.utilitiesNote;

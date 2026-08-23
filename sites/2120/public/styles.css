@@ -183,3 +183,44 @@ table.rates td.num { text-align: right; white-space: nowrap; }
 .contact-lines a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 .contact-lines a:hover { color: var(--brand-100); }
 .site-footer a { color: rgba(255,255,255,0.9); }
+
+
+/* --- Where it is ------------------------------------------------------------ */
+
+.location-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+  align-items: stretch;
+}
+
+.map-frame {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 340px;
+  background: var(--brand-100);
+}
+
+.map-frame iframe { width: 100%; height: 100%; min-height: 340px; border: 0; display: block; }
+
+.nearby-col { display: flex; flex-direction: column; gap: 12px; }
+.btn-block { width: 100%; }
+
+.nearby { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+
+.nearby li {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.nearby-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.nearby-dist { color: var(--brand-700); font-size: 0.9rem; white-space: nowrap; }
+.nearby li p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
+
+@media (max-width: 780px) {
+  .location-layout { grid-template-columns: 1fr; }
+}
