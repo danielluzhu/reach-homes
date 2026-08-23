@@ -54,6 +54,22 @@ function leaseOptionTable(options) {
   </table></div>`;
 }
 
+/**
+ * Photo grid. Each tile links to the full-size image, which is the whole
+ * lightbox: no script, works with JS off, and the browser's own image view
+ * handles zoom and panning better than a hand-rolled overlay would.
+ */
+function gallery(photos) {
+  if (!photos || !photos.length) return "";
+  return `<div class="photo-grid">${photos
+    .map(
+      (src, i) => `<a class="photo-tile" href="${escapeHtml(src)}" target="_blank" rel="noopener">
+        <img src="${escapeHtml(src)}" alt="" loading="${i < 3 ? "eager" : "lazy"}" />
+      </a>`,
+    )
+    .join("")}</div>`;
+}
+
 function unitTable(allUnits) {
   // Units that are off the market are dropped rather than listed as taken:
   // this table is what a renter can actually act on.
@@ -129,6 +145,7 @@ fetch("/api/listings")
         <a class="btn btn-secondary" href="${escapeHtml(l.zillow)}" target="_blank" rel="noopener">View on Zillow</a>
       </div>
 
+      ${section("Photos", gallery(l.photos))}
       ${section("The building", l.building ? list(l.building) : "")}
       ${section("The unit", l.unit ? list(l.unit) : "")}
       ${section("Floor plans & pricing", l.layouts ? layoutTable(l.layouts) : "")}

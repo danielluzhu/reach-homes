@@ -88,6 +88,20 @@
     "zillow": "https://www.zillow.com/homedetails/2120-NE-54th-St-Seattle-WA-98105/48786784_zpid/",
     "image": "/images/listing-2120-ne-54th-st.svg",
     "summary": "A 3,000 sqft, 10 bed / 6 bath house a short walk from Ravenna Park. Lease the whole building or take a floor on its own.",
+    "photos": [
+      "/images/photos/2120-ne-54th-st/front.jpg",
+      "/images/photos/2120-ne-54th-st/living.jpg",
+      "/images/photos/2120-ne-54th-st/kitchen.jpg",
+      "/images/photos/2120-ne-54th-st/m1.jpg",
+      "/images/photos/2120-ne-54th-st/m3.jpg",
+      "/images/photos/2120-ne-54th-st/m4.jpg",
+      "/images/photos/2120-ne-54th-st/u.jpg",
+      "/images/photos/2120-ne-54th-st/u2.jpg",
+      "/images/photos/2120-ne-54th-st/entry.jpg",
+      "/images/photos/2120-ne-54th-st/bath-u.jpg",
+      "/images/photos/2120-ne-54th-st/laundry.jpg",
+      "/images/photos/2120-ne-54th-st/garage.jpg"
+    ],
     "building": [
       "10 bed / 6 bath across three floors, 3,000 sqft",
       "Lower floor: 3 bed, 2 bath, kitchen, living room, garage and laundry room",

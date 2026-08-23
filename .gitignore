@@ -10,3 +10,7 @@ data/geo.json
 
 # Contact form submissions (server.ts) — contains names, phones and emails.
 data/submissions.json
+
+# Source photo drops. The web-sized copies under public/images/photos are what
+# the site serves; the originals don't belong in the repo.
+*.zip

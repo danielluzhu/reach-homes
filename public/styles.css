@@ -1033,3 +1033,35 @@ main {
     font-size: 0.9rem;
   }
 }
+
+
+/* --- Listing photo grid ----------------------------------------------------- */
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.photo-tile {
+  display: block;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--brand-100);
+  line-height: 0;
+}
+
+.photo-tile img {
+  width: 100%;
+  /* Uniform tiles regardless of portrait/landscape originals. */
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.photo-tile:hover img { transform: scale(1.03); }
+
+.photo-tile:focus-visible {
+  outline: 2px solid var(--brand-600);
+  outline-offset: 2px;
+}
