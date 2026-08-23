@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(command -v apt-get brew snap curl)",
-      "Read(//usr/lib/**)"
+      "Read(//usr/lib/**)",
+      "Bash(python3 -c \"import PIL, PIL.ImageDraw; print\\(PIL.__version__\\)\")",
+      "Bash(python3 -c \"import cairosvg; print\\('cairosvg'\\)\")"
     ]
   }
 }

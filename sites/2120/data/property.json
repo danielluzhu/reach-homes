@@ -5,6 +5,8 @@
   "baths": 6,
   "kitchens": 2,
   "sqft": 3000,
+  "available": "2026-09-01",
+  "availableLabel": "Early September 2026",
   "utilitiesPerPerson": 100,
   "utilitiesNote": "Flat $100 per person each month, internet included.",
   "levels": [
@@ -51,9 +53,40 @@
   ],
   "leaseTerms": {
     "min": 3,
-    "max": 12,
-    "note": "Leases run from 3 to 12 months, so a quarter, a school year, or a full year all work."
+    "max": 12
   },
+  "terms": [
+    {
+      "id": "long",
+      "label": "Long term",
+      "months": "6 to 12 months",
+      "path": "/",
+      "title": "2120 NE 54th St \u2014 rooms by the bedroom in Ravenna, Seattle",
+      "description": "A 10-bedroom, 6-bath house with two kitchens in Ravenna, on leases of 6 to 12 months. Rent a single bedroom, a pair, a whole floor, or the entire house.",
+      "roomsOnly": false,
+      "premium": {
+        "room": 0,
+        "private": 0
+      },
+      "leaseNote": "Leases run from 6 to 12 months, so a school year or a full year both work.",
+      "crossLink": "Staying six months or more? The long-term site has the standard rates, plus the pairs, whole floors and the whole house."
+    },
+    {
+      "id": "short",
+      "label": "Short term",
+      "months": "Under 6 months",
+      "path": "/short-term/",
+      "title": "2120 NE 54th St \u2014 short-term rooms in Ravenna, Seattle",
+      "description": "Single bedrooms in a 10-bedroom, 6-bath Ravenna house on leases of 3 to 5 months, from $1,000 a month with utilities at a flat $100 per person.",
+      "roomsOnly": true,
+      "premium": {
+        "room": 150,
+        "private": 200
+      },
+      "leaseNote": "Leases run from 3 to 5 months. A room on a short lease is $150 above the long-term rate, or $200 for a room with its own bathroom.",
+      "crossLink": "Staying under six months? The short-term site has the ten rooms on leases of 3 to 5 months."
+    }
+  ],
   "furnishing": {
     "included": [
       "Bed",

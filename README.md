@@ -77,29 +77,54 @@ Two things differ from the local server, because Pages serves static files only:
   so root-relative URLs need that prefix. CI passes it via `BASE_PATH`, taken
   from the repo's Pages settings.
 
-## The 2120 microsite
+## The 2120 microsites
 
 `sites/2120/` is a separate site for 2120 NE 54th St, whose ten bedrooms are
 let individually, in pairs, by the floor, or as a whole house — more detail
-than one listing card can carry. It runs on its own port:
+than one listing card can carry.
+
+The house is let on two terms, and each has a site of its own:
+
+| Term | Path | What it shows |
+| --- | --- | --- |
+| Long term, 6–12 months | `/` | Rooms at the standard rates, plus the pairs, whole floors and the whole house |
+| Short term, 3–5 months | `/short-term/` | Single rooms only, $150 above the long-term rate — $200 for a room with its own bathroom |
+
+Both come from one template. `data/property.json` holds a `terms` entry per
+site with its path, title, rent premium and copy; `sites/2120/render.ts` bakes
+one of them into the page, keeping the `<!--IF:bundles-->` blocks on the
+long-term site and the `<!--IF:rooms-only-->` ones on the short-term site, so
+neither ships the other's markup. Each links to the other once, in the footer.
+
+One server process serves both, on its own port:
 
 ```sh
 cd sites/2120 && bun run server.ts     # http://localhost:2120
+                                       # http://localhost:2120/short-term
 ```
 
 `deploy/reach-2120.service` runs it under systemd alongside the main site.
 
-It also publishes as part of the main static build, at `/2120` under the main
-site, so it has a link of its own without a second host or repo:
+They also publish as part of the main static build, under `/2120` on the main
+site, so they have links of their own without a second host or repo:
 
     https://danielluzhu.github.io/reach-homes/2120/
+    https://danielluzhu.github.io/reach-homes/2120/short-term/
 
 `sites/2120/build.ts` produces that output and is called by
 `scripts/build-static.ts`; it can also be run standalone into `sites/2120/dist`.
+Assets and `api/*.json` are written once and shared by both pages.
 
 Its rates are the source for the "Lease options" table on the main site's
 2120 listing; `data/listings.json` there mirrors them, so change a rate in
-`sites/2120/data/listings.json` and update the listing to match.
+`sites/2120/data/listings.json` and update the listing to match. The short-term
+premium is applied at render time and is not mirrored there.
+
+A combination's `separately` is the sum of its rooms' rents, and its `rent`
+comes off that by a fixed discount: $50 for a pair, $100 for a whole floor,
+$200 for the main and upper floors together, and $500 for the whole house. Room
+rents therefore move the combination rates too — recompute both when one
+changes, or the savings shown on each card stop being true.
 
 ## Availability sync
 

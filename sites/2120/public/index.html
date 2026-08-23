@@ -3,51 +3,75 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>2120 NE 54th St — rooms by the bedroom in Ravenna, Seattle</title>
-<meta name="description" content="A 10-bedroom, 6-bath house with two kitchens in Ravenna. Rent a single bedroom, a pair, a whole floor, or the entire house." />
+<!--HEAD-->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
 <!--HEADER-->
 
-<section class="hero">
-  <img src="/images/front.jpg" alt="" />
-  <div class="hero-scrim"></div>
-  <div class="hero-inner">
-    <p class="eyebrow">2120 NE 54th St &middot; Ravenna, Seattle</p>
-    <h1>Ten bedrooms, six baths, two kitchens — rented one room at a time.</h1>
-    <p>
-      Take a single bedroom from $800, pair up with a friend, claim a floor with its
-      own kitchen, or lease the whole house. Every room can be furnished free with a
-      bed and desk. Leases run 3 to 12 months, and utilities are a flat $100 per
-      person with internet included.
-    </p>
-    <div class="hero-actions">
-      <a class="btn btn-primary" href="#rooms">See the ten rooms</a>
-      <a class="btn btn-ghost" href="#groups">Whole floors &amp; house</a>
+<main>
+  <div class="detail-hero">
+    <img src="/images/front.jpg" alt="2120 NE 54th St, Seattle" />
+  </div>
+
+  <div class="detail-head">
+    <div>
+      <div class="neighborhood">Ravenna, Seattle</div>
+      <h1>2120 NE 54th St</h1>
+      <p class="detail-sub">Ten bedrooms, six baths, two kitchens &mdash; rented one room at a time</p>
+      <p class="address" data-address></p>
+    </div>
+    <div class="detail-price">
+      <div class="price" data-rent-range></div>
+      <div class="availability" id="availability"></div>
     </div>
   </div>
-</section>
 
-<section class="facts">
-  <div class="facts-inner">
-    <div class="fact"><span class="fact-num">10</span><span class="fact-key">Bedrooms</span></div>
-    <div class="fact"><span class="fact-num">6</span><span class="fact-key">Bathrooms</span></div>
-    <div class="fact"><span class="fact-num">2</span><span class="fact-key">Kitchens</span></div>
-    <div class="fact"><span class="fact-num">3</span><span class="fact-key">Floors</span></div>
-    <div class="fact"><span class="fact-num">$100</span><span class="fact-key">Utilities per person</span></div>
+  <div class="spec-row">
+    <div class="spec"><div class="spec-val">10 bd</div><div class="spec-key">Bedrooms</div></div>
+    <div class="spec"><div class="spec-val">6</div><div class="spec-key">Bathrooms</div></div>
+    <div class="spec"><div class="spec-val">2</div><div class="spec-key">Kitchens</div></div>
+    <div class="spec"><div class="spec-val">3,000 sqft</div><div class="spec-key">Size</div></div>
+    <div class="spec"><div class="spec-val" id="lease-spec"></div><div class="spec-key">Lease</div></div>
+    <div class="spec"><div class="spec-val">$100</div><div class="spec-key">Utilities per person</div></div>
   </div>
-</section>
 
-<main>
+  <!--IF:bundles-->
+  <p class="detail-summary">
+    Take a single bedroom from <span data-min-rent></span>, pair up with a friend, claim a
+    floor with its own kitchen, or lease the whole house. Every room can be furnished
+    free with a bed and desk. Leases run 6 to 12 months, and utilities are a flat $100
+    per person with internet included.
+  </p>
+  <!--END:bundles-->
+  <!--IF:rooms-only-->
+  <p class="detail-summary">
+    Take a single bedroom from <span data-min-rent></span> on a lease of 3 to 5 months.
+    Every room can be furnished free with a bed and desk, and utilities are a flat $100
+    per person with internet included. Pairs, whole floors and the entire house are
+    let on the long-term site, from six months up.
+  </p>
+  <!--END:rooms-only-->
+
+  <div class="detail-actions">
+    <a class="btn btn-primary" href="#rooms">See the ten rooms</a>
+    <!--IF:bundles--><a class="btn btn-secondary" href="#groups">Whole floors &amp; house</a><!--END:bundles-->
+    <a class="btn btn-secondary" href="#inquire">Inquire</a>
+  </div>
+
   <section class="section" id="rooms">
     <div class="section-heading">
       <h2>Rent a single bedroom</h2>
-      <p>Ten rooms across three floors, with the pairs and whole-floor rates alongside them. Any room can be furnished free with a bed and desk.</p>
+      <!--IF:bundles--><p>Ten rooms across three floors, with the pairs and whole-floor rates alongside them. Any room can be furnished free with a bed and desk.</p><!--END:bundles-->
+      <!--IF:rooms-only--><p>Ten rooms across three floors, on a lease of 3 to 5 months. Any room can be furnished free with a bed and desk.</p><!--END:rooms-only-->
     </div>
     <div id="floors"></div>
   </section>
 
+  <!--IF:bundles-->
   <section class="section" id="groups">
     <div class="section-heading">
       <h2>Take more than one floor</h2>
@@ -55,11 +79,12 @@
     </div>
     <div class="grid" id="bundle-grid"></div>
   </section>
+  <!--END:bundles-->
 
   <section class="section" id="location">
     <div class="section-heading">
       <h2>Where it is</h2>
-      <p id="address-line"></p>
+      <p data-address></p>
     </div>
 
     <div class="location-layout">
@@ -81,12 +106,12 @@
   <section class="section" id="house">
     <div class="section-heading">
       <h2>How the house is laid out</h2>
-      <p>Which bathrooms are shared, and where the kitchens are.</p>
+      <p>Every room, the floor it sits on, and the bathroom that comes with it.</p>
     </div>
     <div class="table-scroll">
       <table class="rates">
         <thead>
-          <tr><th>Floor</th><th>Rooms</th><th>Bathrooms</th><th>Shared space</th><th class="num">Whole floor</th></tr>
+          <tr><th>Room</th><th>Floor</th><th>Bathroom</th><th class="num">Rent</th></tr>
         </thead>
         <tbody id="layout-rows"></tbody>
       </table>
@@ -117,7 +142,7 @@
         <a id="phone-line" href="#"></a>
       </p>
     </div>
-    <div class="hero-actions">
+    <div class="cta-actions">
       <a class="btn btn-primary" id="inquire-link" href="#">Inquire about a room</a>
       <a class="btn btn-secondary" id="call-link" href="#">Call or text</a>
     </div>
@@ -132,8 +157,13 @@ Promise.all([
   fetch("/api/listings").then((r) => r.json()),
   fetch("/api/property").then((r) => r.json()),
 ]).then(([listings, property]) => {
+  // Which of the two sites this is: the long-term one, or the short-term one
+  // where only single rooms are let, at a premium. TERM_ID comes from the head.
+  const term = property.terms.find((t) => t.id === TERM_ID);
   const rooms = listings.filter((l) => l.kind === "room");
   const bundles = listings.filter((l) => l.kind === "bundle");
+  // Only the combinations that cross floors; the rest sit with their rooms.
+  const multiFloor = bundles.filter((b) => b.levelId.length > 1);
 
   // Rooms, grouped by the floor they sit on.
   document.getElementById("floors").innerHTML = property.levels
@@ -141,9 +171,11 @@ Promise.all([
       const onFloor = rooms.filter((r) => r.levelId === lvl.id);
       // Every combination confined to this floor: its pairs, then the whole
       // floor last, so the options read smallest to largest across the row.
-      const combos = bundles
-        .filter((b) => b.levelId === lvl.id)
-        .sort((a, b) => a.rooms.length - b.rooms.length);
+      const combos = term.roomsOnly
+        ? []
+        : bundles
+            .filter((b) => b.levelId === lvl.id)
+            .sort((a, b) => a.rooms.length - b.rooms.length);
       return `
         <div class="floor">
           <div class="floor-head">
@@ -151,32 +183,52 @@ Promise.all([
             <span class="floor-note">${escapeHtml(lvl.note)}</span>
           </div>
           <div class="grid">
-            ${onFloor.map(roomCard).join("")}
+            ${onFloor.map((r) => roomCard(r, term)).join("")}
             ${combos.map((b) => comboCard(b, onFloor.length)).join("")}
           </div>
         </div>`;
     })
     .join("");
 
-  // Only the combinations that cross floors; the rest sit with their rooms.
-  const multiFloor = bundles.filter((b) => b.levelId.length > 1);
-  document.getElementById("bundle-grid").innerHTML = multiFloor.map(bundleCard).join("");
+  // The section holding these only exists on the long-term site.
+  if (!term.roomsOnly) {
+    document.getElementById("bundle-grid").innerHTML = multiFloor.map(bundleCard).join("");
+  }
 
+  // A row per room, in floor order, at this site's rents.
   document.getElementById("layout-rows").innerHTML = property.levels
-    .map((lvl) => {
-      const onFloor = rooms.filter((r) => r.levelId === lvl.id);
-      const whole = bundles.find((b) => b.levelId === lvl.id && b.rooms.length === onFloor.length);
-      return `<tr>
+    .map((lvl) =>
+      rooms
+        .filter((r) => r.levelId === lvl.id)
+        .map(
+          (r) => `<tr>
+        <td>${escapeHtml(r.label)}</td>
         <td>${escapeHtml(lvl.name)}</td>
-        <td>${onFloor.map((r) => escapeHtml(r.label)).join(", ")}</td>
-        <td>${escapeHtml(bathSummary(onFloor))}</td>
-        <td>${lvl.shared.length ? lvl.shared.map(escapeHtml).join(", ") : "—"}</td>
-        <td class="num">${whole ? money(whole.rent) : "—"}</td>
-      </tr>`;
-    })
+        <td${r.private ? ' class="private"' : ""}>${escapeHtml(bathShort(r))}</td>
+        <td class="num">${money(roomRent(r, term))}</td>
+      </tr>`,
+        )
+        .join(""),
+    )
     .join("");
 
-  document.getElementById("address-line").textContent = property.address;
+  // The opening rate quoted in the summary, at this site's rents.
+  const cheapest = Math.min(...rooms.map((r) => roomRent(r, term)));
+  document.querySelectorAll("[data-min-rent]").forEach((el) => { el.textContent = money(cheapest); });
+
+  // The headline range runs from the cheapest room to the largest thing on
+  // offer: the whole house where it is let, the dearest room where it isn't.
+  const dearest = term.roomsOnly
+    ? Math.max(...rooms.map((r) => roomRent(r, term)))
+    : Math.max(...bundles.map((b) => b.rent));
+  document.querySelectorAll("[data-rent-range]").forEach((el) => {
+    el.innerHTML = `${escapeHtml(money(cheapest))}\u2013${escapeHtml(money(dearest))}<small>/mo</small>`;
+  });
+
+  document.getElementById("availability").textContent = property.availableLabel;
+  document.getElementById("lease-spec").textContent = term.months;
+
+  document.querySelectorAll("[data-address]").forEach((el) => { el.textContent = property.address; });
   document.getElementById("map").src =
     "https://maps.google.com/maps?q=" + encodeURIComponent(property.mapQuery) + "&z=15&output=embed";
   document.getElementById("maps-link").href =
@@ -200,7 +252,7 @@ Promise.all([
     .join("");
 
   document.getElementById("utilities-note").textContent = property.utilitiesNote;
-  document.getElementById("lease-note").textContent = property.leaseTerms.note;
+  document.getElementById("lease-note").textContent = term.leaseNote;
   document.getElementById("furnishing-note").textContent = property.furnishing.note;
   const { email, phone, phoneDisplay } = property.contact;
   const mailto = "mailto:" + email + "?subject=" + encodeURIComponent("Inquiry — 2120 NE 54th St");

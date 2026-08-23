@@ -1,16 +1,21 @@
 /**
- * Builds a static copy of the 2120 site.
+ * Builds a static copy of the 2120 sites.
  *
- * The server renders the page and serves its JSON at request time; a static
+ * The server renders the pages and serves their JSON at request time; a static
  * host does neither, so both are done here. Exported rather than run directly
  * so the main site's build can place this at /2120 within its own output, and
  * the two publish together.
  *
  *   BASE_PATH=/reach-homes/2120 bun build.ts   # standalone, into ./dist
+ *
+ * There are two sites, one per lease term, and both are written here: the
+ * long-term one at the root and the short-term one at /short-term. They share
+ * every asset, so only the HTML is written twice.
  */
 
 import { file, write } from "bun";
 import { mkdir, rm, cp } from "node:fs/promises";
+import { renderSite, type Term } from "./render";
 
 const ROOT = import.meta.dir;
 
@@ -36,15 +41,15 @@ export async function build2120(outDir: string, base: string) {
     return out;
   };
 
-  const [page, header, footer] = await Promise.all([
-    file(`${publicDir}/index.html`).text(),
-    file(`${publicDir}/partials/header.html`).text(),
-    file(`${publicDir}/partials/footer.html`).text(),
-  ]);
-  await write(
-    `${outDir}/index.html`,
-    rewrite(page.replace("<!--HEADER-->", header).replace("<!--FOOTER-->", footer)),
-  );
+  const property = await file(`${dataDir}/property.json`).json();
+  const terms: Term[] = property.terms;
+  for (const term of terms) {
+    // "/" lands at the root, "/short-term/" in a directory of its own; both
+    // reach the shared assets and JSON by the same root-relative paths.
+    const dir = `${outDir}${term.path}`.replace(/\/+$/, "");
+    await mkdir(dir, { recursive: true });
+    await write(`${dir}/index.html`, rewrite(await renderSite(term, terms)));
+  }
 
   // The in-page anchors the header links to are relative to the page, so the
   // rewrite above must not have touched them; only site.js needs it.
@@ -52,7 +57,7 @@ export async function build2120(outDir: string, base: string) {
   await write(`${outDir}/styles.css`, rewrite(await file(`${outDir}/styles.css`).text()));
 
   await write(`${outDir}/api/listings.json`, JSON.stringify(await file(`${dataDir}/listings.json`).json()));
-  await write(`${outDir}/api/property.json`, JSON.stringify(await file(`${dataDir}/property.json`).json()));
+  await write(`${outDir}/api/property.json`, JSON.stringify(property));
 
   return outDir;
 }

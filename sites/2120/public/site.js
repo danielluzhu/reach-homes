@@ -8,23 +8,29 @@ function escapeHtml(s) {
   })[c]);
 }
 
-/** "2 shared, 1 private" — how the bathrooms on a floor are arranged. */
-function bathSummary(rooms) {
-  const priv = rooms.filter((r) => r.private).length;
-  // Rooms sharing a bath are paired, so each pair accounts for one bathroom.
-  const shared = Math.ceil((rooms.length - priv) / 2);
-  const parts = [];
-  if (shared) parts.push(`${shared} shared`);
-  if (priv) parts.push(`${priv} private`);
-  return parts.join(", ") || "—";
+/**
+ * "Shared with L2", or "Private" — the room's bathroom, short enough for a
+ * table cell. The cards carry the full phrase.
+ */
+function bathShort(r) {
+  return r.bath.replace(/\s*bathroom\s*/i, " ").trim();
 }
 
-function roomCard(r) {
-  // Only some rooms have been photographed. Showing a different room's photo
-  // in the gap would misrepresent what you are renting, so those cards get a
-  // labelled placeholder instead.
+/**
+ * What a room rents for on the selected term. Short stays carry a premium over
+ * the long-term rate, and a room with its own bathroom carries a larger one.
+ */
+function roomRent(r, term) {
+  const premium = term.premium ?? {};
+  return r.rent + (r.private ? premium.private ?? 0 : premium.room ?? 0);
+}
+
+function roomCard(r, term) {
+  // Only some rooms have been photographed. An unphotographed room gets a
+  // labelled placeholder rather than a stand-in, unless the stand-in is a room
+  // of the same layout — then it is shown and said so, on the caption below.
   const photo = r.photo
-    ? `<div class="photo"><img src="/images/${escapeHtml(r.photo)}" alt="${escapeHtml(r.label)}" loading="lazy" /></div>`
+    ? `<div class="photo"><img src="/images/${escapeHtml(r.photo)}" alt="${escapeHtml(r.photoOf || r.label)}" loading="lazy" /></div>`
     : `<div class="photo photo-none"><span>Photo on request</span></div>`;
   return `
     <article class="card">
@@ -32,8 +38,9 @@ function roomCard(r) {
       <div class="card-body">
         <h4>${escapeHtml(r.label)}</h4>
         <span class="tag${r.private ? " tag-private" : ""}">${escapeHtml(r.bath)}</span>
+        ${r.photoOf ? `<span class="photo-note">Photo of ${escapeHtml(r.photoOf)} — ${escapeHtml(r.label)} has the same layout</span>` : ""}
         <div class="price-row">
-          <span class="price">${money(r.rent)}<small>/mo</small></span>
+          <span class="price">${money(roomRent(r, term))}<small>/mo</small></span>
         </div>
       </div>
     </article>`;

@@ -1,5 +1,13 @@
+/*
+ * The 2120 microsite wears the main Reach Homes look: the tokens, header,
+ * footer, buttons, cards and tables below are the ones from the main site's
+ * stylesheet, so this page and the 2120 listing at /listing?id=2120-ne-54th-st
+ * read as the same site. Only what the microsite has and the main site doesn't
+ * — floors of rooms, the whole-floor cards, the map and its walk times — is
+ * styled here on its own, and it borrows those same pieces to do it.
+ */
+
 :root {
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
   --brand-900: #2b0a12;
   --brand-800: #4d1122;
   --brand-700: #7b1e35;
@@ -11,27 +19,24 @@
   --card: #ffffff;
   --border: #ece5e6;
   --accent: #c2761b;
-  --radius: 14px;
-  --shadow-sm: 0 1px 2px rgba(43, 10, 18, 0.05);
-  --shadow: 0 1px 2px rgba(43, 10, 18, 0.05), 0 10px 28px rgba(43, 10, 18, 0.08);
-  --shadow-lg: 0 2px 4px rgba(43, 10, 18, 0.06), 0 18px 48px rgba(43, 10, 18, 0.13);
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(43, 10, 18, 0.06), 0 8px 24px rgba(43, 10, 18, 0.07);
 }
-
-::selection { background: var(--brand-100); color: var(--brand-900); }
-
-html { scroll-behavior: smooth; }
 
 * { box-sizing: border-box; }
 
-h1, h2, h3, h4, strong, b, .btn, button { font-weight: 400; }
-
-h1, h2, .price, .fact-num, .brand {
-  font-family: var(--font-display);
-  letter-spacing: -0.015em;
+/* No bold anywhere: neutralize the user-agent defaults as well as our own
+   rules, so weight never carries emphasis on its own. */
+h1, h2, h3, h4, h5, h6,
+strong, b, th, optgroup, .btn, button {
+  font-weight: 400;
 }
+
+html { scroll-behavior: smooth; }
 
 html, body {
   margin: 0;
+  padding: 0;
   background: var(--paper);
   color: var(--ink);
   font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
@@ -39,224 +44,285 @@ html, body {
 }
 
 a { color: var(--brand-700); }
+
 img { max-width: 100%; display: block; }
 
-.site-header { position: sticky; top: 0; z-index: 10; background: var(--brand-900); color: #fff; }
-.nav-wrap {
-  max-width: 1080px; margin: 0 auto; padding: 14px 24px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-}
-.brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-size: 1.05rem; }
-.brand-mark {
-  background: var(--brand-600); border-radius: 8px; padding: 4px 9px;
-  font-size: 0.95rem; letter-spacing: 0.02em;
-}
-nav.links { display: flex; gap: 4px; flex-wrap: wrap; }
-nav.links a {
-  color: rgba(255,255,255,0.82); text-decoration: none; padding: 8px 13px;
-  border-radius: 999px; font-size: 0.92rem;
-}
-nav.links a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+::selection { background: var(--brand-100); color: var(--brand-900); }
 
-.hero { position: relative; color: #fff; overflow: hidden; display: flex; align-items: center; min-height: min(62vh, 520px); }
-.hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-.hero-scrim {
-  position: absolute; inset: 0; z-index: 0;
-  background:
-    linear-gradient(100deg, rgba(43,10,18,0.95) 0%, rgba(43,10,18,0.78) 46%, rgba(43,10,18,0.28) 100%),
-    radial-gradient(120% 90% at 15% 40%, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 60%);
+/* ---- Header and footer ---- */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--brand-900);
+  color: #fff;
 }
-.hero-inner { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 72px 24px 64px; }
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.73rem;
-  color: rgba(255,255,255,0.72);
-  margin: 0 0 18px;
-  display: inline-flex;
-  padding: 5px 12px;
-  border: 1px solid rgba(255,255,255,0.24);
+
+.nav-wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  color: #fff;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+nav.links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+nav.links a {
+  color: rgba(255,255,255,0.82);
+  text-decoration: none;
+  padding: 8px 14px;
   border-radius: 999px;
-  backdrop-filter: blur(3px);
+  font-size: 0.95rem;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.hero h1 {
-  font-size: clamp(2.1rem, 4.8vw, 3.35rem);
-  line-height: 1.08;
-  margin: 0 0 18px;
-  max-width: 20ch;
-  text-wrap: balance;
+
+nav.links a:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.site-footer {
+  background: var(--brand-900);
+  color: rgba(255,255,255,0.75);
+  padding: 28px 24px;
+  text-align: center;
+  font-size: 0.85rem;
 }
-.hero p { font-size: 1.08rem; line-height: 1.62; color: rgba(255,255,255,0.88); max-width: 54ch; margin: 0 0 28px; }
-.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.site-footer p { margin: 4px 0; }
+.site-footer a { color: rgba(255,255,255,0.9); }
+.site-footer .fine { opacity: 0.6; font-size: 0.78rem; margin-bottom: 0; }
+
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* ---- Buttons ---- */
 
 .btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 11px 20px; border-radius: 999px; text-decoration: none;
-  border: 1px solid transparent; cursor: pointer; font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.05s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
-.btn { transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease; }
+
 .btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--brand-700); color: #fff; box-shadow: var(--shadow-sm); }
-.btn-primary:hover { background: var(--brand-600); box-shadow: var(--shadow); }
-.btn-ghost { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.45); }
-.btn-ghost:hover { background: rgba(255,255,255,0.2); }
-.btn-secondary { background: var(--card); color: var(--ink); border-color: var(--border); }
+
+.btn-primary { background: var(--brand-700); color: #fff; }
+.btn-primary:hover { background: var(--brand-600); }
+
+.btn-secondary {
+  background: #fff;
+  color: var(--brand-800);
+  border-color: var(--border);
+}
 .btn-secondary:hover { border-color: var(--brand-700); }
 
-.facts {
-  background: linear-gradient(180deg, var(--brand-800) 0%, #45101f 100%);
-  color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-}
-.facts-inner {
-  max-width: 1080px; margin: 0 auto; padding: 32px 24px;
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 22px;
-}
-.fact { display: flex; flex-direction: column; gap: 3px; }
-.fact + .fact { padding-left: 22px; border-left: 1px solid rgba(255,255,255,0.18); }
-.fact-num { font-size: clamp(1.4rem, 2.2vw, 1.8rem); line-height: 1.1; }
-.fact-key { font-size: 0.84rem; color: rgba(255,255,255,0.76); }
+.btn-block { width: 100%; }
 
-main { max-width: 1080px; margin: 0 auto; padding: 44px 24px 80px; }
-.section-heading {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 16px; flex-wrap: wrap;
-  margin: 0 0 22px; padding-bottom: 14px;
+/* ---- The property, in the shape the main site's listing page uses ---- */
+
+.detail-hero {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 21 / 8;
+  background: var(--brand-100);
+  margin-bottom: 24px;
+}
+.detail-hero img { width: 100%; height: 100%; object-fit: cover; }
+
+.detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.detail-head h1 { margin: 4px 0 6px; font-size: 1.9rem; }
+/* Plain, as it renders on the main site's listing page, where the eyebrow
+   styling is scoped to the listing cards and doesn't reach this line. */
+.detail-head .neighborhood { color: var(--ink); }
+.detail-sub { margin: 0 0 4px; color: var(--ink); font-size: 1.02rem; }
+.detail-head .address { color: var(--muted); font-size: 0.92rem; margin: 0; }
+
+.detail-price { text-align: right; }
+.detail-price .price { font-size: 1.6rem; }
+.price small { color: var(--muted); font-size: 0.8rem; }
+
+.availability {
+  font-size: 0.82rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--brand-100);
+  color: var(--brand-800);
+  margin-top: 6px;
+  display: inline-block;
+}
+
+.spec-row {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin: 26px 0;
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
-.section-heading h2 { font-size: clamp(1.5rem, 2.4vw, 1.9rem); margin: 0; }
-.section-heading p { color: var(--muted); margin: 0; font-size: 0.95rem; }
-.section { margin-top: 68px; scroll-margin-top: 88px; }
+.spec-val { font-size: 1.3rem; color: var(--brand-800); }
+.spec-key { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
 
-.floor { margin-top: 34px; }
-.floor-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-.floor-head h3 {
-  margin: 0; font-size: 1.2rem;
-  font-family: var(--font-display);
-}
-/* A small rule ties the floor label to its row of rooms. */
-.floor-head::after {
-  content: ""; flex: 1; height: 1px; min-width: 24px;
-  background: var(--border);
-}
-.floor-head .floor-note { color: var(--muted); font-size: 0.92rem; }
+.detail-summary { font-size: 1.05rem; max-width: 72ch; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.detail-actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 24px 0 8px; }
+
+/* ---- Sections ---- */
+
+.section { margin-top: 44px; scroll-margin-top: 76px; }
+
+.section-heading { margin: 0 0 18px; }
+
+.section-heading h2 {
+  font-size: 1.15rem;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--brand-100);
+}
+
+.section-heading p { color: var(--muted); margin: 0; font-size: 0.95rem; max-width: 78ch; }
+
+/* ---- Rooms, by the floor they sit on ---- */
+
+.floor { margin-top: 26px; }
+
+.floor-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.floor-head h3 { margin: 0; font-size: 1.05rem; }
+.floor-head .floor-note { color: var(--muted); font-size: 0.9rem; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
 
 .card {
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-  overflow: hidden; display: flex; flex-direction: column;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
 }
-.card:hover { border-color: var(--brand-600); box-shadow: var(--shadow-lg); transform: translateY(-3px); }
-.card .photo { overflow: hidden; }
-.card .photo img { transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.3, 1); }
-.card:hover .photo img { transform: scale(1.05); }
-.card .photo { aspect-ratio: 4 / 3; background: var(--brand-100); }
+
+.card .photo {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--brand-100);
+}
 .card .photo img { width: 100%; height: 100%; object-fit: cover; }
+
+/* A room nobody has photographed yet: a labelled panel, so the gap reads as a
+   gap rather than as a room that looks like the one beside it. */
 .photo-none {
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: repeating-linear-gradient(135deg, var(--brand-100), var(--brand-100) 10px, #f7e2e7 10px, #f7e2e7 20px);
-  color: var(--brand-800); font-size: 0.85rem;
+  color: var(--brand-800);
+  font-size: 0.85rem;
 }
-.card-body { padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 9px; flex: 1; }
-.card h4 { margin: 0; font-size: 1.18rem; font-family: var(--font-display); }
+
+.card-body {
+  padding: 18px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.card h4 { margin: 0; font-size: 1.15rem; }
 .card .bath { color: var(--muted); font-size: 0.9rem; }
+
+/* Whose room the photo is of, where it isn't this one's. */
+.photo-note { color: var(--muted); font-size: 0.8rem; margin-top: -4px; }
+
 .tag {
-  align-self: flex-start; font-size: 0.76rem; padding: 3px 9px; border-radius: 999px;
-  background: var(--brand-100); color: var(--brand-800);
+  align-self: flex-start;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--brand-100);
+  color: var(--brand-800);
 }
 .tag-private { background: #e7f6ec; color: #1c6b3a; }
-.price-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 6px; }
-.price { font-size: 1.42rem; }
-.price small { color: var(--muted); font-size: 0.78rem; }
+
+.price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+  flex-wrap: wrap;
+}
+.price { font-size: 1.15rem; }
 .saves { font-size: 0.8rem; color: var(--brand-700); }
 .strike { color: var(--muted); text-decoration: line-through; font-size: 0.85rem; }
 
-table.rates { width: 100%; border-collapse: collapse; margin-top: 8px; }
-table.rates th, table.rates td { text-align: left; padding: 14px 14px; border-bottom: 1px solid var(--border); }
-table.rates tbody tr { transition: background 0.15s ease; }
-table.rates tbody tr:hover { background: var(--brand-100); }
-table.rates th { background: var(--brand-100); color: var(--brand-800); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
-table.rates td.num { text-align: right; white-space: nowrap; }
-.table-scroll { overflow-x: auto; }
-
-.note-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-
-.note-card {
-  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 24px 26px; margin-top: 22px; box-shadow: var(--shadow-sm);
-}
-.note-card h3 { margin: 0 0 8px; font-size: 1.12rem; font-family: var(--font-display); }
-.note-card p { margin: 0; color: var(--muted); }
-
-.cta {
-  margin-top: 68px;
-  background: linear-gradient(135deg, var(--brand-900) 0%, #43101f 100%);
-  color: #fff; box-shadow: var(--shadow-lg);
-  border-radius: var(--radius); padding: 30px; display: flex; gap: 24px;
-  align-items: center; justify-content: space-between; flex-wrap: wrap;
-  scroll-margin-top: 80px;
-}
-.cta > :first-child { flex: 1 1 340px; }
-.cta h3 { margin: 0 0 8px; font-size: 1.4rem; font-family: var(--font-display); }
-.cta p { margin: 0; color: rgba(255,255,255,0.82); font-size: 0.95rem; }
-
-.site-footer { background: var(--brand-900); color: rgba(255,255,255,0.8); text-align: center; padding: 30px 24px; font-size: 0.92rem; }
-.site-footer p { margin: 4px 0; }
-.site-footer .fine { color: rgba(255,255,255,0.55); font-size: 0.84rem; }
-
-@media (max-width: 860px) {
-  .facts-inner { grid-template-columns: repeat(2, 1fr); gap: 18px; }
-  .fact + .fact { padding-left: 0; border-left: 0; }
-  .fact:nth-child(even) { padding-left: 18px; border-left: 1px solid rgba(255,255,255,0.18); }
-}
-@media (max-width: 560px) {
-  .hero { min-height: 0; }
-  .hero-actions .btn { width: 100%; }
-  .facts-inner { grid-template-columns: 1fr; }
-  .fact:nth-child(even) { padding-left: 0; border-left: 0; }
-}
-
-
-/* --- "Take the whole floor" card, inline with that floor's rooms ------------- */
-
-.card-whole {
-  border-color: var(--brand-600);
-  background: linear-gradient(180deg, var(--brand-100) 0%, var(--card) 55%);
-}
-
-/* No photo on this card, so its body carries the height the room cards get
-   from their image. */
-.card-whole .card-body { justify-content: center; min-height: 190px; }
-
+/* The pair and whole-floor cards sitting in with that floor's rooms: no photo,
+   so the body carries the height the room cards get from their image. */
+.card-whole { border-color: var(--brand-600); background: var(--brand-100); }
+.card-whole .card-body { justify-content: center; min-height: 180px; }
 .tag-whole { background: var(--brand-600); color: #fff; }
-/* The whole-floor option reads a step above the pairs beside it. */
 .card-floor { border-color: var(--brand-700); }
 .card-floor .tag-whole { background: var(--brand-800); }
 
-
-.contact-lines { margin-top: 12px !important; font-size: 0.95rem; }
-.contact-lines a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
-.contact-lines a:hover { color: var(--brand-100); }
-.site-footer a { color: rgba(255,255,255,0.9); }
-
-
-/* --- Where it is ------------------------------------------------------------ */
+/* ---- Where it is ---- */
 
 .location-layout {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
-  gap: 20px;
-  margin-top: 20px;
+  gap: 24px;
   align-items: stretch;
 }
 
 .map-frame {
   border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: var(--shadow);
   min-height: 340px;
   background: var(--brand-100);
 }
@@ -264,7 +330,6 @@ table.rates td.num { text-align: right; white-space: nowrap; }
 .map-frame iframe { width: 100%; height: 100%; min-height: 340px; border: 0; display: block; }
 
 .nearby-col { display: flex; flex-direction: column; gap: 12px; }
-.btn-block { width: 100%; }
 
 .nearby { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 
@@ -272,29 +337,126 @@ table.rates td.num { text-align: right; white-space: nowrap; }
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.15s ease;
 }
-.nearby li:hover { border-color: var(--brand-600); box-shadow: var(--shadow); transform: translateY(-2px); }
+.nearby li:hover { border-color: var(--brand-700); }
 
-.nearby li a {
-  display: block;
-  padding: 15px 17px;
-  color: inherit;
-  text-decoration: none;
-}
+.nearby li a { display: block; padding: 15px 17px; color: inherit; text-decoration: none; }
 
-.nearby-cta {
-  display: inline-block;
-  margin-top: 8px;
-  font-size: 0.84rem;
-  color: var(--brand-700);
-}
-.nearby li:hover .nearby-cta { text-decoration: underline; text-underline-offset: 3px; }
-
-.nearby-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-family: var(--font-display); font-size: 1.05rem; }
+.nearby-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 1rem; }
 .nearby-dist { color: var(--brand-700); font-size: 0.9rem; white-space: nowrap; }
 .nearby li p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
 
+.nearby-cta { display: inline-block; margin-top: 8px; font-size: 0.84rem; color: var(--brand-700); }
+.nearby li:hover .nearby-cta { text-decoration: underline; text-underline-offset: 3px; }
+
 @media (max-width: 780px) {
   .location-layout { grid-template-columns: 1fr; }
+}
+
+/* ---- How the house is laid out ---- */
+
+.table-scroll { overflow-x: auto; }
+
+table.rates {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.93rem;
+  min-width: 380px;
+}
+table.rates th {
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--brand-100);
+  color: var(--brand-800);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+table.rates th:first-child { border-radius: 8px 0 0 8px; }
+table.rates th:last-child { border-radius: 0 8px 8px 0; }
+table.rates td { padding: 11px 14px; border-bottom: 1px solid var(--border); }
+table.rates td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* The same green the card's tag uses, so a private bath reads the same in both. */
+table.rates td.private { color: #1c6b3a; }
+
+.note-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.note-card { background: var(--brand-100); border-radius: var(--radius); padding: 20px; }
+.note-card h3 { margin: 0 0 8px; font-size: 1rem; color: var(--brand-800); }
+.note-card p { margin: 0; color: var(--brand-900); font-size: 0.92rem; opacity: 0.85; }
+
+/* ---- Inquire ---- */
+
+.cta {
+  margin-top: 48px;
+  background: var(--brand-900);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  scroll-margin-top: 76px;
+}
+
+/* Text column flexes; the buttons keep their intrinsic width and stay on the
+   right, instead of the pair overflowing by a few px and wrapping. */
+.cta > :first-child { flex: 1 1 340px; }
+.cta-actions { flex: 0 0 auto; display: flex; gap: 10px; flex-wrap: wrap; }
+
+.cta h3 { margin: 0 0 6px; font-size: 1.2rem; }
+.cta p { margin: 0; color: rgba(255,255,255,0.82); max-width: 60ch; font-size: 0.95rem; }
+.cta .btn-secondary { background: transparent; color: #fff; border-color: rgba(255,255,255,0.4); }
+.cta .btn-secondary:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
+
+.contact-lines { margin-top: 12px !important; font-size: 0.95rem; }
+.contact-lines a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.contact-lines a:hover { color: var(--brand-100); }
+
+/* ---- Link to the other of the two sites, in the footer ---- */
+
+.cross-site { margin: 10px 0 !important; }
+.cross-site a { color: rgba(255,255,255,0.9); text-decoration: underline; text-underline-offset: 3px; }
+.cross-site a:hover { color: var(--brand-100); }
+
+/* --- Header on small screens ------------------------------------------------
+   The links don't fit beside the wordmark on a phone; without this the row
+   overflows and the last of them is pushed off-screen. Wrap to a second row so
+   every link stays reachable, as the main site's header does. */
+
+@media (max-width: 720px) {
+  .nav-wrap {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  nav.links {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  nav.links a {
+    white-space: nowrap;
+    padding: 7px 11px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .detail-price { text-align: left; }
+  .spec-row { gap: 24px; }
+  .detail-actions .btn { width: 100%; }
 }

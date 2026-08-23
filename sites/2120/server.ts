@@ -4,26 +4,21 @@
  * main Reach Homes server.
  *
  *   PORT=2120 bun run server.ts
+ *
+ * It serves two sites off that port, one per lease term: the long-term site at
+ * "/" and the short-term one at "/short-term". Both come from the same
+ * template, and data/property.json says which paths they answer on.
  */
 
 import { file } from "bun";
+import { renderSite, type Term } from "./render";
 
 const PORT = Number(process.env.PORT ?? 2120);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
 const DATA_DIR = `${import.meta.dir}/data`;
 
-const PAGE_ROUTES: Record<string, string> = {
-  "/": "index.html",
-};
-
-async function renderPage(fileName: string) {
-  const [page, header, footer] = await Promise.all([
-    file(`${PUBLIC_DIR}/${fileName}`).text(),
-    file(`${PUBLIC_DIR}/partials/header.html`).text(),
-    file(`${PUBLIC_DIR}/partials/footer.html`).text(),
-  ]);
-  const html = page.replace("<!--HEADER-->", header).replace("<!--FOOTER-->", footer);
-  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+async function terms(): Promise<Term[]> {
+  return (await file(`${DATA_DIR}/property.json`).json()).terms;
 }
 
 function json(data: unknown) {
@@ -40,7 +35,15 @@ const server = Bun.serve({
     if (pathname === "/api/listings") return json(await file(`${DATA_DIR}/listings.json`).json());
     if (pathname === "/api/property") return json(await file(`${DATA_DIR}/property.json`).json());
 
-    if (pathname in PAGE_ROUTES) return renderPage(PAGE_ROUTES[pathname]);
+    // "/short-term" and "/short-term/" are the same site.
+    const route = pathname.replace(/\/+$/, "") || "/";
+    const all = await terms();
+    const term = all.find((t) => t.path.replace(/\/+$/, "") === (route === "/" ? "" : route));
+    if (term) {
+      return new Response(await renderSite(term, all), {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
 
     const staticFile = file(`${PUBLIC_DIR}${pathname}`);
     if (await staticFile.exists()) return new Response(staticFile);

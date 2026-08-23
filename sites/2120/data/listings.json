@@ -9,7 +9,7 @@
       "L1"
     ],
     "beds": 1,
-    "rent": 800,
+    "rent": 850,
     "bath": "Shared bathroom with L2",
     "private": false,
     "photo": "l1.jpg"
@@ -24,7 +24,7 @@
       "L2"
     ],
     "beds": 1,
-    "rent": 800,
+    "rent": 850,
     "bath": "Shared bathroom with L1",
     "private": false,
     "photo": "l2.jpg"
@@ -39,10 +39,11 @@
       "L3"
     ],
     "beds": 1,
-    "rent": 1000,
+    "rent": 1100,
     "bath": "Private bathroom",
     "private": true,
-    "photo": null
+    "photo": "m5.jpg",
+    "photoOf": "M5"
   },
   {
     "id": "m1",
@@ -54,7 +55,7 @@
       "M1"
     ],
     "beds": 1,
-    "rent": 825,
+    "rent": 875,
     "bath": "Shared bathroom with M2",
     "private": false,
     "photo": "m1.jpg"
@@ -69,7 +70,7 @@
       "M2"
     ],
     "beds": 1,
-    "rent": 825,
+    "rent": 875,
     "bath": "Shared bathroom with M1",
     "private": false,
     "photo": "m2.jpg"
@@ -84,7 +85,7 @@
       "M3"
     ],
     "beds": 1,
-    "rent": 850,
+    "rent": 900,
     "bath": "Shared bathroom with M4",
     "private": false,
     "photo": "m3.jpg"
@@ -99,7 +100,7 @@
       "M4"
     ],
     "beds": 1,
-    "rent": 850,
+    "rent": 900,
     "bath": "Shared bathroom with M3",
     "private": false,
     "photo": "m4.jpg"
@@ -114,10 +115,10 @@
       "M5"
     ],
     "beds": 1,
-    "rent": 1000,
+    "rent": 1150,
     "bath": "Private bathroom",
     "private": true,
-    "photo": null
+    "photo": "m5.jpg"
   },
   {
     "id": "u1",
@@ -129,7 +130,7 @@
       "U1"
     ],
     "beds": 1,
-    "rent": 1000,
+    "rent": 1100,
     "bath": "Shared bathroom with U2",
     "private": false,
     "photo": "u.jpg"
@@ -144,7 +145,7 @@
       "U2"
     ],
     "beds": 1,
-    "rent": 900,
+    "rent": 950,
     "bath": "Shared bathroom with U1",
     "private": false,
     "photo": "u2.jpg"
@@ -160,8 +161,8 @@
       "L2"
     ],
     "beds": 2,
-    "rent": 1550,
-    "separately": 1600,
+    "rent": 1650,
+    "separately": 1700,
     "blurb": "Two lower-level bedrooms sharing a bathroom, with the lower living room and kitchen.",
     "photo": "entry.jpg"
   },
@@ -177,8 +178,8 @@
       "L3"
     ],
     "beds": 3,
-    "rent": 2500,
-    "separately": 2600,
+    "rent": 2700,
+    "separately": 2800,
     "blurb": "The whole lower level: three bedrooms, two bathrooms, and a living room and kitchen of its own.",
     "photo": "laundry.jpg"
   },
@@ -193,8 +194,8 @@
       "M2"
     ],
     "beds": 2,
-    "rent": 1600,
-    "separately": 1650,
+    "rent": 1700,
+    "separately": 1750,
     "blurb": "Two main-floor bedrooms sharing a bathroom, on the floor with the main living room and kitchen.",
     "photo": "m1.jpg"
   },
@@ -209,8 +210,8 @@
       "M4"
     ],
     "beds": 2,
-    "rent": 1650,
-    "separately": 1700,
+    "rent": 1750,
+    "separately": 1800,
     "blurb": "Two main-floor bedrooms sharing a bathroom, on the floor with the main living room and kitchen.",
     "photo": "m3.jpg"
   },
@@ -228,8 +229,8 @@
       "M5"
     ],
     "beds": 5,
-    "rent": 4200,
-    "separately": 4350,
+    "rent": 4600,
+    "separately": 4700,
     "blurb": "The entire main floor: five bedrooms, three bathrooms, and the house's principal living room and kitchen.",
     "photo": "kitchen.jpg"
   },
@@ -244,8 +245,8 @@
       "U2"
     ],
     "beds": 2,
-    "rent": 1850,
-    "separately": 1900,
+    "rent": 1950,
+    "separately": 2050,
     "blurb": "Both upper-floor bedrooms, sharing a bathroom between them.",
     "photo": "u.jpg"
   },
@@ -265,8 +266,8 @@
       "U2"
     ],
     "beds": 7,
-    "rent": 5900,
-    "separately": 6250,
+    "rent": 6550,
+    "separately": 6750,
     "blurb": "Seven bedrooms across the main and upper floors, with the main living room and kitchen.",
     "photo": "living.jpg"
   },
@@ -289,8 +290,8 @@
       "U2"
     ],
     "beds": 10,
-    "rent": 8000,
-    "separately": 8850,
+    "rent": 9050,
+    "separately": 9550,
     "blurb": "All ten bedrooms, six bathrooms and both kitchens across three floors.",
     "photo": "front.jpg"
   }
