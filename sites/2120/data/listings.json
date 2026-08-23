@@ -1,0 +1,297 @@
+[
+  {
+    "id": "l1",
+    "label": "L1",
+    "kind": "room",
+    "level": "Lower",
+    "levelId": "L",
+    "rooms": [
+      "L1"
+    ],
+    "beds": 1,
+    "rent": 800,
+    "bath": "Shared bathroom with L2",
+    "private": false,
+    "photo": null
+  },
+  {
+    "id": "l2",
+    "label": "L2",
+    "kind": "room",
+    "level": "Lower",
+    "levelId": "L",
+    "rooms": [
+      "L2"
+    ],
+    "beds": 1,
+    "rent": 800,
+    "bath": "Shared bathroom with L1",
+    "private": false,
+    "photo": null
+  },
+  {
+    "id": "l3",
+    "label": "L3",
+    "kind": "room",
+    "level": "Lower",
+    "levelId": "L",
+    "rooms": [
+      "L3"
+    ],
+    "beds": 1,
+    "rent": 1000,
+    "bath": "Private bathroom",
+    "private": true,
+    "photo": null
+  },
+  {
+    "id": "m1",
+    "label": "M1",
+    "kind": "room",
+    "level": "Main",
+    "levelId": "M",
+    "rooms": [
+      "M1"
+    ],
+    "beds": 1,
+    "rent": 800,
+    "bath": "Shared bathroom with M2",
+    "private": false,
+    "photo": "m1.jpg"
+  },
+  {
+    "id": "m2",
+    "label": "M2",
+    "kind": "room",
+    "level": "Main",
+    "levelId": "M",
+    "rooms": [
+      "M2"
+    ],
+    "beds": 1,
+    "rent": 800,
+    "bath": "Shared bathroom with M1",
+    "private": false,
+    "photo": null
+  },
+  {
+    "id": "m3",
+    "label": "M3",
+    "kind": "room",
+    "level": "Main",
+    "levelId": "M",
+    "rooms": [
+      "M3"
+    ],
+    "beds": 1,
+    "rent": 850,
+    "bath": "Shared bathroom with M4",
+    "private": false,
+    "photo": "m3.jpg"
+  },
+  {
+    "id": "m4",
+    "label": "M4",
+    "kind": "room",
+    "level": "Main",
+    "levelId": "M",
+    "rooms": [
+      "M4"
+    ],
+    "beds": 1,
+    "rent": 850,
+    "bath": "Shared bathroom with M3",
+    "private": false,
+    "photo": "m4.jpg"
+  },
+  {
+    "id": "m5",
+    "label": "M5",
+    "kind": "room",
+    "level": "Main",
+    "levelId": "M",
+    "rooms": [
+      "M5"
+    ],
+    "beds": 1,
+    "rent": 1000,
+    "bath": "Private bathroom",
+    "private": true,
+    "photo": null
+  },
+  {
+    "id": "u1",
+    "label": "U1",
+    "kind": "room",
+    "level": "Upper",
+    "levelId": "U",
+    "rooms": [
+      "U1"
+    ],
+    "beds": 1,
+    "rent": 1000,
+    "bath": "Shared bathroom with U2",
+    "private": false,
+    "photo": "u.jpg"
+  },
+  {
+    "id": "u2",
+    "label": "U2",
+    "kind": "room",
+    "level": "Upper",
+    "levelId": "U",
+    "rooms": [
+      "U2"
+    ],
+    "beds": 1,
+    "rent": 900,
+    "bath": "Shared bathroom with U1",
+    "private": false,
+    "photo": "u2.jpg"
+  },
+  {
+    "id": "l1-l2",
+    "label": "L1 + L2",
+    "kind": "bundle",
+    "level": "Lower",
+    "levelId": "L",
+    "rooms": [
+      "L1",
+      "L2"
+    ],
+    "beds": 2,
+    "rent": 1600,
+    "separately": 1600,
+    "blurb": "Two lower-level bedrooms sharing a bathroom, with the lower living room and kitchen.",
+    "photo": "entry.jpg"
+  },
+  {
+    "id": "lower",
+    "label": "Lower floor \u2014 L1, L2 & L3",
+    "kind": "bundle",
+    "level": "Lower",
+    "levelId": "L",
+    "rooms": [
+      "L1",
+      "L2",
+      "L3"
+    ],
+    "beds": 3,
+    "rent": 2500,
+    "separately": 2600,
+    "blurb": "The whole lower level: three bedrooms, two bathrooms, and a living room and kitchen of its own.",
+    "photo": "laundry.jpg"
+  },
+  {
+    "id": "m1-m2",
+    "label": "M1 + M2",
+    "kind": "bundle",
+    "level": "Main",
+    "levelId": "M",
+    "rooms": [
+      "M1",
+      "M2"
+    ],
+    "beds": 2,
+    "rent": 1550,
+    "separately": 1600,
+    "blurb": "Two main-floor bedrooms sharing a bathroom, on the floor with the main living room and kitchen.",
+    "photo": "m1.jpg"
+  },
+  {
+    "id": "m3-m4",
+    "label": "M3 + M4",
+    "kind": "bundle",
+    "level": "Main",
+    "levelId": "M",
+    "rooms": [
+      "M3",
+      "M4"
+    ],
+    "beds": 2,
+    "rent": 1600,
+    "separately": 1700,
+    "blurb": "Two main-floor bedrooms sharing a bathroom, on the floor with the main living room and kitchen.",
+    "photo": "m3.jpg"
+  },
+  {
+    "id": "main",
+    "label": "Main floor \u2014 M1 to M5",
+    "kind": "bundle",
+    "level": "Main",
+    "levelId": "M",
+    "rooms": [
+      "M1",
+      "M2",
+      "M3",
+      "M4",
+      "M5"
+    ],
+    "beds": 5,
+    "rent": 4100,
+    "separately": 4300,
+    "blurb": "The entire main floor: five bedrooms, three bathrooms, and the house's principal living room and kitchen.",
+    "photo": "kitchen.jpg"
+  },
+  {
+    "id": "u1-u2",
+    "label": "U1 + U2",
+    "kind": "bundle",
+    "level": "Upper",
+    "levelId": "U",
+    "rooms": [
+      "U1",
+      "U2"
+    ],
+    "beds": 2,
+    "rent": 1850,
+    "separately": 1900,
+    "blurb": "Both upper-floor bedrooms, sharing a bathroom between them.",
+    "photo": "u.jpg"
+  },
+  {
+    "id": "main-upper",
+    "label": "Main + Upper floors",
+    "kind": "bundle",
+    "level": "Main + Upper",
+    "levelId": "MU",
+    "rooms": [
+      "M1",
+      "M2",
+      "M3",
+      "M4",
+      "M5",
+      "U1",
+      "U2"
+    ],
+    "beds": 7,
+    "rent": 5800,
+    "separately": 6200,
+    "blurb": "Seven bedrooms across the main and upper floors, with the main living room and kitchen.",
+    "photo": "living.jpg"
+  },
+  {
+    "id": "whole-house",
+    "label": "The entire house \u2014 all 10 bedrooms",
+    "kind": "bundle",
+    "level": "Lower + Main + Upper",
+    "levelId": "LMU",
+    "rooms": [
+      "L1",
+      "L2",
+      "L3",
+      "M1",
+      "M2",
+      "M3",
+      "M4",
+      "M5",
+      "U1",
+      "U2"
+    ],
+    "beds": 10,
+    "rent": 8000,
+    "separately": 8800,
+    "blurb": "All ten bedrooms, six bathrooms and both kitchens across three floors.",
+    "photo": "front.jpg"
+  }
+]

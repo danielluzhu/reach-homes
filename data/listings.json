@@ -116,6 +116,7 @@
       { "name": "3 bedrooms", "detail": "Leased as a separate floor plan", "rent": 3000 }
     ],
     "lease": [
+      "Leases run 3 to 12 months",
       "Available starting early September",
       "Floors can be leased separately"
     ]

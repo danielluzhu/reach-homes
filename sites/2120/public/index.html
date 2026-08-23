@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2120 NE 54th St — rooms by the bedroom in Ravenna, Seattle</title>
+<meta name="description" content="A 10-bedroom, 6-bath house with two kitchens in Ravenna. Rent a single bedroom, a pair, a whole floor, or the entire house." />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<!--HEADER-->
+
+<section class="hero">
+  <img src="/images/front.jpg" alt="" />
+  <div class="hero-scrim"></div>
+  <div class="hero-inner">
+    <p class="eyebrow">Ravenna &middot; Seattle &middot; a short walk from Ravenna Park</p>
+    <h1>Ten bedrooms, six baths, two kitchens — rented one room at a time.</h1>
+    <p>
+      Take a single bedroom from $800, pair up with a friend, claim a floor with its
+      own kitchen, or lease the whole house. Utilities are a flat $100 per person,
+      internet included.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#rooms">See the ten rooms</a>
+      <a class="btn btn-ghost" href="#groups">Groups &amp; whole floors</a>
+    </div>
+  </div>
+</section>
+
+<section class="facts">
+  <div class="facts-inner">
+    <div class="fact"><span class="fact-num">10</span><span class="fact-key">Bedrooms</span></div>
+    <div class="fact"><span class="fact-num">6</span><span class="fact-key">Bathrooms</span></div>
+    <div class="fact"><span class="fact-num">2</span><span class="fact-key">Kitchens</span></div>
+    <div class="fact"><span class="fact-num">3</span><span class="fact-key">Floors</span></div>
+    <div class="fact"><span class="fact-num">$100</span><span class="fact-key">Utilities per person</span></div>
+  </div>
+</section>
+
+<main>
+  <section class="section" id="rooms">
+    <div class="section-heading">
+      <h2>Rent a single bedroom</h2>
+      <p>Ten rooms across three floors. Each rate is per room, per month.</p>
+    </div>
+    <div id="floors"></div>
+  </section>
+
+  <section class="section" id="groups">
+    <div class="section-heading">
+      <h2>Take a pair, a floor, or the house</h2>
+      <p>Renting together costs less than the same rooms taken separately.</p>
+    </div>
+    <div class="grid" id="bundle-grid"></div>
+  </section>
+
+  <section class="section" id="house">
+    <div class="section-heading">
+      <h2>How the house is laid out</h2>
+      <p>Which bathrooms are shared, and where the kitchens are.</p>
+    </div>
+    <div class="table-scroll">
+      <table class="rates">
+        <thead>
+          <tr><th>Floor</th><th>Rooms</th><th>Bathrooms</th><th>Shared space</th><th class="num">Whole floor</th></tr>
+        </thead>
+        <tbody id="layout-rows"></tbody>
+      </table>
+    </div>
+
+    <div class="note-grid">
+      <div class="note-card">
+        <h3>Utilities</h3>
+        <p id="utilities-note"></p>
+      </div>
+      <div class="note-card">
+        <h3>Lease length</h3>
+        <p id="lease-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" id="inquire">
+    <div>
+      <h3>Interested in a room?</h3>
+      <p>Tell us which room or floor you're after and your move-in timing, and we'll get back to you within one business day.</p>
+    </div>
+    <div class="hero-actions">
+      <a class="btn btn-primary" id="inquire-link" href="#">Inquire about a room</a>
+      <a class="btn btn-secondary" id="zillow-link" href="#" target="_blank" rel="noopener">View on Zillow</a>
+    </div>
+  </section>
+</main>
+
+<!--FOOTER-->
+
+<script src="/site.js"></script>
+<script>
+Promise.all([
+  fetch("/api/listings").then((r) => r.json()),
+  fetch("/api/property").then((r) => r.json()),
+]).then(([listings, property]) => {
+  const rooms = listings.filter((l) => l.kind === "room");
+  const bundles = listings.filter((l) => l.kind === "bundle");
+
+  // Rooms, grouped by the floor they sit on.
+  document.getElementById("floors").innerHTML = property.levels
+    .map((lvl) => {
+      const onFloor = rooms.filter((r) => r.levelId === lvl.id);
+      return `
+        <div class="floor">
+          <div class="floor-head">
+            <h3>${escapeHtml(lvl.name)} floor</h3>
+            <span class="floor-note">${escapeHtml(lvl.note)}</span>
+          </div>
+          <div class="grid">${onFloor.map(roomCard).join("")}</div>
+        </div>`;
+    })
+    .join("");
+
+  document.getElementById("bundle-grid").innerHTML = bundles.map(bundleCard).join("");
+
+  document.getElementById("layout-rows").innerHTML = property.levels
+    .map((lvl) => {
+      const onFloor = rooms.filter((r) => r.levelId === lvl.id);
+      const whole = bundles.find((b) => b.levelId === lvl.id && b.rooms.length === onFloor.length);
+      return `<tr>
+        <td>${escapeHtml(lvl.name)}</td>
+        <td>${onFloor.map((r) => escapeHtml(r.label)).join(", ")}</td>
+        <td>${escapeHtml(bathSummary(onFloor))}</td>
+        <td>${lvl.shared.length ? lvl.shared.map(escapeHtml).join(", ") : "—"}</td>
+        <td class="num">${whole ? money(whole.rent) : "—"}</td>
+      </tr>`;
+    })
+    .join("");
+
+  document.getElementById("utilities-note").textContent = property.utilitiesNote;
+  document.getElementById("lease-note").textContent = property.leaseTerms.note;
+  document.getElementById("zillow-link").href = property.zillow;
+  document.getElementById("inquire-link").href =
+    "mailto:?subject=" + encodeURIComponent("Inquiry — 2120 NE 54th St");
+});
+</script>
+</body>
+</html>

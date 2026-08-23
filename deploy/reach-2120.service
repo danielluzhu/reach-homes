@@ -1,0 +1,38 @@
+# The 2120 NE 54th St microsite, on its own port alongside reach-homes.service.
+#
+#   sudo cp deploy/reach-2120.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now reach-2120
+#   journalctl -u reach-2120 -f
+
+[Unit]
+Description=2120 NE 54th St site (Bun)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/srv/reach-homes/sites/2120
+
+Environment=PORT=3100
+Environment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ubuntu/.bun/bin/bun run server.ts
+
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=reach-2120
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target

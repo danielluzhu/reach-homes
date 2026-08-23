@@ -1,0 +1,58 @@
+{
+  "address": "2120 NE 54th St, Seattle, WA 98105",
+  "neighborhood": "Ravenna",
+  "beds": 10,
+  "baths": 6,
+  "kitchens": 2,
+  "sqft": 3000,
+  "utilitiesPerPerson": 100,
+  "utilitiesNote": "Flat $100 per person each month, internet included.",
+  "zillow": "https://www.zillow.com/homedetails/2120-NE-54th-St-Seattle-WA-98105/48784372_zpid/",
+  "levels": [
+    {
+      "id": "L",
+      "name": "Lower",
+      "rooms": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "shared": [
+        "Living room",
+        "Kitchen"
+      ],
+      "note": "A self-contained floor: the lower level has a living room and kitchen of its own."
+    },
+    {
+      "id": "M",
+      "name": "Main",
+      "rooms": [
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5"
+      ],
+      "shared": [
+        "Main living room",
+        "Main kitchen"
+      ],
+      "note": "The main floor holds the house's principal living room and kitchen."
+    },
+    {
+      "id": "U",
+      "name": "Upper",
+      "rooms": [
+        "U1",
+        "U2"
+      ],
+      "shared": [],
+      "note": "Two bedrooms sharing a bathroom, above the main floor."
+    }
+  ],
+  "leaseTerms": {
+    "min": 3,
+    "max": 12,
+    "note": "Leases run from 3 to 12 months, so a quarter, a school year, or a full year all work."
+  }
+}
