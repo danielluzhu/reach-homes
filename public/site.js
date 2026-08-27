@@ -27,12 +27,27 @@ function bathLabel(l) {
 }
 
 /**
- * A listing's "status" is "available" (open to inquiries) or "pending" (an
- * application is in progress). Pending listings stay on the site so the
- * portfolio still reads as active, but every place they appear is labelled.
+ * A listing's "status" is "available" (open to inquiries), "pending" (an
+ * application is in progress) or "taken" (rented, no longer on the market).
+ * Neither of the latter is removed from the site -- the portfolio still reads
+ * as active -- but every place they appear is labelled.
+ *
+ * Every non-available status needs an entry here: the contact page prints the
+ * label beside the listing name and would fail on a status without one.
  */
 const STATUS_LABELS = {
   pending: "Application pending",
+  taken: "Rented",
+};
+
+/**
+ * What a listing that isn't open says in place of the availability date. A
+ * rented unit has no date to advertise, and printing one reads as an
+ * invitation to inquire about something already gone.
+ */
+const STATUS_NOTES = {
+  pending: "An application is in progress on this unit. We're still taking inquiries in case it falls through.",
+  taken: "This one is rented and is here so you can see what we manage. Ask us about anything similar coming up.",
 };
 
 /**
@@ -54,6 +69,19 @@ function isAvailable(l) {
 
 function statusLabel(l) {
   return STATUS_LABELS[l.status] || null;
+}
+
+function statusNote(l) {
+  return STATUS_NOTES[l.status] || null;
+}
+
+function isTaken(l) {
+  return l.status === "taken";
+}
+
+/** Sort key: open first, then pending, then what's already gone. */
+function statusRank(l) {
+  return isAvailable(l) ? 0 : isTaken(l) ? 2 : 1;
 }
 
 /**
@@ -87,6 +115,8 @@ function unitCountLabel(l) {
  * timing that the card doesn't have room for.
  */
 function availabilityLabel(l) {
+  // A rented listing's date is in the past as an offer; the status replaces it.
+  if (isTaken(l)) return STATUS_LABELS.taken;
   const c = unitCounts(l);
   if (!c) return l.availableLabel;
   return c.available + " of " + c.total + " units \u00b7 " + l.availableLabel;

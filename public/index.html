@@ -146,7 +146,7 @@ function card(l) {
         <p class="desc">${escapeHtml(l.summary)}</p>
         <div class="card-footer">
           <div class="price">${rentLabel(l)}</div>
-          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(unitCountLabel(l) || l.availableLabel)}</div>
+          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(unitCountLabel(l) || availabilityLabel(l))}</div>
         </div>
         <div class="card-actions">
           <a class="btn btn-primary" style="flex:1" href="/listing?id=${encodeURIComponent(l.id)}">View details</a>
@@ -167,14 +167,18 @@ function render(filter) {
 fetch("/api/listings")
   .then((r) => r.json())
   .then((listings) => {
-    // Available first, pending after — original order preserved within each group.
-    ALL = [...listings].sort((a, b) => Number(isAvailable(b)) - Number(isAvailable(a)));
+    // Available first, then pending, then rented — original order within each group.
+    ALL = [...listings].sort((a, b) => statusRank(a) - statusRank(b));
 
+    // Rented listings are counted apart from pending ones: lumping them together
+    // would overstate what a renter can still act on.
     const openCount = listings.filter(isAvailable).length;
-    const pendingCount = listings.length - openCount;
+    const pendingCount = listings.filter((l) => l.status === "pending").length;
+    const takenCount = listings.filter(isTaken).length;
     document.getElementById("listing-count").textContent =
       openCount + (openCount === 1 ? " property" : " properties") + " available" +
-      (pendingCount ? ` · ${pendingCount} pending` : "");
+      (pendingCount ? ` · ${pendingCount} pending` : "") +
+      (takenCount ? ` · ${takenCount} rented` : "");
 
     const hoods = [...new Set(listings.map((l) => l.neighborhood))].sort();
     const bar = document.getElementById("filter-bar");
