@@ -320,6 +320,14 @@ main {
   border: 1px solid #e0e2e2;
 }
 
+/* A room someone has actually taken. Grey like a pending one, but solid rather
+   than outlined: this one isn't coming back. */
+.tag-leased {
+  background: #77808a;
+  color: #fff;
+  border: 1px solid #77808a;
+}
+
 .card-pending {
   background: #fafafa;
   border-color: #e4e4e4;
@@ -339,6 +347,14 @@ main {
   background: #eeefef;
   color: #77808a;
   border-color: #e0e2e2;
+}
+
+/* Solid, so a leased room reads as settled rather than merely quiet -- and it
+   has to come after the rule above, which it ties with on specificity. */
+.card-pending .tag-leased {
+  background: #77808a;
+  color: #fff;
+  border-color: #77808a;
 }
 
 .card-pending .saves { color: #8a929a; }

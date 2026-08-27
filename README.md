@@ -132,6 +132,18 @@ holds: the main floor, the upper floor and the whole house were dropped, so a
 means restoring its entry and recomputing `separately` and `rent` from the room
 rents at the time.
 
+A room carries a `status` of `pending` (an application is in progress) or
+`leased` (someone has taken it); a room without one is open. Both stay listed
+and greyed, but they differ in what they do to the combinations: a pending room
+leaves its pairs and floors on offer, flagged with what's outstanding, because
+an application can fall through, while a **leased room withdraws every
+combination that needs it** — those can no longer be assembled, so the page
+stops offering them rather than pricing something nobody can take. That is
+derived at render time, so the headline range and the "more than one floor"
+section (which disappears when nothing is left in it) follow from the room
+statuses alone. The hero sentence naming the options is prose, though, so check
+it still reads true after a status change.
+
 ## Availability sync
 
 The studios at 4544 20th Ave NE are also listed on the building's own site,

@@ -41,10 +41,10 @@
 
   <!--IF:bundles-->
   <p class="detail-summary">
-    Take a single bedroom from <span data-min-rent></span>, pair up with a friend, claim the
-    lower floor with its own kitchen, or take the main and upper floors together. Every
-    room can be furnished free with a bed and desk. Leases run 6 to 12 months, and
-    utilities are a flat $100 per person with internet included.
+    Take a single bedroom from <span data-min-rent></span>, pair up with a friend, or claim
+    the lower floor with its own kitchen. Every room can be furnished free with a bed and
+    desk. Leases run 6 to 12 months, and utilities are a flat $100 per person with
+    internet included.
   </p>
   <!--END:bundles-->
   <!--IF:rooms-only-->
@@ -161,7 +161,11 @@ Promise.all([
   // where only single rooms are let, at a premium. TERM_ID comes from the head.
   const term = property.terms.find((t) => t.id === TERM_ID);
   const rooms = listings.filter((l) => l.kind === "room");
-  const bundles = listings.filter((l) => l.kind === "bundle");
+  // Only the combinations still on offer: one needing a leased room cannot be
+  // assembled, so it is dropped rather than shown at a price nobody can take.
+  const bundles = listings
+    .filter((l) => l.kind === "bundle")
+    .filter((b) => isOfferable(b, rooms));
   // Only the combinations that cross floors; the rest sit with their rooms.
   const multiFloor = bundles.filter((b) => b.levelId.length > 1);
 
@@ -190,9 +194,17 @@ Promise.all([
     })
     .join("");
 
-  // The section holding these only exists on the long-term site.
+  // The section holding these only exists on the long-term site, and only
+  // while something spans more than one floor.
   if (!term.roomsOnly) {
-    document.getElementById("bundle-grid").innerHTML = multiFloor.map((b) => bundleCard(b, rooms)).join("");
+    const groups = document.getElementById("groups");
+    if (multiFloor.length) {
+      document.getElementById("bundle-grid").innerHTML = multiFloor.map((b) => bundleCard(b, rooms)).join("");
+    } else {
+      groups.remove();
+      document.querySelectorAll('nav.links a[href="#groups"]').forEach((a) => a.remove());
+      document.querySelectorAll('.detail-actions a[href="#groups"]').forEach((a) => a.remove());
+    }
   }
 
   // A row per room, in floor order, at this site's rents.
@@ -201,8 +213,8 @@ Promise.all([
       rooms
         .filter((r) => r.levelId === lvl.id)
         .map(
-          (r) => `<tr${isPending(r) ? ' class="row-pending"' : ""}>
-        <td>${escapeHtml(r.label)}${isPending(r) ? ' <span class="row-flag">Application pending</span>' : ""}</td>
+          (r) => `<tr${isPending(r) || isLeased(r) ? ' class="row-pending"' : ""}>
+        <td>${escapeHtml(r.label)}${isLeased(r) ? ' <span class="row-flag">Leased</span>' : isPending(r) ? ' <span class="row-flag">Application pending</span>' : ""}</td>
         <td>${escapeHtml(lvl.name)}</td>
         <td${r.private ? ' class="private"' : ""}>${escapeHtml(bathShort(r))}</td>
         <td class="num">${money(roomRent(r, term))}</td>
@@ -219,7 +231,7 @@ Promise.all([
   // The headline range runs from the cheapest room to the largest thing on
   // offer: the dearest combination where they are let, the dearest room where
   // they aren't.
-  const dearest = term.roomsOnly
+  const dearest = term.roomsOnly || !bundles.length
     ? Math.max(...rooms.map((r) => roomRent(r, term)))
     : Math.max(...bundles.map((b) => b.rent));
   document.querySelectorAll("[data-rent-range]").forEach((el) => {

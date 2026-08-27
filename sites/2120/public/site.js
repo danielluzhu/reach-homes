@@ -9,12 +9,30 @@ function escapeHtml(s) {
 }
 
 /**
- * A room is open unless an application is in progress on it. Pending rooms stay
- * listed, and every place they appear says so: an application can fall through,
- * and we keep taking inquiries in case it does.
+ * A room is open unless someone is partway to taking it ("pending") or has
+ * taken it ("leased"). Both stay listed -- a renter reading the page wants to
+ * know how full the house is -- but they differ in kind: an application can
+ * fall through and we keep taking inquiries on a pending room, while a leased
+ * one is gone.
  */
 function isPending(r) {
   return r.status === "pending";
+}
+
+function isLeased(r) {
+  return r.status === "leased";
+}
+
+/**
+ * Whether a combination can still be assembled. A pending room might come back,
+ * so a combination containing one stays on offer and says what's outstanding; a
+ * leased room cannot, so the pairs and floors that need it are no longer
+ * offered at all rather than priced as though they were.
+ */
+function isOfferable(b, rooms) {
+  const leased = {};
+  rooms.forEach((r) => { if (isLeased(r)) leased[r.label] = true; });
+  return !b.rooms.some((label) => leased[label]);
 }
 
 /**
@@ -62,11 +80,13 @@ function roomCard(r, term) {
   const photo = r.photo
     ? `<div class="photo"><img src="/images/${escapeHtml(r.photo)}" alt="${escapeHtml(r.photoOf || r.label)}" loading="lazy" /></div>`
     : `<div class="photo photo-none"><span>Photo on request</span></div>`;
+  const off = isPending(r) || isLeased(r);
   return `
-    <article class="card${isPending(r) ? " card-pending" : ""}">
+    <article class="card${off ? " card-pending" : ""}">
       ${photo}
       <div class="card-body">
         <h4>${escapeHtml(r.label)}</h4>
+        ${isLeased(r) ? '<span class="tag tag-leased">Leased</span>' : ""}
         ${isPending(r) ? '<span class="tag tag-pending">Application pending</span>' : ""}
         <span class="tag${r.private ? " tag-private" : ""}">${escapeHtml(r.bath)}</span>
         ${r.photoOf ? `<span class="photo-note">Photo of ${escapeHtml(r.photoOf)} — ${escapeHtml(r.label)} has the same layout</span>` : ""}

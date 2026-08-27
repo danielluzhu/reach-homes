@@ -104,7 +104,7 @@
     "rent": 900,
     "bath": "Shared bathroom with M3",
     "private": false,
-    "status": "pending",
+    "status": "leased",
     "photo": "m4.jpg"
   },
   {
@@ -150,7 +150,7 @@
     "rent": 950,
     "bath": "Shared bathroom with U1",
     "private": false,
-    "status": "pending",
+    "status": "leased",
     "photo": "u2.jpg"
   },
   {
