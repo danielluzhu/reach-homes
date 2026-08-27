@@ -310,27 +310,52 @@ main {
 .card-floor .tag-whole { background: var(--brand-800); }
 
 /* A room with an application in progress: still listed, still priced, but
-   visibly set back from the ones a renter can act on today. */
+   drained of colour so the ones a renter can act on today are what the eye
+   lands on. Everything inside the card goes grey together -- a maroon price or
+   a pink bathroom tag left at full strength would keep pulling attention back. */
 
 .tag-pending {
-  background: #f1f2f1;
-  color: var(--muted);
-  border: 1px solid var(--border);
+  background: #eeefef;
+  color: #77808a;
+  border: 1px solid #e0e2e2;
 }
 
-.card-pending { background: #fcfbfb; }
-.card-pending .photo img { filter: saturate(0.55); opacity: 0.75; }
-.card-pending h4 { color: var(--muted); }
+.card-pending {
+  background: #fafafa;
+  border-color: #e4e4e4;
+}
 
-.row-pending td:first-child { color: var(--muted); }
+.card-pending .photo img { filter: grayscale(0.85); opacity: 0.6; }
+.card-pending h4,
+.card-pending .price,
+.card-pending .price small,
+.card-pending .bath,
+.card-pending .photo-note { color: #8a929a; }
+
+/* The bathroom tag and the "All 5 rooms" badge lose their colour here too. */
+.card-pending .tag,
+.card-pending .tag-private,
+.card-pending .tag-whole {
+  background: #eeefef;
+  color: #77808a;
+  border-color: #e0e2e2;
+}
+
+.card-pending .saves { color: #8a929a; }
+.card-pending .strike { color: #a6adb4; }
+
+/* A pending row is greyed across all four columns, not just its label. */
+.row-pending td,
+.row-pending td.private,
+.row-pending td.num { color: #8a929a; }
 
 .row-flag {
   display: inline-block;
   margin-left: 8px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #f1f2f1;
-  color: var(--muted);
+  background: #eeefef;
+  color: #77808a;
   font-size: 0.72rem;
   white-space: nowrap;
 }
