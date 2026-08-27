@@ -62,14 +62,14 @@
       "months": "6 to 12 months",
       "path": "/",
       "title": "2120 NE 54th St \u2014 rooms by the bedroom in Ravenna, Seattle",
-      "description": "A 10-bedroom, 6-bath house with two kitchens in Ravenna, on leases of 6 to 12 months. Rent a single bedroom, a pair, a whole floor, or the entire house.",
+      "description": "A 10-bedroom, 6-bath house with two kitchens in Ravenna, on leases of 6 to 12 months. Rent a single bedroom, a pair, or a whole floor.",
       "roomsOnly": false,
       "premium": {
         "room": 0,
         "private": 0
       },
       "leaseNote": "Leases run from 6 to 12 months, so a school year or a full year both work.",
-      "crossLink": "Staying six months or more? The long-term site has the standard rates, plus the pairs, whole floors and the whole house."
+      "crossLink": "Staying six months or more? The long-term site has the standard rates, plus the pairs and whole floors."
     },
     {
       "id": "short",

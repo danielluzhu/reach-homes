@@ -20,7 +20,7 @@ function isPending(r) {
 /**
  * Which of a combination's rooms have an application in progress. Derived from
  * the rooms rather than recorded on the combination, so marking a room pending
- * cannot leave the pairs, floors and whole house out of step with it.
+ * cannot leave the pairs and floors out of step with it.
  */
 function pendingIn(b, rooms) {
   const pending = {};

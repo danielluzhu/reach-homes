@@ -121,10 +121,16 @@ Its rates are the source for the "Lease options" table on the main site's
 premium is applied at render time and is not mirrored there.
 
 A combination's `separately` is the sum of its rooms' rents, and its `rent`
-comes off that by a fixed discount: $50 for a pair, $100 for a whole floor,
-$200 for the main and upper floors together, and $500 for the whole house. Room
-rents therefore move the combination rates too — recompute both when one
-changes, or the savings shown on each card stop being true.
+comes off that by a fixed discount: $50 for a pair, $100 for a whole floor, and
+$200 for the main and upper floors together. Room rents therefore move the
+combination rates too — recompute both when one changes, or the savings shown on
+each card stop being true.
+
+Which combinations are offered is just which ones `sites/2120/data/listings.json`
+holds: the main floor, the upper floor and the whole house were dropped, so a
+`bundle` entry for each of them was removed rather than hidden. Adding one back
+means restoring its entry and recomputing `separately` and `rent` from the room
+rents at the time.
 
 ## Availability sync
 

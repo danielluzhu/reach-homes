@@ -219,41 +219,6 @@
     "photo": "m3.jpg"
   },
   {
-    "id": "main",
-    "label": "Main floor \u2014 M1 to M5",
-    "kind": "bundle",
-    "level": "Main",
-    "levelId": "M",
-    "rooms": [
-      "M1",
-      "M2",
-      "M3",
-      "M4",
-      "M5"
-    ],
-    "beds": 5,
-    "rent": 4600,
-    "separately": 4700,
-    "blurb": "The entire main floor: five bedrooms, three bathrooms, and the house's principal living room and kitchen.",
-    "photo": "kitchen.jpg"
-  },
-  {
-    "id": "u1-u2",
-    "label": "U1 + U2",
-    "kind": "bundle",
-    "level": "Upper",
-    "levelId": "U",
-    "rooms": [
-      "U1",
-      "U2"
-    ],
-    "beds": 2,
-    "rent": 1950,
-    "separately": 2050,
-    "blurb": "Both upper-floor bedrooms, sharing a bathroom between them.",
-    "photo": "u.jpg"
-  },
-  {
     "id": "main-upper",
     "label": "Main + Upper floors",
     "kind": "bundle",
@@ -273,29 +238,5 @@
     "separately": 6750,
     "blurb": "Seven bedrooms across the main and upper floors, with the main living room and kitchen.",
     "photo": "living.jpg"
-  },
-  {
-    "id": "whole-house",
-    "label": "The entire house \u2014 all 10 bedrooms",
-    "kind": "bundle",
-    "level": "Lower + Main + Upper",
-    "levelId": "LMU",
-    "rooms": [
-      "L1",
-      "L2",
-      "L3",
-      "M1",
-      "M2",
-      "M3",
-      "M4",
-      "M5",
-      "U1",
-      "U2"
-    ],
-    "beds": 10,
-    "rent": 9050,
-    "separately": 9550,
-    "blurb": "All ten bedrooms, six bathrooms and both kitchens across three floors.",
-    "photo": "front.jpg"
   }
 ]

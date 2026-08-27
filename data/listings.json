@@ -73,7 +73,7 @@
   {
     "id": "2120-ne-54th-st",
     "title": "2120 NE 54th St",
-    "subtitle": "10-bedroom house — by the room, by the floor, or whole",
+    "subtitle": "10-bedroom house — by the room, by the pair, or by the floor",
     "neighborhood": "Ravenna",
     "address": "2120 NE 54th St, Seattle, WA 98105",
     "beds": 10,
@@ -81,13 +81,13 @@
     "baths": 6,
     "sqft": 3000,
     "rentFrom": 850,
-    "rentTo": 9050,
+    "rentTo": 6550,
     "available": "2026-09-01",
     "availableLabel": "Early September 2026",
     "status": "available",
     "zillow": "https://www.zillow.com/homedetails/2120-NE-54th-St-Seattle-WA-98105/48786784_zpid/",
     "image": "/images/listing-2120-ne-54th-st.svg",
-    "summary": "A 3,000 sqft, 10 bed / 6 bath house with two kitchens, a short walk from Ravenna Park. Rooms go individually from $850, in pairs, by the floor, or the whole house at $9,050. Utilities are a flat $100 per person including internet.",
+    "summary": "A 3,000 sqft, 10 bed / 6 bath house with two kitchens, a short walk from Ravenna Park. Rooms go individually from $850, in pairs, by the floor, or the main and upper floors together at $6,550. Utilities are a flat $100 per person including internet.",
     "photos": [
       "/images/photos/2120-ne-54th-st/front.jpg",
       "/images/photos/2120-ne-54th-st/living.jpg",
@@ -125,10 +125,7 @@
       { "name": "Lower floor", "detail": "L1–L3, with its own living room and kitchen", "rent": 2700 },
       { "name": "M1 + M2", "detail": "Two main-floor bedrooms sharing a bath", "rent": 1700 },
       { "name": "M3 + M4", "detail": "Two main-floor bedrooms sharing a bath", "rent": 1750 },
-      { "name": "Main floor", "detail": "M1–M5, with the main living room and kitchen", "rent": 4600 },
-      { "name": "U1 + U2", "detail": "Both upper bedrooms, sharing a bath", "rent": 1950 },
-      { "name": "Main + Upper floors", "detail": "Seven bedrooms across two floors", "rent": 6550 },
-      { "name": "Entire house", "detail": "All 10 bedrooms, 6 baths, 2 kitchens", "rent": 9050 }
+      { "name": "Main + Upper floors", "detail": "Seven bedrooms across two floors", "rent": 6550 }
     ],
     "lease": [
       "Leases run 3 to 12 months",
