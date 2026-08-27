@@ -309,6 +309,32 @@ main {
 .card-floor { border-color: var(--brand-700); }
 .card-floor .tag-whole { background: var(--brand-800); }
 
+/* A room with an application in progress: still listed, still priced, but
+   visibly set back from the ones a renter can act on today. */
+
+.tag-pending {
+  background: #f1f2f1;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.card-pending { background: #fcfbfb; }
+.card-pending .photo img { filter: saturate(0.55); opacity: 0.75; }
+.card-pending h4 { color: var(--muted); }
+
+.row-pending td:first-child { color: var(--muted); }
+
+.row-flag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f2f1;
+  color: var(--muted);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
 /* ---- Where it is ---- */
 
 .location-layout {

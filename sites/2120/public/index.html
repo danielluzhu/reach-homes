@@ -184,7 +184,7 @@ Promise.all([
           </div>
           <div class="grid">
             ${onFloor.map((r) => roomCard(r, term)).join("")}
-            ${combos.map((b) => comboCard(b, onFloor.length)).join("")}
+            ${combos.map((b) => comboCard(b, onFloor.length, rooms)).join("")}
           </div>
         </div>`;
     })
@@ -192,7 +192,7 @@ Promise.all([
 
   // The section holding these only exists on the long-term site.
   if (!term.roomsOnly) {
-    document.getElementById("bundle-grid").innerHTML = multiFloor.map(bundleCard).join("");
+    document.getElementById("bundle-grid").innerHTML = multiFloor.map((b) => bundleCard(b, rooms)).join("");
   }
 
   // A row per room, in floor order, at this site's rents.
@@ -201,8 +201,8 @@ Promise.all([
       rooms
         .filter((r) => r.levelId === lvl.id)
         .map(
-          (r) => `<tr>
-        <td>${escapeHtml(r.label)}</td>
+          (r) => `<tr${isPending(r) ? ' class="row-pending"' : ""}>
+        <td>${escapeHtml(r.label)}${isPending(r) ? ' <span class="row-flag">Application pending</span>' : ""}</td>
         <td>${escapeHtml(lvl.name)}</td>
         <td${r.private ? ' class="private"' : ""}>${escapeHtml(bathShort(r))}</td>
         <td class="num">${money(roomRent(r, term))}</td>

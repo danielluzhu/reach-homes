@@ -9,6 +9,36 @@ function escapeHtml(s) {
 }
 
 /**
+ * A room is open unless an application is in progress on it. Pending rooms stay
+ * listed, and every place they appear says so: an application can fall through,
+ * and we keep taking inquiries in case it does.
+ */
+function isPending(r) {
+  return r.status === "pending";
+}
+
+/**
+ * Which of a combination's rooms have an application in progress. Derived from
+ * the rooms rather than recorded on the combination, so marking a room pending
+ * cannot leave the pairs, floors and whole house out of step with it.
+ */
+function pendingIn(b, rooms) {
+  const pending = {};
+  rooms.forEach((r) => { if (isPending(r)) pending[r.label] = true; });
+  return b.rooms.filter((label) => pending[label]);
+}
+
+/** How a combination reads when some of its rooms are spoken for. */
+function pendingNote(names, total) {
+  if (!names.length) return "";
+  const all = names.length === total;
+  const which = names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+  return all
+    ? "Application pending"
+    : which + (names.length === 1 ? " has" : " have") + " an application pending";
+}
+
+/**
  * "Shared with L2", or "Private" — the room's bathroom, short enough for a
  * table cell. The cards carry the full phrase.
  */
@@ -33,10 +63,11 @@ function roomCard(r, term) {
     ? `<div class="photo"><img src="/images/${escapeHtml(r.photo)}" alt="${escapeHtml(r.photoOf || r.label)}" loading="lazy" /></div>`
     : `<div class="photo photo-none"><span>Photo on request</span></div>`;
   return `
-    <article class="card">
+    <article class="card${isPending(r) ? " card-pending" : ""}">
       ${photo}
       <div class="card-body">
         <h4>${escapeHtml(r.label)}</h4>
+        ${isPending(r) ? '<span class="tag tag-pending">Application pending</span>' : ""}
         <span class="tag${r.private ? " tag-private" : ""}">${escapeHtml(r.bath)}</span>
         ${r.photoOf ? `<span class="photo-note">Photo of ${escapeHtml(r.photoOf)} — ${escapeHtml(r.label)} has the same layout</span>` : ""}
         <div class="price-row">
@@ -46,13 +77,15 @@ function roomCard(r, term) {
     </article>`;
 }
 
-function bundleCard(b) {
+function bundleCard(b, rooms) {
   const saves = b.separately - b.rent;
+  const pending = pendingIn(b, rooms);
   return `
-    <article class="card">
+    <article class="card${pending.length ? " card-pending" : ""}">
       <div class="photo"><img src="/images/${escapeHtml(b.photo)}" alt="" loading="lazy" /></div>
       <div class="card-body">
         <h4>${escapeHtml(b.label)}</h4>
+        ${pending.length ? `<span class="tag tag-pending">${escapeHtml(pendingNote(pending, b.rooms.length))}</span>` : ""}
         <span class="bath">${b.beds} bedroom${b.beds === 1 ? "" : "s"}${b.blurb ? " — " + escapeHtml(b.blurb) : ""}</span>
         <div class="price-row">
           <span class="price">${money(b.rent)}<small>/mo</small></span>
@@ -69,14 +102,16 @@ function bundleCard(b) {
  * whole floor. Styled apart from the room cards beside it because it isn't a
  * room, it's the alternative to taking them one at a time.
  */
-function comboCard(b, roomsOnFloor) {
+function comboCard(b, roomsOnFloor, rooms) {
   const whole = b.rooms.length === roomsOnFloor;
   const saves = b.separately - b.rent;
+  const pending = pendingIn(b, rooms);
   return `
-    <article class="card card-whole${whole ? " card-floor" : ""}">
+    <article class="card card-whole${whole ? " card-floor" : ""}${pending.length ? " card-pending" : ""}">
       <div class="card-body">
         <span class="tag tag-whole">${whole ? `All ${roomsOnFloor} rooms` : "Pair"}</span>
         <h4>${whole ? "Take the whole floor" : escapeHtml(b.label)}</h4>
+        ${pending.length ? `<span class="tag tag-pending">${escapeHtml(pendingNote(pending, b.rooms.length))}</span>` : ""}
         <span class="bath">${escapeHtml(whole ? b.label : b.blurb)}</span>
         <div class="price-row">
           <span class="price">${money(b.rent)}<small>/mo</small></span>
