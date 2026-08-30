@@ -120,6 +120,7 @@
     "rent": 1150,
     "bath": "Private bathroom",
     "private": true,
+    "status": "pending",
     "photo": "m5.jpg"
   },
   {
