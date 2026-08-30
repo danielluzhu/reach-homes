@@ -309,6 +309,15 @@ main {
 .card-floor { border-color: var(--brand-700); }
 .card-floor .tag-whole { background: var(--brand-800); }
 
+/* A room that is free, but not yet: the date sits with the status tags rather
+   than in the price row, because it qualifies the offer the same way they do.
+   Amber rather than grey -- the room is on offer, only later. */
+.tag-date {
+  background: #fdf3e4;
+  color: #8a5410;
+  border: 1px solid #f3e1c6;
+}
+
 /* A room with an application in progress: still listed, still priced, but
    drained of colour so the ones a renter can act on today are what the eye
    lands on. Everything inside the card goes grey together -- a maroon price or
@@ -340,9 +349,11 @@ main {
 .card-pending .bath,
 .card-pending .photo-note { color: #8a929a; }
 
-/* The bathroom tag and the "All 5 rooms" badge lose their colour here too. */
+/* The bathroom tag, the availability date and the "All 5 rooms" badge lose
+   their colour here too. */
 .card-pending .tag,
 .card-pending .tag-private,
+.card-pending .tag-date,
 .card-pending .tag-whole {
   background: #eeefef;
   color: #77808a;

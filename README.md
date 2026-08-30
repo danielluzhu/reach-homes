@@ -144,6 +144,14 @@ section (which disappears when nothing is left in it) follow from the room
 statuses alone. The hero sentence naming the options is prose, though, so check
 it still reads true after a status change.
 
+A room may also carry an `available` date (`YYYY-MM-DD`) for when it comes
+open, shown on its card as "Available September 5". It is for a room that opens
+later than the rest; a room without one is open on the house's own date in
+`property.json`, which the heading already gives. A date that has passed stops
+being shown, so an old one is inert rather than wrong. Pairs and floors take
+theirs from the last of their rooms to come free, since none of them can be
+moved into before that.
+
 ## Availability sync
 
 The studios at 4544 20th Ave NE are also listed on the building's own site,

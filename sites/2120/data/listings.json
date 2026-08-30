@@ -12,6 +12,7 @@
     "rent": 850,
     "bath": "Shared bathroom with L2",
     "private": false,
+    "available": "2026-09-05",
     "photo": "l1.jpg"
   },
   {
@@ -27,6 +28,7 @@
     "rent": 850,
     "bath": "Shared bathroom with L1",
     "private": false,
+    "available": "2026-09-05",
     "photo": "l2.jpg"
   },
   {
@@ -42,6 +44,7 @@
     "rent": 1100,
     "bath": "Private bathroom",
     "private": true,
+    "available": "2026-09-05",
     "photo": "m5.jpg",
     "photoOf": "M5"
   },
@@ -58,6 +61,7 @@
     "rent": 875,
     "bath": "Shared bathroom with M2",
     "private": false,
+    "available": "2026-09-05",
     "photo": "m1.jpg"
   },
   {
@@ -73,6 +77,7 @@
     "rent": 875,
     "bath": "Shared bathroom with M1",
     "private": false,
+    "available": "2026-09-05",
     "photo": "m2.jpg"
   },
   {

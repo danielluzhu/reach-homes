@@ -36,6 +36,57 @@ function isOfferable(b, rooms) {
 }
 
 /**
+ * Today as the same YYYY-MM-DD string the data uses, so the two compare as
+ * plain strings. Going through Date would read "2026-09-05" as UTC midnight
+ * and, west of Greenwich, call it the 4th.
+ */
+function today() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/** "2026-09-05" as "September 5", parsed by hand for the reason above. */
+function dateLabel(iso) {
+  const [, m, d] = iso.split("-").map(Number);
+  return MONTHS[m - 1] + " " + d;
+}
+
+/**
+ * When a room comes open, where that is still ahead of us. A room whose date
+ * has passed is simply available and has nothing to announce, so the date
+ * drops off the page on its own rather than waiting to be cleared out. A room
+ * with no date at all is open on the house's own date, which the page already
+ * carries in the heading.
+ */
+function availableFrom(r) {
+  return r.available && r.available > today() ? r.available : null;
+}
+
+/**
+ * When a combination comes open: the last of its rooms to do so, since it
+ * can't be moved into until all of them are free.
+ */
+function bundleAvailableFrom(b, rooms) {
+  const dates = rooms
+    .filter((r) => b.rooms.includes(r.label))
+    .map(availableFrom)
+    .filter(Boolean)
+    .sort();
+  return dates.length ? dates[dates.length - 1] : null;
+}
+
+/** The card tag naming that date, where there is one to name. */
+function availableTag(iso) {
+  return iso ? `<span class="tag tag-date">Available ${escapeHtml(dateLabel(iso))}</span>` : "";
+}
+
+/**
  * Which of a combination's rooms have an application in progress. Derived from
  * the rooms rather than recorded on the combination, so marking a room pending
  * cannot leave the pairs and floors out of step with it.
@@ -81,6 +132,8 @@ function roomCard(r, term) {
     ? `<div class="photo"><img src="/images/${escapeHtml(r.photo)}" alt="${escapeHtml(r.photoOf || r.label)}" loading="lazy" /></div>`
     : `<div class="photo photo-none"><span>Photo on request</span></div>`;
   const off = isPending(r) || isLeased(r);
+  // A leased room has no date to give: it isn't coming open.
+  const from = isLeased(r) ? null : availableFrom(r);
   return `
     <article class="card${off ? " card-pending" : ""}">
       ${photo}
@@ -88,6 +141,7 @@ function roomCard(r, term) {
         <h4>${escapeHtml(r.label)}</h4>
         ${isLeased(r) ? '<span class="tag tag-leased">Leased</span>' : ""}
         ${isPending(r) ? '<span class="tag tag-pending">Application pending</span>' : ""}
+        ${availableTag(from)}
         <span class="tag${r.private ? " tag-private" : ""}">${escapeHtml(r.bath)}</span>
         ${r.photoOf ? `<span class="photo-note">Photo of ${escapeHtml(r.photoOf)} — ${escapeHtml(r.label)} has the same layout</span>` : ""}
         <div class="price-row">
@@ -106,6 +160,7 @@ function bundleCard(b, rooms) {
       <div class="card-body">
         <h4>${escapeHtml(b.label)}</h4>
         ${pending.length ? `<span class="tag tag-pending">${escapeHtml(pendingNote(pending, b.rooms.length))}</span>` : ""}
+        ${availableTag(bundleAvailableFrom(b, rooms))}
         <span class="bath">${b.beds} bedroom${b.beds === 1 ? "" : "s"}${b.blurb ? " — " + escapeHtml(b.blurb) : ""}</span>
         <div class="price-row">
           <span class="price">${money(b.rent)}<small>/mo</small></span>
@@ -132,6 +187,7 @@ function comboCard(b, roomsOnFloor, rooms) {
         <span class="tag tag-whole">${whole ? `All ${roomsOnFloor} rooms` : "Pair"}</span>
         <h4>${whole ? "Take the whole floor" : escapeHtml(b.label)}</h4>
         ${pending.length ? `<span class="tag tag-pending">${escapeHtml(pendingNote(pending, b.rooms.length))}</span>` : ""}
+        ${availableTag(bundleAvailableFrom(b, rooms))}
         <span class="bath">${escapeHtml(whole ? b.label : b.blurb)}</span>
         <div class="price-row">
           <span class="price">${money(b.rent)}<small>/mo</small></span>
