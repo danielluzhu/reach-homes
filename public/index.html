@@ -167,20 +167,24 @@ function render(filter) {
 fetch("/api/listings")
   .then((r) => r.json())
   .then((listings) => {
-    // Available first, then pending, then rented — original order within each group.
-    ALL = [...listings].sort((a, b) => statusRank(a) - statusRank(b));
+    // What someone can still act on. A rented listing comes off the front page
+    // entirely -- this section is headed "Available Now" and a place that is
+    // gone belongs on neither the grid, the count, nor the filter bar. Its
+    // detail page stays reachable for anyone holding the link.
+    const onOffer = listings.filter((l) => !isTaken(l));
 
-    // Rented listings are counted apart from pending ones: lumping them together
-    // would overstate what a renter can still act on.
-    const openCount = listings.filter(isAvailable).length;
-    const pendingCount = listings.filter((l) => l.status === "pending").length;
-    const takenCount = listings.filter(isTaken).length;
+    // Available first, then pending — original order within each group.
+    ALL = [...onOffer].sort((a, b) => statusRank(a) - statusRank(b));
+
+    const openCount = onOffer.filter(isAvailable).length;
+    const pendingCount = onOffer.filter((l) => l.status === "pending").length;
     document.getElementById("listing-count").textContent =
       openCount + (openCount === 1 ? " property" : " properties") + " available" +
-      (pendingCount ? ` · ${pendingCount} pending` : "") +
-      (takenCount ? ` · ${takenCount} rented` : "");
+      (pendingCount ? ` · ${pendingCount} pending` : "");
 
-    const hoods = [...new Set(listings.map((l) => l.neighborhood))].sort();
+    // Drawn from what's shown, so a neighborhood whose only listing is rented
+    // doesn't offer a chip that filters down to nothing.
+    const hoods = [...new Set(onOffer.map((l) => l.neighborhood))].sort();
     const bar = document.getElementById("filter-bar");
     bar.hidden = false;
     bar.innerHTML =
