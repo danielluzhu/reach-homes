@@ -141,6 +141,7 @@
     "rent": 1100,
     "bath": "Shared bathroom with U2",
     "private": false,
+    "available": "2026-08-31",
     "photo": "u.jpg"
   },
   {
