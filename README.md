@@ -87,8 +87,8 @@ The house is let on two terms, and each has a site of its own:
 
 | Term | Path | What it shows |
 | --- | --- | --- |
-| Long term, 6–12 months | `/` | Rooms at the standard rates, plus the pairs, whole floors and the whole house |
-| Short term, 3–5 months | `/short-term/` | Single rooms only, $150 above the long-term rate — $200 for a room with its own bathroom |
+| Long term, 8–12 months | `/` | Rooms at the standard rates, plus the pairs, whole floors and the whole house |
+| Short term, 3–7 months | `/short-term/` | Single rooms only, $150 above the long-term rate — $200 for a room with its own bathroom |
 
 Both come from one template. `data/property.json` holds a `terms` entry per
 site with its path, title, rent premium and copy; `sites/2120/render.ts` bakes
