@@ -44,7 +44,7 @@
     "rent": 1100,
     "bath": "Private bathroom",
     "private": true,
-    "available": "2026-09-05",
+    "status": "leased",
     "photo": "m5.jpg",
     "photoOf": "M5"
   },
@@ -125,7 +125,6 @@
     "rent": 1150,
     "bath": "Private bathroom",
     "private": true,
-    "status": "pending",
     "photo": "m5.jpg"
   },
   {
