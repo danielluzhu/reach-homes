@@ -13,7 +13,7 @@
     "rentFrom": 1200,
     "rentTo": 1300,
     "available": "2026-08-08",
-    "availableLabel": "Aug–Sep 2026",
+    "availableLabel": "Aug\u2013Sep 2026",
     "totalUnits": 31,
     "status": "available",
     "zillow": "https://www.zillow.com/b/4544-20th-ave-ne-seattle-wa-62r4yK/",
@@ -21,7 +21,7 @@
     "promo": "1 month free on a new lease",
     "summary": "Brand-new studio building steps from UW and the light rail. 31 units, each with a private bathroom and kitchenette, and free furnishing available.",
     "building": [
-      "Built 2026 — first leasing season",
+      "Built 2026 \u2014 first leasing season",
       "31 studio units across ground level through 4th floor",
       "Walking distance to UW and the light rail station",
       "Shared laundry room and bike storage room",
@@ -60,20 +60,52 @@
       "Internet: $40 flat"
     ],
     "upcomingUnits": [
-      { "unit": "101", "available": "2026-07-30", "label": "Available now" },
-      { "unit": "004", "available": "2026-08-08", "status": "unavailable" },
-      { "unit": "406", "available": "2026-08-10", "status": "unavailable" },
-      { "unit": "403", "available": "2026-08-16", "status": "unavailable" },
-      { "unit": "201", "available": "2026-08-22", "status": "unavailable" },
-      { "unit": "404", "available": "2026-08-23", "status": "unavailable" },
-      { "unit": "402", "available": "2026-09-18", "status": "unavailable" },
-      { "unit": "401", "available": "2026-09-22", "status": "pending" }
+      {
+        "unit": "101",
+        "available": "2026-07-30",
+        "label": "Available now"
+      },
+      {
+        "unit": "004",
+        "available": "2026-08-08",
+        "status": "unavailable"
+      },
+      {
+        "unit": "406",
+        "available": "2026-08-10",
+        "status": "unavailable"
+      },
+      {
+        "unit": "403",
+        "available": "2026-08-16",
+        "status": "unavailable"
+      },
+      {
+        "unit": "201",
+        "available": "2026-08-22",
+        "status": "unavailable"
+      },
+      {
+        "unit": "404",
+        "available": "2026-08-23",
+        "status": "unavailable"
+      },
+      {
+        "unit": "402",
+        "available": "2026-09-18",
+        "status": "unavailable"
+      },
+      {
+        "unit": "401",
+        "available": "2026-09-22",
+        "status": "pending"
+      }
     ]
   },
   {
     "id": "2120-ne-54th-st",
     "title": "2120 NE 54th St",
-    "subtitle": "10-bedroom house — by the room, by the pair, or by the floor",
+    "subtitle": "10-bedroom house \u2014 by the room, by the pair, or by the floor",
     "neighborhood": "Ravenna",
     "address": "2120 NE 54th St, Seattle, WA 98105",
     "beds": 10,
@@ -109,23 +141,48 @@
       "Lower floor: 3 bed, 2 bath, kitchen, living room, garage and laundry room",
       "Middle floor: 5 bed, 3 bath, kitchen and living room",
       "Top floor: 2 bed, 1 bath",
-      "Garage plus driveway — ample parking",
+      "Garage plus driveway \u2014 ample parking",
       "Very close to Ravenna Park"
     ],
     "unit": [
-      "Ten bedrooms let individually: L1–L3 lower, M1–M5 main, U1–U2 upper",
+      "Ten bedrooms let individually: L1\u2013L3 lower, M1\u2013M5 main, U1\u2013U2 upper",
       "Lower: L1 and L2 share a bathroom, L3 has its own",
       "Main: M1/M2 share, M3/M4 share, M5 has its own",
       "Upper: U1 and U2 share a bathroom",
       "Lower floor has a second living room and kitchen of its own"
     ],
     "leaseOptions": [
-      { "name": "Single bedroom", "detail": "Any of the ten rooms, shared or private bath", "rent": 850, "rentLabel": "$850–$1,150/mo" },
-      { "name": "L1 + L2", "detail": "Two lower bedrooms sharing a bath", "rent": 1650 },
-      { "name": "Lower floor", "detail": "L1–L3, with its own living room and kitchen", "rent": 2700 },
-      { "name": "M1 + M2", "detail": "Two main-floor bedrooms sharing a bath", "rent": 1700 },
-      { "name": "M3 + M4", "detail": "Two main-floor bedrooms sharing a bath", "rent": 1750 },
-      { "name": "Main + Upper floors", "detail": "Seven bedrooms across two floors", "rent": 6550 }
+      {
+        "name": "Single bedroom",
+        "detail": "Any of the ten rooms, shared or private bath",
+        "rent": 850,
+        "rentLabel": "$850\u2013$1,150/mo"
+      },
+      {
+        "name": "L1 + L2",
+        "detail": "Two lower bedrooms sharing a bath",
+        "rent": 1650
+      },
+      {
+        "name": "Lower floor",
+        "detail": "L1\u2013L3, with its own living room and kitchen",
+        "rent": 2700
+      },
+      {
+        "name": "M1 + M2",
+        "detail": "Two main-floor bedrooms sharing a bath",
+        "rent": 1700
+      },
+      {
+        "name": "M3 + M4",
+        "detail": "Two main-floor bedrooms sharing a bath",
+        "rent": 1750
+      },
+      {
+        "name": "Main + Upper floors",
+        "detail": "Seven bedrooms across two floors",
+        "rent": 6550
+      }
     ],
     "lease": [
       "Leases run 3 to 12 months",
@@ -154,7 +211,7 @@
     "building": [
       "8 bed / 3 bath, 2,600 sqft",
       "Huge back yard",
-      "Parking for 4–5 cars depending on size",
+      "Parking for 4\u20135 cars depending on size",
       "Located on a private alleyway off the main road"
     ],
     "lease": [
@@ -163,38 +220,58 @@
   },
   {
     "id": "4316-36th-ave-ne-l",
-    "title": "4316 36th Ave NE — Lower Unit",
-    "subtitle": "4-bedroom lower half of a duplex",
+    "title": "4316 36th Ave NE \u2014 Lower Unit",
+    "subtitle": "4 furnished bedrooms in a duplex \u2014 rented one room at a time",
     "neighborhood": "Bryant",
     "address": "4316 36th Ave NE, Seattle, WA 98105",
     "beds": 4,
     "bedsLabel": "4 bd",
     "baths": 1.5,
     "sqft": 1200,
-    "rent": 3600,
+    "rentFrom": 1000,
+    "rentTo": 3600,
     "available": "2026-09-01",
     "availableLabel": "Early September 2026",
     "status": "available",
     "zillow": "https://www.zillow.com/homedetails/4316-36th-Ave-NE-L-Seattle-WA-98105/2072279403_zpid/",
     "image": "/images/listing-4316-36th-ave-ne-l.svg",
-    "summary": "The lower half of a duplex — 4 bed / 1.5 bath, 1,200 sqft, with its own private entry and no internal connection to the unit upstairs.",
+    "summary": "The lower half of a duplex \u2014 4 bed / 1.5 bath, 1,200 sqft, with its own private entry and no internal connection to the unit upstairs. Bedrooms are let one at a time and come furnished, from $1,000 a month, or take all four and the unit is $3,600.",
     "building": [
       "Duplex: 6 bedrooms upstairs, 4 downstairs",
-      "Separate private entry — no internal connection between units",
+      "Separate private entry \u2014 no internal connection between units",
       "Upstairs is currently occupied",
       "Large backyard area, co-maintained between units"
     ],
     "unit": [
-      "4 bed / 1.5 bath, 1,200 sqft"
+      "4 bed / 1.5 bath, 1,200 sqft",
+      "Four bedrooms let individually, or the whole unit together",
+      "Every bedroom comes furnished with a bed and desk",
+      "One full bath and one half bath, shared between the four bedrooms",
+      "Private entry, kitchen and living room \u2014 shared by the four rooms"
     ],
     "lease": [
-      "Available starting early September"
+      "Available starting early September",
+      "Rooms from $1,000 a month, furnished",
+      "All four bedrooms together: $3,600 a month"
+    ],
+    "leaseOptions": [
+      {
+        "name": "Single bedroom",
+        "detail": "Any of the four bedrooms, furnished",
+        "rent": 1000,
+        "rentLabel": "$1,000\u2013$1,100/mo"
+      },
+      {
+        "name": "The whole unit",
+        "detail": "All four bedrooms, both baths, kitchen and living room",
+        "rent": 3600
+      }
     ]
   },
   {
     "id": "4735-22nd-ave-ne",
     "title": "4735 22nd Ave NE",
-    "subtitle": "3-bedroom apartments — one of four units available",
+    "subtitle": "3-bedroom apartments \u2014 one of four units available",
     "neighborhood": "University District",
     "address": "4735 22nd Ave NE, Seattle, WA 98105",
     "beds": 3,
@@ -217,7 +294,7 @@
     ],
     "unit": [
       "3 bed / 1 bath, 1,000 sqft",
-      "Units 3 and 4 — one is still available"
+      "Units 3 and 4 \u2014 one is still available"
     ],
     "lease": [
       "Available starting September",
@@ -252,7 +329,7 @@
     ],
     "lease": [
       "Available Saturday, August 10, 2026",
-      "Leases up to one year — six months or longer preferred"
+      "Leases up to one year \u2014 six months or longer preferred"
     ]
   }
 ]
