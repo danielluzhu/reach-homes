@@ -152,6 +152,15 @@ that has passed stops being shown, so an old one is inert rather than wrong.
 Pairs and floors take theirs from the last of their rooms to come free, since
 none of them can be moved into before that.
 
+`property.json` also carries `pendingApplications`: applications in progress
+that aren't tied to a bedroom yet, because the applicant has taken the house
+rather than a room. There is no card to grey out for one, so the number is
+stated under the availability date instead, counted against the rooms nobody
+has claimed by name — "4 applications pending on the 6 rooms still open".
+Rooms that *have* been named take `status: "pending"` as usual and are left
+out of that open total, so a single application is never described twice.
+Drop the number as rooms get settled, or delete it and the line disappears.
+
 ## Availability sync
 
 The studios at 4544 20th Ave NE are also listed on the building's own site,

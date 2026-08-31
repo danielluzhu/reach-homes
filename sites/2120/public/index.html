@@ -27,6 +27,7 @@
     <div class="detail-price">
       <div class="price" data-rent-range></div>
       <div class="availability" id="availability"></div>
+      <p class="availability-note" id="pending-note"></p>
     </div>
   </div>
 
@@ -239,6 +240,15 @@ Promise.all([
   });
 
   document.getElementById("availability").textContent = property.availableLabel;
+
+  // Applications not yet tied to a room, counted against the rooms nobody has
+  // claimed by name -- a room already marked pending is spoken for on its own
+  // card and would otherwise be counted twice.
+  const stillOpen = rooms.filter((r) => !isLeased(r) && !isPending(r)).length;
+  const note = unassignedNote(property.pendingApplications ?? 0, stillOpen);
+  const noteEl = document.getElementById("pending-note");
+  if (note) noteEl.textContent = note;
+  else noteEl.remove();
   document.getElementById("lease-spec").textContent = term.months;
 
   document.querySelectorAll("[data-address]").forEach((el) => { el.textContent = property.address; });

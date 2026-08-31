@@ -87,6 +87,24 @@ function availableTag(iso) {
 }
 
 /**
+ * Applications in progress that aren't tied to a room yet: someone has applied
+ * to the house rather than to a bedroom, and which room they take isn't
+ * settled. There is nothing to grey out, since no card is the one spoken for,
+ * so the count is stated against the rooms still open instead -- how much of
+ * what's left is already claimed is the part a renter needs.
+ *
+ * Rooms that have been named carry `status: "pending"` and are counted out of
+ * the open total by the caller, so the two can't describe the same application
+ * twice.
+ */
+function unassignedNote(count, open) {
+  if (!count) return "";
+  const apps = count + (count === 1 ? " application" : " applications");
+  const left = open + (open === 1 ? " room" : " rooms") + " still open";
+  return apps + " pending on the " + left + " \u2014 which rooms isn't settled yet";
+}
+
+/**
  * Which of a combination's rooms have an application in progress. Derived from
  * the rooms rather than recorded on the combination, so marking a room pending
  * cannot leave the pairs and floors out of step with it.
