@@ -239,7 +239,11 @@
     "photos": [
       {
         "src": "/images/photos/4316-36th-ave-ne-l/a.jpg",
-        "caption": "Bedrooms A and B \u2014 the two are identical"
+        "caption": "Bedroom A"
+      },
+      {
+        "src": "/images/photos/4316-36th-ave-ne-l/a.jpg",
+        "caption": "Bedroom B \u2014 identical to A, shown in A's photo"
       },
       {
         "src": "/images/photos/4316-36th-ave-ne-l/c.jpg",
@@ -270,8 +274,13 @@
     ],
     "leaseOptions": [
       {
-        "name": "Bedrooms A and B",
-        "detail": "Identical rooms, furnished \u2014 either one",
+        "name": "Bedroom A",
+        "detail": "Furnished",
+        "rent": 1100
+      },
+      {
+        "name": "Bedroom B",
+        "detail": "Furnished, identical to A",
         "rent": 1100
       },
       {
