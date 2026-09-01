@@ -60,7 +60,7 @@
       "Internet: $40 flat"
     ],
     "upcomingUnits": [
-      { "unit": "101", "available": "2026-07-30", "label": "Available now" },
+      { "unit": "101", "available": "2026-07-30", "label": "Available now", "status": "pending" },
       { "unit": "004", "available": "2026-08-08", "status": "unavailable" },
       { "unit": "406", "available": "2026-08-10", "status": "unavailable" },
       { "unit": "403", "available": "2026-08-16", "status": "unavailable" },
