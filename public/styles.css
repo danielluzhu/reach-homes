@@ -1035,6 +1035,69 @@ main {
 }
 
 
+/* --- Rooms & pricing cards -------------------------------------------------- */
+
+/* One room per card: its photo, what it is, and what it costs. Replaces the
+   gallery and the lease options table for a listing let by the room, where the
+   two halves described the same bedroom from opposite ends of the page. */
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.option-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
+}
+
+.option-photo { display: block; line-height: 0; }
+
+.option-photo img {
+  width: 100%;
+  /* Matches the photo grid, so a page with both keeps one tile shape. */
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+
+.option-card:hover .option-photo img { transform: scale(1.03); }
+
+.option-photo:focus-visible {
+  outline: 2px solid var(--brand-600);
+  outline-offset: -2px;
+}
+
+.option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px 14px;
+}
+
+.option-body h4 { margin: 0; font-size: 1.05rem; }
+.option-detail { color: var(--muted); font-size: 0.88rem; }
+.option-note { color: var(--muted); font-size: 0.78rem; }
+
+.option-price {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 1.1rem;
+}
+.option-price small { color: var(--muted); font-size: 0.8rem; }
+
+/* Not a room but the alternative to them, so it reads as its own thing --
+   and it has no photo to give the card its height. */
+.option-card-whole {
+  border-color: var(--brand-600);
+  background: var(--brand-100);
+}
+.option-card-whole .option-body { justify-content: center; min-height: 150px; }
+
 /* --- Listing photo grid ----------------------------------------------------- */
 
 .photo-grid {

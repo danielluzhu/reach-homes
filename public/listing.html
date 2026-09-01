@@ -43,6 +43,37 @@ function layoutTable(layouts) {
   </table></div>`;
 }
 
+/**
+ * Lease options as cards, for a listing whose options are rooms with photos of
+ * their own. A price in a table and a photo in a gallery describe the same
+ * bedroom from opposite ends of the page, and the reader has to hold one in
+ * their head while they scroll to the other; on a card they arrive together.
+ *
+ * An option without a photo -- the whole unit, a pair, a floor -- still gets a
+ * card, styled apart, because it is the alternative to the rooms rather than
+ * one of them.
+ */
+function leaseOptionCards(options) {
+  return `<div class="option-grid">${options
+    .map((o) => {
+      const photo = o.photo
+        ? `<a class="option-photo" href="${escapeHtml(o.photo)}" target="_blank" rel="noopener">
+             <img src="${escapeHtml(o.photo)}" alt="${escapeHtml(o.name)}" loading="lazy" />
+           </a>`
+        : "";
+      return `<article class="option-card${o.photo ? "" : " option-card-whole"}">
+        ${photo}
+        <div class="option-body">
+          <h4>${escapeHtml(o.name)}</h4>
+          ${o.photoOf ? `<span class="option-note">Photo of ${escapeHtml(o.photoOf)}</span>` : ""}
+          <span class="option-detail">${escapeHtml(o.detail)}</span>
+          <div class="option-price">${o.rentLabel ? escapeHtml(o.rentLabel) : money(o.rent) + "<small>/mo</small>"}</div>
+        </div>
+      </article>`;
+    })
+    .join("")}</div>`;
+}
+
 function leaseOptionTable(options) {
   return `<div class="table-scroll"><table class="data-table">
     <thead><tr><th>Option</th><th>Details</th><th>Rent</th></tr></thead>
@@ -117,6 +148,9 @@ fetch("/api/listings")
 
     document.title = l.title + " — Reach Homes";
     const sqft = sqftLabel(l);
+    // Where the lease options carry photos, they are rooms and they replace
+    // both the gallery and the options table with one set of cards.
+    const roomOptions = (l.leaseOptions || []).some((o) => o.photo);
 
     el.innerHTML = `
       <div class="detail-hero">
@@ -152,11 +186,13 @@ fetch("/api/listings")
         <a class="btn btn-secondary" href="${escapeHtml(l.zillow)}" target="_blank" rel="noopener">View on Zillow</a>
       </div>
 
-      ${section("Photos", gallery(l.photos))}
+      ${roomOptions
+        ? section("Rooms & pricing", leaseOptionCards(l.leaseOptions))
+        : section("Photos", gallery(l.photos))}
       ${section("The building", l.building ? list(l.building) : "")}
       ${section("The unit", l.unit ? list(l.unit) : "")}
       ${section("Floor plans & pricing", l.layouts ? layoutTable(l.layouts) : "")}
-      ${section("Lease options", l.leaseOptions ? leaseOptionTable(l.leaseOptions) : "")}
+      ${roomOptions ? "" : section("Lease options", l.leaseOptions ? leaseOptionTable(l.leaseOptions) : "")}
       ${section("Lease terms", l.lease ? list(l.lease) : "")}
       ${section("Upcoming availability", l.upcomingUnits ? unitTable(l.upcomingUnits) : "")}
     `;

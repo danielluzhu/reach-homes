@@ -236,24 +236,6 @@
     "zillow": "https://www.zillow.com/homedetails/4316-36th-Ave-NE-L-Seattle-WA-98105/2072279403_zpid/",
     "image": "/images/listing-4316-36th-ave-ne-l.svg",
     "summary": "The lower half of a duplex, with its own private entry and no internal connection to the unit upstairs.",
-    "photos": [
-      {
-        "src": "/images/photos/4316-36th-ave-ne-l/a.jpg",
-        "caption": "Bedroom A"
-      },
-      {
-        "src": "/images/photos/4316-36th-ave-ne-l/a.jpg",
-        "caption": "Bedroom B \u2014 identical to A, shown in A's photo"
-      },
-      {
-        "src": "/images/photos/4316-36th-ave-ne-l/c.jpg",
-        "caption": "Bedroom C"
-      },
-      {
-        "src": "/images/photos/4316-36th-ave-ne-l/d.jpg",
-        "caption": "Bedroom D"
-      }
-    ],
     "building": [
       "Duplex: 6 bedrooms upstairs, 4 downstairs",
       "Separate private entry \u2014 no internal connection between units",
@@ -276,22 +258,27 @@
       {
         "name": "Bedroom A",
         "detail": "Furnished",
-        "rent": 1100
+        "rent": 1100,
+        "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg"
       },
       {
         "name": "Bedroom B",
         "detail": "Furnished, identical to A",
-        "rent": 1100
+        "rent": 1100,
+        "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg",
+        "photoOf": "Bedroom A"
       },
       {
         "name": "Bedroom C",
         "detail": "Furnished",
-        "rent": 1050
+        "rent": 1050,
+        "photo": "/images/photos/4316-36th-ave-ne-l/c.jpg"
       },
       {
         "name": "Bedroom D",
         "detail": "Furnished",
-        "rent": 1000
+        "rent": 1000,
+        "photo": "/images/photos/4316-36th-ave-ne-l/d.jpg"
       },
       {
         "name": "The whole unit",
