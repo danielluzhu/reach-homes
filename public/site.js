@@ -98,16 +98,30 @@ function unitsRemaining(l) {
  * where there is one, so it can't fall out of step with the unit statuses;
  * otherwise taken from a stated unitsAvailable.
  */
+function unitsPending(l) {
+  if (l.unitsPending != null) return l.unitsPending;
+  if (!l.upcomingUnits) return null;
+  return l.upcomingUnits.filter((u) => u.status === "pending").length;
+}
+
 function unitCounts(l) {
   if (l.totalUnits == null) return null;
   const available = l.unitsAvailable != null ? l.unitsAvailable : unitsRemaining(l);
-  return available == null ? null : { available: available, total: l.totalUnits };
+  return available == null
+    ? null
+    : { available: available, total: l.totalUnits, pending: unitsPending(l) || 0 };
 }
 
-/** Compact count for listing cards, e.g. "4/31 available". */
+/**
+ * Compact count for listing cards, e.g. "4/31 available" or, where some of the
+ * rest are spoken for, "4/10 available, 3 pending". Pending is named rather
+ * than folded into the unavailable remainder: an application can fall through,
+ * so it is a different thing to a renter than a place that is gone.
+ */
 function unitCountLabel(l) {
   const c = unitCounts(l);
-  return c ? c.available + "/" + c.total + " available" : null;
+  if (!c) return null;
+  return c.available + "/" + c.total + " available" + (c.pending ? `, ${c.pending} pending` : "");
 }
 
 /**
@@ -119,7 +133,11 @@ function availabilityLabel(l) {
   if (isTaken(l)) return STATUS_LABELS.taken;
   const c = unitCounts(l);
   if (!c) return l.availableLabel;
-  return c.available + " of " + c.total + " units \u00b7 " + l.availableLabel;
+  // "units" for a building let by the unit, "rooms" for a house let by the
+  // room -- calling a bedroom a unit reads as a separate address.
+  const noun = l.unitNoun || "units";
+  const pending = c.pending ? c.pending + " pending \u00b7 " : "";
+  return c.available + " of " + c.total + " " + noun + " \u00b7 " + pending + l.availableLabel;
 }
 
 function fmtDate(iso) {
