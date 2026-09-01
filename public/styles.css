@@ -1061,6 +1061,18 @@ main {
 
 .photo-tile:hover img { transform: scale(1.03); }
 
+/* Which room this is. Sits under the image rather than over it: a label
+   floated on the photo lands on whatever happens to be in that corner, and
+   these are rooms, so it lands on a bed as often as on a blank wall. */
+.photo-caption {
+  display: block;
+  padding: 7px 10px 8px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 .photo-tile:focus-visible {
   outline: 2px solid var(--brand-600);
   outline-offset: 2px;

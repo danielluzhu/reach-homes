@@ -58,15 +58,22 @@ function leaseOptionTable(options) {
  * Photo grid. Each tile links to the full-size image, which is the whole
  * lightbox: no script, works with JS off, and the browser's own image view
  * handles zoom and panning better than a hand-rolled overlay would.
+ *
+ * A photo is either a path on its own or `{ src, caption }`. The caption is
+ * for a listing let by the room, where a picture of a bedroom says nothing
+ * useful unless it says which bedroom -- and it doubles as the alt text, since
+ * a caption worth showing is a caption worth reading aloud.
  */
 function gallery(photos) {
   if (!photos || !photos.length) return "";
   return `<div class="photo-grid">${photos
-    .map(
-      (src, i) => `<a class="photo-tile" href="${escapeHtml(src)}" target="_blank" rel="noopener">
-        <img src="${escapeHtml(src)}" alt="" loading="${i < 3 ? "eager" : "lazy"}" />
-      </a>`,
-    )
+    .map((photo, i) => {
+      const { src, caption } = typeof photo === "string" ? { src: photo } : photo;
+      return `<a class="photo-tile" href="${escapeHtml(src)}" target="_blank" rel="noopener">
+        <img src="${escapeHtml(src)}" alt="${escapeHtml(caption || "")}" loading="${i < 3 ? "eager" : "lazy"}" />
+        ${caption ? `<span class="photo-caption">${escapeHtml(caption)}</span>` : ""}
+      </a>`;
+    })
     .join("")}</div>`;
 }
 
