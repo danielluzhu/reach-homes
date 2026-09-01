@@ -148,8 +148,10 @@ fetch("/api/listings")
 
     document.title = l.title + " — Reach Homes";
     const sqft = sqftLabel(l);
-    // Where the lease options carry photos, they are rooms and they replace
-    // both the gallery and the options table with one set of cards.
+    // Where the lease options carry photos, they are rooms: they replace the
+    // options table with cards that put each room's photo beside its rent. The
+    // gallery stays for everything that isn't a room -- the building, the
+    // shared spaces -- which is what it holds once the rooms have left it.
     const roomOptions = (l.leaseOptions || []).some((o) => o.photo);
 
     el.innerHTML = `
@@ -186,9 +188,8 @@ fetch("/api/listings")
         <a class="btn btn-secondary" href="${escapeHtml(l.zillow)}" target="_blank" rel="noopener">View on Zillow</a>
       </div>
 
-      ${roomOptions
-        ? section("Rooms & pricing", leaseOptionCards(l.leaseOptions))
-        : section("Photos", gallery(l.photos))}
+      ${section("Photos", gallery(l.photos))}
+      ${roomOptions ? section("Rooms & pricing", leaseOptionCards(l.leaseOptions)) : ""}
       ${section("The building", l.building ? list(l.building) : "")}
       ${section("The unit", l.unit ? list(l.unit) : "")}
       ${section("Floor plans & pricing", l.layouts ? layoutTable(l.layouts) : "")}

@@ -236,6 +236,16 @@
     "zillow": "https://www.zillow.com/homedetails/4316-36th-Ave-NE-L-Seattle-WA-98105/2072279403_zpid/",
     "image": "/images/listing-4316-36th-ave-ne-l.svg",
     "summary": "The lower half of a duplex, with its own private entry and no internal connection to the unit upstairs.",
+    "photos": [
+      {
+        "src": "/images/photos/4316-36th-ave-ne-l/exterior.jpg",
+        "caption": "The duplex from the garden side"
+      },
+      {
+        "src": "/images/photos/4316-36th-ave-ne-l/kitchen.jpg",
+        "caption": "The kitchen \u2014 shared by the four rooms"
+      }
+    ],
     "building": [
       "Duplex: 6 bedrooms upstairs, 4 downstairs",
       "Separate private entry \u2014 no internal connection between units",
