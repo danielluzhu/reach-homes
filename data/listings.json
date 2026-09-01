@@ -229,7 +229,7 @@
     "baths": 1.5,
     "sqft": 1200,
     "rentFrom": 1000,
-    "rentTo": 3600,
+    "rentTo": 1100,
     "available": "2026-09-01",
     "availableLabel": "Early September 2026",
     "status": "available",
@@ -244,15 +244,14 @@
     ],
     "unit": [
       "4 bed / 1.5 bath, 1,200 sqft",
-      "Four bedrooms \u2014 A, B, C and D \u2014 let individually, or the whole unit together",
+      "Four bedrooms \u2014 A, B, C and D \u2014 each let on its own",
       "Every bedroom comes furnished: bed, desk and chair, nightstand and lamp",
       "One full bath and one half bath, shared between the four bedrooms",
       "Private entry, kitchen and living room \u2014 shared by the four rooms"
     ],
     "lease": [
       "Available starting early September",
-      "Rooms from $1,000 to $1,100 a month, furnished",
-      "All four bedrooms together: $3,600 a month"
+      "Rooms from $1,000 to $1,100 a month, furnished"
     ],
     "leaseOptions": [
       {
@@ -279,11 +278,6 @@
         "detail": "Furnished",
         "rent": 1000,
         "photo": "/images/photos/4316-36th-ave-ne-l/d.jpg"
-      },
-      {
-        "name": "The whole unit",
-        "detail": "All four bedrooms, both baths, kitchen and living room",
-        "rent": 3600
       }
     ]
   },
