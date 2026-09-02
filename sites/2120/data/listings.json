@@ -63,6 +63,7 @@
     "rent": 875,
     "bath": "Shared bathroom with M2",
     "private": false,
+    "status": "pending",
     "available": "2026-11-30",
     "photo": "m1.jpg"
   },
