@@ -167,7 +167,7 @@
   {
     "id": "4316-36th-ave-ne-l",
     "title": "4316 36th Ave NE — Lower Unit",
-    "subtitle": "4 furnished bedrooms in a duplex — rented one room at a time",
+    "subtitle": "4 bedrooms in a duplex — rented one room at a time",
     "neighborhood": "Bryant",
     "address": "4316 36th Ave NE, Seattle, WA 98105",
     "beds": 4,
@@ -207,13 +207,13 @@
     ],
     "lease": [
       "Available starting early September",
-      "Rooms from $1,000 to $1,100 a month, furnished"
+      "Rooms from $1,000 to $1,100 a month"
     ],
     "leaseOptions": [
-      { "name": "Bedroom A", "detail": "Furnished", "rent": 1100, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg" },
-      { "name": "Bedroom B", "detail": "Furnished, identical to A", "rent": 1100, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg", "photoOf": "Bedroom A" },
-      { "name": "Bedroom C", "detail": "Furnished", "rent": 1050, "photo": "/images/photos/4316-36th-ave-ne-l/c.jpg" },
-      { "name": "Bedroom D", "detail": "Furnished", "rent": 1000, "photo": "/images/photos/4316-36th-ave-ne-l/d.jpg" }
+      { "name": "Bedroom A", "detail": "Can be furnished", "rent": 1100, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg" },
+      { "name": "Bedroom B", "detail": "Can be furnished, identical to A", "rent": 1100, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg", "photoOf": "Bedroom A" },
+      { "name": "Bedroom C", "detail": "Can be furnished", "rent": 1050, "photo": "/images/photos/4316-36th-ave-ne-l/c.jpg" },
+      { "name": "Bedroom D", "detail": "Can be furnished", "rent": 1000, "photo": "/images/photos/4316-36th-ave-ne-l/d.jpg" }
     ]
   },
   {
