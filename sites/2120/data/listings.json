@@ -12,6 +12,7 @@
     "rent": 850,
     "bath": "Shared bathroom with L2",
     "private": false,
+    "status": "pending",
     "available": "2026-09-05",
     "photo": "l1.jpg"
   },
@@ -28,6 +29,7 @@
     "rent": 850,
     "bath": "Shared bathroom with L1",
     "private": false,
+    "status": "pending",
     "available": "2026-09-05",
     "photo": "l2.jpg"
   },
