@@ -15,10 +15,9 @@
     "available": "2026-08-08",
     "availableLabel": "Aug–Sep 2026",
     "totalUnits": 31,
-    "status": "available",
+    "status": "taken",
     "zillow": "https://www.zillow.com/b/4544-20th-ave-ne-seattle-wa-62r4yK/",
     "image": "/images/listing-4544-20th-ave-ne.svg",
-    "promo": "1 month free on a new lease",
     "summary": "Brand-new studio building steps from UW and the light rail. 31 units, each with a private bathroom and kitchenette, and free furnishing available.",
     "building": [
       "Built 2026 — first leasing season",
@@ -60,7 +59,7 @@
       "Internet: $40 flat"
     ],
     "upcomingUnits": [
-      { "unit": "101", "available": "2026-07-30", "label": "Available now", "status": "pending" },
+      { "unit": "101", "available": "2026-07-30", "label": "Available now", "status": "unavailable" },
       { "unit": "004", "available": "2026-08-08", "status": "unavailable" },
       { "unit": "406", "available": "2026-08-10", "status": "unavailable" },
       { "unit": "403", "available": "2026-08-16", "status": "unavailable" },
