@@ -225,15 +225,20 @@ Promise.all([
     )
     .join("");
 
-  // The opening rate quoted in the summary, at this site's rents.
-  const cheapest = Math.min(...rooms.map((r) => roomRent(r, term)));
+  // The opening rate quoted in the summary, at this site's rents. Only rooms
+  // that can still be taken count: a leased room's rent is no longer an offer,
+  // and quoting it advertises a price nobody can rent at. A pending room stays
+  // in, on the same reasoning as the combinations -- the application may fall
+  // through.
+  const offered = rooms.filter((r) => !isLeased(r));
+  const cheapest = Math.min(...offered.map((r) => roomRent(r, term)));
   document.querySelectorAll("[data-min-rent]").forEach((el) => { el.textContent = money(cheapest); });
 
   // The headline range runs from the cheapest room to the largest thing on
   // offer: the dearest combination where they are let, the dearest room where
   // they aren't.
   const dearest = term.roomsOnly || !bundles.length
-    ? Math.max(...rooms.map((r) => roomRent(r, term)))
+    ? Math.max(...offered.map((r) => roomRent(r, term)))
     : Math.max(...bundles.map((b) => b.rent));
   document.querySelectorAll("[data-rent-range]").forEach((el) => {
     el.innerHTML = `${escapeHtml(money(cheapest))}\u2013${escapeHtml(money(dearest))}<small>/mo</small>`;
