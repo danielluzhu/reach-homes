@@ -90,11 +90,9 @@ rather than the diff. Push to `main`; it deploys via `.github/workflows/pages.ym
 
 ## Known drift, still unfixed
 
-- The main site's 2120 card advertises `$850–$6,550` and lists the lower floor,
-  M3 + M4 and Main + Upper in its lease options. All three are withdrawn on the
-  microsite; the real range is `$850–$1,700`.
-- 2120's "from $850" and the short-term top-of-range are computed across *all*
-  rooms, leased included. Correct only by luck — leasing L1 and L2 would
-  advertise a room nobody can take.
-- The front page says 2120 is 4 of 10 available with 3 pending; the microsite
-  derives 6 open, 4 leased and 4 applications with no room named.
+Nothing outstanding. The three that used to sit here — the main site's 2120
+card advertising withdrawn combinations, the rent range computed across leased
+rooms, and the front-page count disagreeing with the microsite — were all
+cleared when L1, L2 and M1 leased. The rent range now derives from the rooms
+still on offer; the card and the count are still mirrored by hand and will
+drift again.
