@@ -1,6 +1,6 @@
 {
-  "units": "70",
-  "doors": "200+",
+  "units": "100+",
+  "doors": "250+",
   "serviceArea": "Seattle & the Eastside",
-  "_note": "Headline figures stated by the business. Unlike data/portfolio-map.json these are NOT derived from address.txt, which currently describes 27 buildings and 65 doors. Edit here and every page follows."
+  "_note": "Headline figures stated by the business. Unlike data/portfolio-map.json these are NOT derived from address.txt, which currently describes 28 buildings and 66 doors. Edit here and every page follows."
 }
