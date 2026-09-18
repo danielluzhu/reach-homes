@@ -1,7 +1,7 @@
 {
   "stats": {
-    "properties": 27,
-    "units": 65,
+    "properties": 28,
+    "units": 66,
     "neighborhoods": 8,
     "cities": 3
   },
@@ -27,14 +27,14 @@
       "units": 3
     },
     {
+      "neighborhood": "Roosevelt",
+      "properties": 3,
+      "units": 3
+    },
+    {
       "neighborhood": "Capitol Hill",
       "properties": 2,
       "units": 6
-    },
-    {
-      "neighborhood": "Roosevelt",
-      "properties": 2,
-      "units": 2
     },
     {
       "neighborhood": "Kenmore",
@@ -147,6 +147,12 @@
     {
       "lat": 47.679,
       "lng": -122.315,
+      "neighborhood": "Roosevelt",
+      "units": 1
+    },
+    {
+      "lat": 47.67,
+      "lng": -122.317,
       "neighborhood": "Roosevelt",
       "units": 1
     },

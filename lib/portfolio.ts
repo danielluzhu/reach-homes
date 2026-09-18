@@ -71,6 +71,7 @@ const NEIGHBORHOODS: Record<string, string> = {
   "5229 18th Ave NE": "University District",
   "5830 NE 204th Pl": "Kenmore",
   "1200 Bellevue Way": "Bellevue",
+  "5612 Roosevelt Way NE": "Roosevelt",
 };
 
 /** Title-case a token, keeping directionals and ordinals correct (ne -> NE, 21St -> 21st). */
