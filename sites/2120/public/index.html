@@ -135,7 +135,7 @@
   <section class="cta" id="inquire">
     <div>
       <h3>Interested in a room?</h3>
-      <p>Tell us which room or floor you're after and your move-in timing, and we'll get back to you within one business day.</p>
+      <p>Tell us which room you're after and your move-in timing, and we'll get back to you within one business day.</p>
       <p class="contact-lines">
         <a id="email-line" href="#"></a><br />
         <a id="phone-line" href="#"></a>
@@ -239,7 +239,9 @@ Promise.all([
     ? Math.max(...offered.map((r) => roomRent(r, term)))
     : Math.max(...bundles.map((b) => b.rent));
   document.querySelectorAll("[data-rent-range]").forEach((el) => {
-    el.innerHTML = `${escapeHtml(money(cheapest))}\u2013${escapeHtml(money(dearest))}<small>/mo</small>`;
+    // One room left makes the range a single figure; "$1,100–$1,100" reads as a typo.
+    const range = cheapest === dearest ? money(cheapest) : `${money(cheapest)}\u2013${money(dearest)}`;
+    el.innerHTML = `${escapeHtml(range)}<small>/mo</small>`;
   });
 
   document.getElementById("availability").textContent = property.availableLabel;

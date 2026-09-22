@@ -44,7 +44,7 @@
     "rent": 1100,
     "bath": "Private bathroom",
     "private": true,
-    "status": "leased",
+    "status": "pending",
     "photo": "m5.jpg",
     "photoOf": "M5"
   },
@@ -77,7 +77,7 @@
     "rent": 875,
     "bath": "Shared bathroom with M1",
     "private": false,
-    "available": "2026-09-05",
+    "status": "leased",
     "photo": "m2.jpg"
   },
   {
@@ -125,6 +125,7 @@
     "rent": 1150,
     "bath": "Private bathroom",
     "private": true,
+    "status": "leased",
     "photo": "m5.jpg"
   },
   {
@@ -140,7 +141,7 @@
     "rent": 1100,
     "bath": "Shared bathroom with U2",
     "private": false,
-    "available": "2026-08-31",
+    "status": "leased",
     "photo": "u.jpg"
   },
   {

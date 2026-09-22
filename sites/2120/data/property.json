@@ -7,7 +7,7 @@
   "sqft": 3000,
   "available": "2026-09-01",
   "availableLabel": "Early September 2026",
-  "pendingApplications": 1,
+  "pendingApplications": 0,
   "utilitiesPerPerson": 100,
   "utilitiesNote": "Flat $100 per person each month, internet included.",
   "levels": [
@@ -78,7 +78,7 @@
       "months": "Under 8 months",
       "path": "/short-term/",
       "title": "2120 NE 54th St \u2014 short-term rooms in Ravenna, Seattle",
-      "description": "Single bedrooms in a 10-bedroom, 6-bath Ravenna house on leases of 3 to 7 months, from $1,025 a month with utilities at a flat $100 per person.",
+      "description": "Single bedrooms in a 10-bedroom, 6-bath Ravenna house on leases of 3 to 7 months, from $1,300 a month with utilities at a flat $100 per person.",
       "roomsOnly": true,
       "premium": {
         "room": 150,
