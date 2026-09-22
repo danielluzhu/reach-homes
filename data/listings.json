@@ -170,8 +170,8 @@
     "bedsLabel": "4 bd",
     "baths": 1.5,
     "sqft": 1200,
-    "rentFrom": 1100,
-    "rentTo": 1100,
+    "rentFrom": 1050,
+    "rentTo": 1050,
     "available": "2026-09-01",
     "availableLabel": "Early September 2026",
     "totalUnits": 4,
@@ -206,11 +206,11 @@
     ],
     "lease": [
       "Available starting early September",
-      "Bedrooms A and B are still open, at $1,100 a month each"
+      "Bedrooms A and B are still open, at $1,050 a month each"
     ],
     "leaseOptions": [
-      { "name": "Bedroom A", "detail": "Can be furnished", "rent": 1100, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg" },
-      { "name": "Bedroom B", "detail": "Can be furnished, identical to A", "rent": 1100, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg", "photoOf": "Bedroom A" }
+      { "name": "Bedroom A", "detail": "Can be furnished", "rent": 1050, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg" },
+      { "name": "Bedroom B", "detail": "Can be furnished, identical to A", "rent": 1050, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg", "photoOf": "Bedroom A" }
     ]
   },
   {
