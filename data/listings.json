@@ -83,7 +83,7 @@
     "rentFrom": 1100,
     "rentTo": 1100,
     "available": "2026-09-01",
-    "availableLabel": "Early September 2026",
+    "availableLabel": "Available now",
     "totalUnits": 10,
     "unitsAvailable": 0,
     "unitsPending": 1,
@@ -130,7 +130,7 @@
     "lease": [
       "Leases run 3 to 12 months",
       "Rooms can be furnished free with a bed and desk",
-      "Available starting early September"
+      "Available now"
     ]
   },
   {
@@ -173,7 +173,7 @@
     "rentFrom": 1050,
     "rentTo": 1050,
     "available": "2026-09-01",
-    "availableLabel": "Early September 2026",
+    "availableLabel": "Available now",
     "totalUnits": 4,
     "unitsAvailable": 2,
     "unitNoun": "rooms",
@@ -205,7 +205,7 @@
       "Private entry, kitchen and living room — shared by the four rooms"
     ],
     "lease": [
-      "Available starting early September",
+      "Available now",
       "Bedrooms A and B are still open, at $1,050 a month each"
     ],
     "leaseOptions": [
