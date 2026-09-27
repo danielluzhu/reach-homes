@@ -1082,6 +1082,7 @@ main {
 .option-body h4 { margin: 0; font-size: 1.05rem; }
 .option-detail { color: var(--muted); font-size: 0.88rem; }
 .option-note { color: var(--muted); font-size: 0.78rem; }
+.option-body .pill-muted { align-self: flex-start; }
 
 .option-price {
   margin-top: auto;

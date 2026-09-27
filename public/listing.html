@@ -65,6 +65,7 @@ function leaseOptionCards(options) {
         ${photo}
         <div class="option-body">
           <h4>${escapeHtml(o.name)}</h4>
+          ${unitStatusLabel(o) ? `<span class="pill-muted">${escapeHtml(unitStatusLabel(o))}</span>` : ""}
           ${o.photoOf ? `<span class="option-note">Photo of ${escapeHtml(o.photoOf)}</span>` : ""}
           <span class="option-detail">${escapeHtml(o.detail)}</span>
           <div class="option-price">${o.rentLabel ? escapeHtml(o.rentLabel) : money(o.rent) + "<small>/mo</small>"}</div>
