@@ -44,7 +44,7 @@
     "rent": 1100,
     "bath": "Private bathroom",
     "private": true,
-    "status": "pending",
+    "status": "leased",
     "photo": "m5.jpg",
     "photoOf": "M5"
   },
