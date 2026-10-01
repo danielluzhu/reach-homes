@@ -221,7 +221,7 @@
   {
     "id": "4735-22nd-ave-ne",
     "title": "4735 22nd Ave NE",
-    "subtitle": "3-bedroom apartments in a small four-unit building",
+    "subtitle": "3-bedroom apartment — unit 3 opens November 30",
     "neighborhood": "University District",
     "address": "4735 22nd Ave NE, Seattle, WA 98105",
     "beds": 3,
@@ -229,14 +229,14 @@
     "baths": 1,
     "sqft": 1000,
     "rent": 2900,
-    "available": "2026-09-01",
-    "availableLabel": "September 2026",
+    "available": "2026-11-30",
+    "availableLabel": "November 30, 2026",
     "totalUnits": 4,
-    "unitsAvailable": 0,
-    "status": "taken",
+    "unitsAvailable": 1,
+    "status": "available",
     "zillow": "https://www.zillow.com/homedetails/4735-22nd-Ave-NE-APT-4-Seattle-WA-98105/2059934895_zpid/",
     "image": "/images/listing-4735-22nd-ave-ne.svg",
-    "summary": "Two 3 bed / 1 bath units in a small four-unit building, 1,000 sqft each, offered furnished at no extra cost. All four units are occupied.",
+    "summary": "Two 3 bed / 1 bath units in a small four-unit building, 1,000 sqft each, available furnished at no extra cost. Unit 3 comes open on November 30; the other three units are occupied.",
     "building": [
       "Four-unit apartment building",
       "Two 2-bedroom units and two 3-bedroom units",
@@ -244,10 +244,11 @@
     ],
     "unit": [
       "3 bed / 1 bath, 1,000 sqft",
-      "Units 3 and 4"
+      "Units 3 and 4 — unit 3 comes open on November 30, 2026"
     ],
     "lease": [
-      "Furnishing was offered at no extra cost"
+      "Unit 3 available from November 30, 2026",
+      "Furnishing available at no extra cost"
     ]
   },
   {
