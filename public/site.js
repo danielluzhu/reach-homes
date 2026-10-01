@@ -67,8 +67,52 @@ function isAvailable(l) {
   return (l.status || "available") === "available";
 }
 
+/**
+ * Today as the same YYYY-MM-DD string the data uses, so the two compare as
+ * plain strings rather than through Date and its timezones.
+ */
+function todayIso() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** A date still ahead of us: the thing is on offer, but can't be moved into yet. */
+function isFuture(iso) {
+  return Boolean(iso) && iso > todayIso();
+}
+
+/**
+ * "Available" and "available soon" are different offers: one can be moved into
+ * today, the other is a lease ending on a known date. A listing is soon while
+ * its own date is ahead, and turns into plain available on the day -- nothing
+ * to edit.
+ */
+function isSoon(l) {
+  return isAvailable(l) && isFuture(l.available);
+}
+
+/**
+ * How many of a listing's open units are only open later. All of them where
+ * the listing itself is dated ahead; otherwise the lease options carrying a
+ * future date of their own, which is how one room in a unit comes up while the
+ * one beside it is already empty.
+ */
+function unitsSoon(l, open) {
+  if (isSoon(l)) return open;
+  return Math.min(open, (l.leaseOptions || []).filter((o) => isFuture(o.available)).length);
+}
+
+/** The pill on a room card: when it can be had, for the ones that can. */
+function optionAvailability(o) {
+  if (o.status) return "";
+  return isFuture(o.available)
+    ? `<span class="pill-soon">Available soon \u00b7 ${escapeHtml(fmtDate(o.available))}</span>`
+    : `<span class="pill-now">Available now</span>`;
+}
+
 function statusLabel(l) {
-  return STATUS_LABELS[l.status] || null;
+  return STATUS_LABELS[l.status] || (isSoon(l) ? "Available soon" : null);
 }
 
 function statusNote(l) {
@@ -79,9 +123,9 @@ function isTaken(l) {
   return l.status === "taken";
 }
 
-/** Sort key: open first, then pending, then what's already gone. */
+/** Sort key: open first, then opening soon, then pending, then what's gone. */
 function statusRank(l) {
-  return isAvailable(l) ? 0 : isTaken(l) ? 2 : 1;
+  return isAvailable(l) ? (isSoon(l) ? 1 : 0) : isTaken(l) ? 3 : 2;
 }
 
 /**
@@ -109,19 +153,32 @@ function unitCounts(l) {
   const available = l.unitsAvailable != null ? l.unitsAvailable : unitsRemaining(l);
   return available == null
     ? null
-    : { available: available, total: l.totalUnits, pending: unitsPending(l) || 0 };
+    : {
+        available: available,
+        soon: unitsSoon(l, available),
+        total: l.totalUnits,
+        pending: unitsPending(l) || 0,
+      };
 }
 
 /**
  * Compact count for listing cards, e.g. "4/31 available" or, where some of the
  * rest are spoken for, "4/10 available, 3 pending". Pending is named rather
  * than folded into the unavailable remainder: an application can fall through,
- * so it is a different thing to a renter than a place that is gone.
+ * so it is a different thing to a renter than a place that is gone. Units
+ * opening later are split out the same way -- "1/4 available, 1 soon", or
+ * "7/10 available soon" where none can be had today.
  */
 function unitCountLabel(l) {
   const c = unitCounts(l);
   if (!c) return null;
-  return c.available + "/" + c.total + " available" + (c.pending ? `, ${c.pending} pending` : "");
+  const now = c.available - c.soon;
+  const open = !c.soon
+    ? c.available + "/" + c.total + " available"
+    : !now
+      ? c.soon + "/" + c.total + " available soon"
+      : now + "/" + c.total + " available, " + c.soon + " soon";
+  return open + (c.pending ? `, ${c.pending} pending` : "");
 }
 
 /**
@@ -137,7 +194,13 @@ function availabilityLabel(l) {
   // room -- calling a bedroom a unit reads as a separate address.
   const noun = l.unitNoun || "units";
   const pending = c.pending ? c.pending + " pending \u00b7 " : "";
-  return c.available + " of " + c.total + " " + noun + " \u00b7 " + pending + l.availableLabel;
+  const now = c.available - c.soon;
+  if (c.soon && now) {
+    return now + " of " + c.total + " " + noun + " available now \u00b7 " + c.soon + " soon" +
+      (c.pending ? " \u00b7 " + c.pending + " pending" : "");
+  }
+  const soon = c.soon ? " available soon" : "";
+  return c.available + " of " + c.total + " " + noun + soon + " \u00b7 " + pending + l.availableLabel;
 }
 
 function fmtDate(iso) {

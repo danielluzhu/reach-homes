@@ -66,6 +66,7 @@ function leaseOptionCards(options) {
         <div class="option-body">
           <h4>${escapeHtml(o.name)}</h4>
           ${unitStatusLabel(o) ? `<span class="pill-muted">${escapeHtml(unitStatusLabel(o))}</span>` : ""}
+          ${optionAvailability(o)}
           ${o.photoOf ? `<span class="option-note">Photo of ${escapeHtml(o.photoOf)}</span>` : ""}
           <span class="option-detail">${escapeHtml(o.detail)}</span>
           <div class="option-price">${o.rentLabel ? escapeHtml(o.rentLabel) : money(o.rent) + "<small>/mo</small>"}</div>
@@ -159,7 +160,7 @@ fetch("/api/listings")
       <div class="detail-hero">
         <img src="${escapeHtml(l.image)}" alt="${escapeHtml(l.title)}" />
         ${l.promo ? `<span class="promo-flag">${escapeHtml(l.promo)}</span>` : ""}
-        ${statusLabel(l) ? `<span class="status-flag">${escapeHtml(statusLabel(l))}</span>` : ""}
+        ${statusLabel(l) ? `<span class="status-flag${isSoon(l) ? " status-flag-soon" : ""}">${escapeHtml(statusLabel(l))}</span>` : ""}
       </div>
 
       <div class="detail-head">
@@ -171,7 +172,7 @@ fetch("/api/listings")
         </div>
         <div class="detail-price">
           <div class="price">${rentLabel(l)}</div>
-          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(availabilityLabel(l))}</div>
+          <div class="availability${isAvailable(l) ? (isSoon(l) ? " availability-soon" : "") : " availability-pending"}">${escapeHtml(availabilityLabel(l))}</div>
           ${statusNote(l) ? `<p class="status-note">${escapeHtml(statusNote(l))}</p>` : ""}
         </div>
       </div>

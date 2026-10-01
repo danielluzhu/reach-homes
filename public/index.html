@@ -38,7 +38,7 @@
 
 <main>
   <div class="section-heading" id="listings">
-    <h2>Available Now</h2>
+    <h2>Available Now &amp; Soon</h2>
     <p class="count" id="listing-count"></p>
   </div>
 
@@ -136,7 +136,7 @@ function card(l) {
       <div class="photo">
         <img src="${escapeHtml(l.image)}" alt="${escapeHtml(l.title)}" loading="lazy" />
         ${l.promo ? `<span class="promo-flag">${escapeHtml(l.promo)}</span>` : ""}
-        ${statusLabel(l) ? `<span class="status-flag">${escapeHtml(statusLabel(l))}</span>` : ""}
+        ${statusLabel(l) ? `<span class="status-flag${isSoon(l) ? " status-flag-soon" : ""}">${escapeHtml(statusLabel(l))}</span>` : ""}
       </div>
       <div class="card-body">
         <div class="neighborhood">${escapeHtml(l.neighborhood)}</div>
@@ -146,7 +146,7 @@ function card(l) {
         <p class="desc">${escapeHtml(l.summary)}</p>
         <div class="card-footer">
           <div class="price">${rentLabel(l)}</div>
-          <div class="availability${isAvailable(l) ? "" : " availability-pending"}">${escapeHtml(unitCountLabel(l) || availabilityLabel(l))}</div>
+          <div class="availability${isAvailable(l) ? (isSoon(l) ? " availability-soon" : "") : " availability-pending"}">${escapeHtml(unitCountLabel(l) || availabilityLabel(l))}</div>
         </div>
         <div class="card-actions">
           <a class="btn btn-primary" style="flex:1" href="/listing?id=${encodeURIComponent(l.id)}">View details</a>
@@ -168,18 +168,20 @@ fetch("/api/listings")
   .then((r) => r.json())
   .then((listings) => {
     // What someone can still act on. A rented listing comes off the front page
-    // entirely -- this section is headed "Available Now" and a place that is
+    // entirely -- this section is headed "Available Now & Soon" and a place that is
     // gone belongs on neither the grid, the count, nor the filter bar. Its
     // detail page stays reachable for anyone holding the link.
     const onOffer = listings.filter((l) => !isTaken(l));
 
-    // Available first, then pending — original order within each group.
+    // Available first, then opening soon, then pending — original order within each group.
     ALL = [...onOffer].sort((a, b) => statusRank(a) - statusRank(b));
 
-    const openCount = onOffer.filter(isAvailable).length;
+    const openCount = onOffer.filter((l) => isAvailable(l) && !isSoon(l)).length;
+    const soonCount = onOffer.filter(isSoon).length;
     const pendingCount = onOffer.filter((l) => l.status === "pending").length;
     document.getElementById("listing-count").textContent =
       openCount + (openCount === 1 ? " property" : " properties") + " available" +
+      (soonCount ? ` · ${soonCount} available soon` : "") +
       (pendingCount ? ` · ${pendingCount} pending` : "");
 
     // Drawn from what's shown, so a neighborhood whose only listing is rented

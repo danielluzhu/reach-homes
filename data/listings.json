@@ -215,7 +215,7 @@
     ],
     "leaseOptions": [
       { "name": "Bedroom A", "detail": "Can be furnished", "rent": 1000, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg" },
-      { "name": "Bedroom D", "detail": "Can be furnished — available from December 18", "rent": 1000, "photo": "/images/photos/4316-36th-ave-ne-l/d.jpg" }
+      { "name": "Bedroom D", "detail": "Can be furnished", "available": "2026-12-18", "rent": 1000, "photo": "/images/photos/4316-36th-ave-ne-l/d.jpg" }
     ]
   },
   {

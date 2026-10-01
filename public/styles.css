@@ -273,6 +273,13 @@ main {
   color: var(--muted);
 }
 
+/* On offer, but not yet: amber, so it reads apart from the maroon of a place
+   that can be moved into today without looking withdrawn like a pending one. */
+.availability-soon {
+  background: #fdf3e4;
+  color: #8a5410;
+}
+
 .card-actions {
   display: flex;
   gap: 10px;
@@ -576,6 +583,8 @@ main {
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
+.status-flag-soon { background: #8a5410; }
+
 .status-note {
   margin: 8px 0 0 auto;
   font-size: 0.85rem;
@@ -688,6 +697,15 @@ main {
 .pill-now {
   background: #e7f6ec;
   color: #1c6b3a;
+  font-weight: 400;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.pill-soon {
+  background: #fdf3e4;
+  color: #8a5410;
   font-weight: 400;
   font-size: 0.8rem;
   padding: 3px 10px;
@@ -1082,7 +1100,9 @@ main {
 .option-body h4 { margin: 0; font-size: 1.05rem; }
 .option-detail { color: var(--muted); font-size: 0.88rem; }
 .option-note { color: var(--muted); font-size: 0.78rem; }
-.option-body .pill-muted { align-self: flex-start; }
+.option-body .pill-muted,
+.option-body .pill-now,
+.option-body .pill-soon { align-self: flex-start; }
 
 .option-price {
   margin-top: auto;
