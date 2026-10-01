@@ -35,6 +35,13 @@ Edit the file by hand, or with a writer that preserves the one-line rows.
 | Unit (4544 `upcomingUnits`) | *absent* = open, `pending`, `unavailable` | `unavailable` means rented and drops the row from the unit table |
 | 2120 room (`sites/2120/`) | *absent* = open, `pending`, `leased` | see below |
 
+A 2120 room normally carries `leasedUntil` (the day its current lease ends)
+rather than `status: "leased"`. It reads as "Leased until <date>" until that
+date is within 90 days (`OPEN_WINDOW_DAYS` in `sites/2120/public/site.js`), then
+opens on its own with an "Available <date>" tag. When a room is re-let, set the
+new `leasedUntil`; don't add a status. Bare `leased` is for a room with no end
+date to give.
+
 A **leased** 2120 room withdraws every combination that needs it — those can no
 longer be assembled, so they stop being offered. A **pending** room does not: an
 application can fall through, so the combination stays on offer and is flagged
@@ -49,6 +56,8 @@ Derived at render time — change a status and stop:
 - Front-page listing grid, the count line, and the neighbourhood chips
 - Room availability dates: shown only while still in the future, so a past date
   disappears on its own. Pairs and floors take the latest of their rooms'.
+- Whether a 2120 room is leased or on offer, from its `leasedUntil`, and the
+  availability line under the headline rent.
 
 **Prose does not derive, and goes stale every time.** After any status change,
 re-read: `sites/2120/public/index.html` hero and section copy, both terms'
@@ -96,3 +105,8 @@ rooms, and the front-page count disagreeing with the microsite — were all
 cleared when L1, L2 and M1 leased. The rent range now derives from the rooms
 still on offer; the card and the count are still mirrored by hand and will
 drift again.
+
+The 90-day rule is only implemented on the 2120 microsite. The main site's
+2120, 4316L and 4735 entries were set by hand from the same vacancy list on
+2026-10-01 and will not open anything by themselves: L3 enters the window on
+2026-12-30, M2 the day after, and 4316 C on 2026-12-30.

@@ -19,8 +19,26 @@ function isPending(r) {
   return r.status === "pending";
 }
 
+/**
+ * How far ahead of a lease ending its room goes back on offer. Further out
+ * than this the room is simply leased, and says until when.
+ */
+const OPEN_WINDOW_DAYS = 90;
+
+/**
+ * A room carries the day its current lease ends as `leasedUntil`. It counts as
+ * leased until that day is within the window above, then opens by itself with
+ * the date on its card -- nobody has to come back and flip a status. A bare
+ * `status: "leased"` still works, for a room with no end date to give.
+ */
 function isLeased(r) {
-  return r.status === "leased";
+  if (r.status === "leased") return true;
+  return Boolean(r.leasedUntil) && r.leasedUntil > isoDate(OPEN_WINDOW_DAYS);
+}
+
+/** What a leased room says: until when, where that is known. */
+function leasedLabel(r) {
+  return r.leasedUntil ? "Leased until " + dateLabel(r.leasedUntil) : "Leased";
 }
 
 /**
@@ -41,7 +59,13 @@ function isOfferable(b, rooms) {
  * and, west of Greenwich, call it the 4th.
  */
 function today() {
+  return isoDate(0);
+}
+
+/** The day `days` from now, in that same form. */
+function isoDate(days) {
   const d = new Date();
+  d.setDate(d.getDate() + days);
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
@@ -51,10 +75,14 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-/** "2026-09-05" as "September 5", parsed by hand for the reason above. */
+/**
+ * "2026-09-05" as "September 5", parsed by hand for the reason above. The year
+ * is added only when it isn't this one, where leaving it off would mislead.
+ */
 function dateLabel(iso) {
-  const [, m, d] = iso.split("-").map(Number);
-  return MONTHS[m - 1] + " " + d;
+  const [y, m, d] = iso.split("-").map(Number);
+  const year = y === new Date().getFullYear() ? "" : ", " + y;
+  return MONTHS[m - 1] + " " + d + year;
 }
 
 /**
@@ -62,10 +90,12 @@ function dateLabel(iso) {
  * has passed is simply available and has nothing to announce, so the date
  * drops off the page on its own rather than waiting to be cleared out. A room
  * with no date at all is open on the house's own date, which the page already
- * carries in the heading.
+ * carries in the heading. The end of the current lease is that date where the
+ * room has one.
  */
 function availableFrom(r) {
-  return r.available && r.available > today() ? r.available : null;
+  const date = r.leasedUntil || r.available;
+  return date && date > today() ? date : null;
 }
 
 /**
@@ -157,7 +187,7 @@ function roomCard(r, term) {
       ${photo}
       <div class="card-body">
         <h4>${escapeHtml(r.label)}</h4>
-        ${isLeased(r) ? '<span class="tag tag-leased">Leased</span>' : ""}
+        ${isLeased(r) ? `<span class="tag tag-leased">${escapeHtml(leasedLabel(r))}</span>` : ""}
         ${isPending(r) ? '<span class="tag tag-pending">Application pending</span>' : ""}
         ${availableTag(from)}
         <span class="tag${r.private ? " tag-private" : ""}">${escapeHtml(r.bath)}</span>
