@@ -42,16 +42,18 @@
 
   <!--IF:bundles-->
   <p class="detail-summary">
-    Every room is leased for now, and the next one opens in mid-November. Rooms can be
-    furnished free with a bed and desk. Leases run 8 to 12 months, and utilities are a flat
-    $100 per person with internet included.
+    Rooms come on offer about 90 days before the current lease on them ends, and each
+    card below gives the date its room is free. Rooms can be furnished free with a bed and
+    desk. Leases run 8 to 12 months, and utilities are a flat $100 per person with internet
+    included.
   </p>
   <!--END:bundles-->
   <!--IF:rooms-only-->
   <p class="detail-summary">
-    Every room is leased for now, and the next one opens in mid-November. Leases run 3 to
-    7 months, rooms can be furnished free with a bed and desk, and utilities are a flat $100
-    per person with internet included.
+    Rooms come on offer about 90 days before the current lease on them ends, and each
+    card below gives the date its room is free. Leases run 3 to 7 months, rooms can be
+    furnished free with a bed and desk, and utilities are a flat $100 per person with
+    internet included.
   </p>
   <!--END:rooms-only-->
 
@@ -64,8 +66,8 @@
   <section class="section" id="rooms">
     <div class="section-heading">
       <h2>The ten bedrooms</h2>
-      <!--IF:bundles--><p>Ten rooms across three floors, all leased for now. Any room can be furnished free with a bed and desk.</p><!--END:bundles-->
-      <!--IF:rooms-only--><p>Ten rooms across three floors, all leased for now, let on leases of 3 to 7 months. Any room can be furnished free with a bed and desk.</p><!--END:rooms-only-->
+      <!--IF:bundles--><p>Ten rooms across three floors, each dated where it isn't free yet. Any room can be furnished free with a bed and desk.</p><!--END:bundles-->
+      <!--IF:rooms-only--><p>Ten rooms across three floors, each dated where it isn't free yet, let on leases of 3 to 7 months. Any room can be furnished free with a bed and desk.</p><!--END:rooms-only-->
     </div>
     <div id="floors"></div>
   </section>
@@ -74,7 +76,7 @@
   <section class="section" id="groups">
     <div class="section-heading">
       <h2>Take more than one floor</h2>
-      <p>Pairs and the lower floor are listed with their rooms above. This one spans two floors.</p>
+      <p>Pairs and single floors are listed with their rooms above. This one spans two floors.</p>
     </div>
     <div class="grid" id="bundle-grid"></div>
   </section>
@@ -134,8 +136,8 @@
 
   <section class="cta" id="inquire">
     <div>
-      <h3>Want a room from mid-November?</h3>
-      <p>The house is full until then. Tell us your move-in timing and we'll get back to you within one business day.</p>
+      <h3>Want one of these rooms?</h3>
+      <p>Tell us which room and your move-in timing and we'll get back to you within one business day.</p>
       <p class="contact-lines">
         <a id="email-line" href="#"></a><br />
         <a id="phone-line" href="#"></a>
@@ -213,7 +215,7 @@ Promise.all([
         .filter((r) => r.levelId === lvl.id)
         .map(
           (r) => `<tr${isPending(r) || isLeased(r) ? ' class="row-pending"' : ""}>
-        <td>${escapeHtml(r.label)}${isLeased(r) ? ' <span class="row-flag">Leased</span>' : isPending(r) ? ' <span class="row-flag">Application pending</span>' : ""}</td>
+        <td>${escapeHtml(r.label)}${isLeased(r) ? ` <span class="row-flag">${escapeHtml(leasedLabel(r))}</span>` : isPending(r) ? ' <span class="row-flag">Application pending</span>' : ""}</td>
         <td>${escapeHtml(lvl.name)}</td>
         <td${r.private ? ' class="private"' : ""}>${escapeHtml(bathShort(r))}</td>
         <td class="num">${money(roomRent(r, term))}</td>
@@ -250,7 +252,16 @@ Promise.all([
     });
   }
 
-  document.getElementById("availability").textContent = property.availableLabel;
+  // The availability line follows the rooms: open now if any offered room is,
+  // otherwise the first date one comes free. Only a house with nothing on offer
+  // and no lease end to point at falls back to the label in the data.
+  const openDates = offered.map(availableFrom);
+  const nextLeaseEnd = rooms.map((r) => r.leasedUntil).filter((d) => d && d > today()).sort()[0];
+  document.getElementById("availability").textContent = !offered.length
+    ? nextLeaseEnd ? "Next room " + dateLabel(nextLeaseEnd) : property.availableLabel
+    : openDates.every(Boolean)
+      ? "Rooms from " + dateLabel(openDates.slice().sort()[0])
+      : "Available now";
 
   // Applications not yet tied to a room, counted against the rooms nobody has
   // claimed by name -- a room already marked pending is spoken for on its own

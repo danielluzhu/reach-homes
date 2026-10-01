@@ -73,7 +73,7 @@
   {
     "id": "2120-ne-54th-st",
     "title": "2120 NE 54th St",
-    "subtitle": "10-bedroom house let one room at a time — next room mid-November",
+    "subtitle": "10-bedroom house — by the room or the pair, opening from November 12",
     "neighborhood": "Ravenna",
     "address": "2120 NE 54th St, Seattle, WA 98105",
     "beds": 10,
@@ -81,17 +81,17 @@
     "baths": 6,
     "sqft": 3000,
     "rentFrom": 850,
-    "rentTo": 1150,
-    "available": "2026-11-15",
-    "availableLabel": "Mid-November 2026",
+    "rentTo": 1750,
+    "available": "2026-11-12",
+    "availableLabel": "From November 12, 2026",
     "totalUnits": 10,
-    "unitsAvailable": 0,
+    "unitsAvailable": 7,
     "unitsPending": 0,
     "unitNoun": "rooms",
-    "status": "taken",
+    "status": "available",
     "zillow": "https://www.zillow.com/homedetails/2120-NE-54th-St-Seattle-WA-98105/48786784_zpid/",
     "image": "/images/listing-2120-ne-54th-st.svg",
-    "summary": "A 3,000 sqft, 10 bed / 6 bath house with two kitchens, a short walk from Ravenna Park. All ten rooms are leased; the next one opens in mid-November. Utilities are a flat $100 per person including internet.",
+    "summary": "A 3,000 sqft, 10 bed / 6 bath house with two kitchens, a short walk from Ravenna Park. Seven of the ten rooms come open between November 12 and December 30 as their current leases end, individually from $850 or as a pair; the other three are leased into 2027. Utilities are a flat $100 per person including internet.",
     "photos": [
       "/images/photos/2120-ne-54th-st/front.jpg",
       "/images/photos/2120-ne-54th-st/living.jpg",
@@ -118,16 +118,22 @@
     ],
     "unit": [
       "Ten bedrooms let individually: L1–L3 lower, M1–M5 main, U1–U2 upper",
-      "All ten are leased — the next room opens in mid-November",
+      "Opening: M3 on November 12, M5 on November 15, L1, L2, M1 and U1 on November 30, M4 on December 30",
+      "Leased: L3 until March 30, 2027, M2 until March 31, 2027, U2 until August 30, 2027",
       "Lower: L1 and L2 share a bathroom, L3 has its own",
       "Main: M1/M2 share, M3/M4 share, M5 has its own",
       "Upper: U1 and U2 share a bathroom",
       "Lower floor has a second living room and kitchen of its own"
     ],
+    "leaseOptions": [
+      { "name": "Single bedroom", "detail": "L1, L2, M1, M3, M4, M5 or U1 — shared or private bath", "rent": 850, "rentLabel": "$850–$1,150/mo" },
+      { "name": "L1 + L2", "detail": "Two lower bedrooms sharing a bath, from November 30", "rent": 1650 },
+      { "name": "M3 + M4", "detail": "Two main-floor bedrooms sharing a bath, from December 30", "rent": 1750 }
+    ],
     "lease": [
       "Leases run 3 to 12 months",
       "Rooms can be furnished free with a bed and desk",
-      "Next room opens mid-November"
+      "Each room is free from the day its current lease ends, between November 12 and December 30"
     ]
   },
   {
