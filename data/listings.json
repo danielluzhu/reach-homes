@@ -178,8 +178,8 @@
     "available": "2026-09-01",
     "availableLabel": "Available now",
     "totalUnits": 4,
-    "unitsAvailable": 1,
-    "unitsPending": 1,
+    "unitsAvailable": 2,
+    "unitsPending": 0,
     "unitNoun": "rooms",
     "status": "available",
     "zillow": "https://www.zillow.com/homedetails/4316-36th-Ave-NE-L-Seattle-WA-98105/2072279403_zpid/",
@@ -209,12 +209,13 @@
       "Private entry, kitchen and living room — shared by the four rooms"
     ],
     "lease": [
-      "Available now",
-      "Bedroom A is open at $1,000 a month; Bedroom B has an application pending, and we're still taking inquiries on it in case that falls through"
+      "Bedroom A is available now at $1,000 a month",
+      "Bedroom D comes open on December 18, 2026",
+      "Bedroom B is leased until August 30, 2027, and Bedroom C until March 30, 2027"
     ],
     "leaseOptions": [
       { "name": "Bedroom A", "detail": "Can be furnished", "rent": 1000, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg" },
-      { "name": "Bedroom B", "status": "pending", "detail": "Can be furnished, identical to A", "rent": 1000, "photo": "/images/photos/4316-36th-ave-ne-l/a.jpg", "photoOf": "Bedroom A" }
+      { "name": "Bedroom D", "detail": "Can be furnished — available from December 18", "rent": 1000, "photo": "/images/photos/4316-36th-ave-ne-l/d.jpg" }
     ]
   },
   {
