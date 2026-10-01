@@ -111,9 +111,17 @@ function bundleAvailableFrom(b, rooms) {
   return dates.length ? dates[dates.length - 1] : null;
 }
 
-/** The card tag naming that date, where there is one to name. */
-function availableTag(iso) {
-  return iso ? `<span class="tag tag-date">Available ${escapeHtml(dateLabel(iso))}</span>` : "";
+/**
+ * The card tag saying when: "Available soon" with the date while it is ahead,
+ * "Available now" once it isn't. The two are told apart by colour as well as
+ * wording, since a renter scanning the floor wants the ones they can have today.
+ */
+function availableTag(iso, spokenFor) {
+  // "Available now" beside an application in progress would contradict it.
+  if (!iso && spokenFor) return "";
+  return iso
+    ? `<span class="tag tag-date">Available soon \u00b7 ${escapeHtml(dateLabel(iso))}</span>`
+    : `<span class="tag tag-now">Available now</span>`;
 }
 
 /**
@@ -180,8 +188,9 @@ function roomCard(r, term) {
     ? `<div class="photo"><img src="/images/${escapeHtml(r.photo)}" alt="${escapeHtml(r.photoOf || r.label)}" loading="lazy" /></div>`
     : `<div class="photo photo-none"><span>Photo on request</span></div>`;
   const off = isPending(r) || isLeased(r);
-  // A leased room has no date to give: it isn't coming open.
-  const from = isLeased(r) ? null : availableFrom(r);
+  // A leased room has no date to give, and a pending one is spoken for: the
+  // availability tag is for rooms that can still be applied for.
+  const from = availableFrom(r);
   return `
     <article class="card${off ? " card-pending" : ""}">
       ${photo}
@@ -189,7 +198,7 @@ function roomCard(r, term) {
         <h4>${escapeHtml(r.label)}</h4>
         ${isLeased(r) ? `<span class="tag tag-leased">${escapeHtml(leasedLabel(r))}</span>` : ""}
         ${isPending(r) ? '<span class="tag tag-pending">Application pending</span>' : ""}
-        ${availableTag(from)}
+        ${off ? "" : availableTag(from)}
         <span class="tag${r.private ? " tag-private" : ""}">${escapeHtml(r.bath)}</span>
         ${r.photoOf ? `<span class="photo-note">Photo of ${escapeHtml(r.photoOf)} — ${escapeHtml(r.label)} has the same layout</span>` : ""}
         <div class="price-row">
@@ -208,7 +217,7 @@ function bundleCard(b, rooms) {
       <div class="card-body">
         <h4>${escapeHtml(b.label)}</h4>
         ${pending.length ? `<span class="tag tag-pending">${escapeHtml(pendingNote(pending, b.rooms.length))}</span>` : ""}
-        ${availableTag(bundleAvailableFrom(b, rooms))}
+        ${availableTag(bundleAvailableFrom(b, rooms), pending.length > 0)}
         <span class="bath">${b.beds} bedroom${b.beds === 1 ? "" : "s"}${b.blurb ? " — " + escapeHtml(b.blurb) : ""}</span>
         <div class="price-row">
           <span class="price">${money(b.rent)}<small>/mo</small></span>
@@ -235,7 +244,7 @@ function comboCard(b, roomsOnFloor, rooms) {
         <span class="tag tag-whole">${whole ? `All ${roomsOnFloor} rooms` : "Pair"}</span>
         <h4>${whole ? "Take the whole floor" : escapeHtml(b.label)}</h4>
         ${pending.length ? `<span class="tag tag-pending">${escapeHtml(pendingNote(pending, b.rooms.length))}</span>` : ""}
-        ${availableTag(bundleAvailableFrom(b, rooms))}
+        ${availableTag(bundleAvailableFrom(b, rooms), pending.length > 0)}
         <span class="bath">${escapeHtml(whole ? b.label : b.blurb)}</span>
         <div class="price-row">
           <span class="price">${money(b.rent)}<small>/mo</small></span>

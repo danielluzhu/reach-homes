@@ -58,6 +58,11 @@ Derived at render time — change a status and stop:
   disappears on its own. Pairs and floors take the latest of their rooms'.
 - Whether a 2120 room is leased or on offer, from its `leasedUntil`, and the
   availability line under the headline rent.
+- "Available now" versus "available soon", everywhere: a future date means
+  soon, and it turns into now when the date passes. On the main site that is
+  the listing's `available`, or a `leaseOption`'s own `available` for one room
+  opening later than the rest (4316L's Bedroom D). Don't write the date into
+  an option's `detail` — it won't expire there.
 
 **Prose does not derive, and goes stale every time.** After any status change,
 re-read: `sites/2120/public/index.html` hero and section copy, both terms'

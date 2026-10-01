@@ -329,6 +329,13 @@ main {
   border: 1px solid #f3e1c6;
 }
 
+/* Its counterpart: a room that can be moved into today. */
+.tag-now {
+  background: #e7f6ec;
+  color: #1c6b3a;
+  border: 1px solid #cfe9d8;
+}
+
 /* A room with an application in progress: still listed, still priced, but
    drained of colour so the ones a renter can act on today are what the eye
    lands on. Everything inside the card goes grey together -- a maroon price or
@@ -397,6 +404,8 @@ main {
   font-size: 0.72rem;
   white-space: nowrap;
 }
+.row-flag-soon { background: #fdf3e4; color: #8a5410; }
+.row-flag-now { background: #e7f6ec; color: #1c6b3a; }
 
 /* ---- Where it is ---- */
 

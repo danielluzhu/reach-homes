@@ -215,7 +215,7 @@ Promise.all([
         .filter((r) => r.levelId === lvl.id)
         .map(
           (r) => `<tr${isPending(r) || isLeased(r) ? ' class="row-pending"' : ""}>
-        <td>${escapeHtml(r.label)}${isLeased(r) ? ` <span class="row-flag">${escapeHtml(leasedLabel(r))}</span>` : isPending(r) ? ' <span class="row-flag">Application pending</span>' : ""}</td>
+        <td>${escapeHtml(r.label)}${isLeased(r) ? ` <span class="row-flag">${escapeHtml(leasedLabel(r))}</span>` : isPending(r) ? ' <span class="row-flag">Application pending</span>' : availableFrom(r) ? ` <span class="row-flag row-flag-soon">Soon \u00b7 ${escapeHtml(dateLabel(availableFrom(r)))}</span>` : ' <span class="row-flag row-flag-now">Now</span>'}</td>
         <td>${escapeHtml(lvl.name)}</td>
         <td${r.private ? ' class="private"' : ""}>${escapeHtml(bathShort(r))}</td>
         <td class="num">${money(roomRent(r, term))}</td>
@@ -260,7 +260,7 @@ Promise.all([
   document.getElementById("availability").textContent = !offered.length
     ? nextLeaseEnd ? "Next room " + dateLabel(nextLeaseEnd) : property.availableLabel
     : openDates.every(Boolean)
-      ? "Rooms from " + dateLabel(openDates.slice().sort()[0])
+      ? "Available soon \u00b7 from " + dateLabel(openDates.slice().sort()[0])
       : "Available now";
 
   // Applications not yet tied to a room, counted against the rooms nobody has
