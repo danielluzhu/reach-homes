@@ -47,7 +47,11 @@ into `portfolio.json` or onto the sign-in page. The admin's assistant (`agent.ts
 changes to the gitignored `data/private.json`, which then replaces
 `portfolio.json` as the live data — so check which one is live before editing
 either. Keep the assistant's tools to reading and staging data: no shell, no
-file writes of its own, nothing applied without the admin's Apply. 2120's rooms are read live from
+file writes of its own, nothing applied without the admin's Apply. `data/registry.json` (gitignored) is the admin's address /
+abbreviation / owner list; the admin view merges it with `address.txt` by house
+number and shows rows exactly as written — the two lists disagree in places
+(3408 NE 37th vs 57th St, 5840 vs 5830 NE 204th Pl) and which is right is the
+owner's call, not ours. 2120's rooms are read live from
 the microsite's data; the other properties' units are a hand copy in
 `data/portfolio.json` and need the same lease-end edits as the leasing sites.
 

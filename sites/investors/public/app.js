@@ -317,19 +317,36 @@ function listingRent(l) {
  * Every building under management, including the ones with no statement here.
  * A row says what is actually on file for it, so a gap reads as a gap.
  */
+/** A building's abbreviation and owners, from the admin's registry rows. */
+function registrySummary(x) {
+  const rows = x.registry || [];
+  const distinct = (list) => [...new Set(list.filter(Boolean))];
+  const number = (x.address.match(/^\d+/) || [""])[0];
+  // The building's own abbreviation is the row abbreviated to its number;
+  // without one, the units' abbreviations stand in.
+  const own = rows.find((r) => r.abbr === number);
+  return {
+    abbr: own ? own.abbr : distinct(rows.map((r) => r.abbr)).join(", "),
+    owners: distinct(rows.map((r) => r.owner)).join(", "),
+  };
+}
+
 function portfolioTable(data) {
   const b = data.buildings;
   const doors = b.reduce((s, x) => s + x.unitCount, 0);
   return `
     <section class="section">
-      <div class="section-heading"><h2>Whole portfolio</h2><p>${b.length} buildings, ${doors} doors, from the address list. Select one for everything on file.</p></div>
+      <div class="section-heading"><h2>Whole portfolio</h2><p>${b.length} buildings, ${doors} doors, from the address list and your owner list together. Select one for everything on file.</p></div>
       <div class="panel table-scroll"><table>
-        <thead><tr><th>Address</th><th>Area</th><th class="num">Doors</th><th>Units</th><th>Public listing</th><th>Statement</th></tr></thead>
+        <thead><tr><th>Address</th><th>Abbr</th><th>Owner</th><th>Area</th><th class="num">Doors</th><th>Units</th><th>Public listing</th><th>Statement</th></tr></thead>
         <tbody>${b.map((x) => {
           const href = "#/b/" + encodeURIComponent(x.id);
           const listed = x.listings.map((l) => LISTING_STATUS[l.status || "available"]).join(", ");
+          const reg = registrySummary(x);
           return `<tr class="clickable" data-href="${href}">
-            <td><a href="${href}">${escapeHtml(x.address)}</a></td>
+            <td><a href="${href}">${escapeHtml(x.address)}</a>${x.unlisted ? '<br /><span class="sub">not in the address list</span>' : ""}</td>
+            <td>${escapeHtml(reg.abbr) || '<span class="sub">\u2014</span>'}</td>
+            <td>${escapeHtml(reg.owners) || '<span class="sub">Not given</span>'}</td>
             <td>${escapeHtml(x.neighborhood)}${x.city !== "Seattle" && x.city !== x.neighborhood ? ", " + escapeHtml(x.city) : ""}</td>
             <td class="num">${x.unitCount}</td>
             <td>${escapeHtml(x.units.join(", ") || "\u2014")}${x.parking.length ? ` <span class="sub">\u00b7 parking ${escapeHtml(x.parking.join(", "))}</span>` : ""}</td>
@@ -385,7 +402,7 @@ function buildingView(b, data) {
   return `
     <a class="back-link" href="#/">\u2190 All properties</a>
     <h1>${escapeHtml(b.address)}</h1>
-    <p class="sub">${escapeHtml(b.neighborhood)} \u00b7 ${escapeHtml(where)} \u00b7 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}" target="_blank" rel="noopener">Map</a></p>
+    <p class="sub">${b.unlisted ? "On your owner list, not in the address list" : escapeHtml(b.neighborhood)} \u00b7 ${escapeHtml(where)} \u00b7 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}" target="_blank" rel="noopener">Map</a></p>
 
     <div class="tiles">
       <div class="tile"><div class="tile-key">Doors</div><div class="tile-val">${b.unitCount}</div><div class="tile-note">${escapeHtml(b.units.length ? "Units " + b.units.join(", ") : "single home, or not broken out")}</div></div>
@@ -394,6 +411,14 @@ function buildingView(b, data) {
       <div class="tile"><div class="tile-key">Statements</div><div class="tile-val">${held.length}</div><div class="tile-note">${held.length ? "rent roll and financials below" : "no rent roll or financials on file"}</div></div>
     </div>
 
+    <section class="section">
+      <div class="section-heading"><h2>Ownership</h2><p>From your address, abbreviation and owner list, exactly as written.</p></div>
+      ${b.registry && b.registry.length ? `<div class="panel table-scroll"><table>
+        <thead><tr><th>Address as listed</th><th>Abbr</th><th>Owner</th></tr></thead>
+        <tbody>${b.registry.map((r) => `<tr><td>${escapeHtml(r.address)}</td><td>${escapeHtml(r.abbr) || "\u2014"}</td><td>${escapeHtml(r.owner)}</td></tr>`).join("")}</tbody>
+      </table></div>` : `<div class="panel"><p style="padding:6px 16px">This building isn't on your owner list, so no owner or abbreviation is recorded for it.</p></div>`}
+    </section>
+
     ${held.length ? `<section class="section">
       <div class="section-heading"><h2>Rent roll and statement</h2></div>
       <div class="panel"><ul class="plain-list">${held.map((p) => `<li><a href="#/p/${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a> \u00b7 ${escapeHtml(ownersLabel(p))}</li>`).join("")}</ul></div>
@@ -401,7 +426,7 @@ function buildingView(b, data) {
 
     ${b.listings.map(listingBlock).join("")}
 
-    ${!held.length && !b.listings.length ? `<section class="section"><div class="panel"><p style="padding:6px 16px">The address list is the only record of this building here: no lease dates, rents, owners or financials have been entered for it.</p></div></section>` : ""}`;
+    ${!held.length && !b.listings.length ? `<section class="section"><div class="panel"><p style="padding:6px 16px">No lease dates, rents or financials have been entered for this building.</p></div></section>` : ""}`;
 }
 
 /* ---------- One property ---------- */

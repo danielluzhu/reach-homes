@@ -11,3 +11,6 @@ data/private.json
 
 # The Anthropic API key for the assistant (Bun loads .env from here).
 .env
+
+# Address, abbreviation and owner for every building, as given by the admin.
+data/registry.json

@@ -35,6 +35,7 @@ const ROOMS_2120_PATH = `${import.meta.dir}/../2120/data/listings.json`;
 const ADMIN_CODE_PATH = `${import.meta.dir}/data/admin-code.txt`;
 const ADDRESS_PATH = `${import.meta.dir}/../../address.txt`;
 const LISTINGS_PATH = `${import.meta.dir}/../../data/listings.json`;
+const REGISTRY_PATH = `${import.meta.dir}/data/registry.json`;
 
 /**
  * Where the admin's uploads land: notes typed into the page and files dropped
@@ -111,18 +112,63 @@ async function adminCode(): Promise<string | null> {
  * on a machine without it the list is simply empty.
  */
 async function wholePortfolio(data: Portfolio) {
-  if (!(await file(ADDRESS_PATH).exists())) return [];
-  const [buildings, listings] = await Promise.all([
-    loadPortfolio(ADDRESS_PATH),
+  const [buildings, listings, registry] = await Promise.all([
+    (await file(ADDRESS_PATH).exists()) ? loadPortfolio(ADDRESS_PATH) : [],
     file(LISTINGS_PATH).json() as Promise<Array<Record<string, unknown>>>,
+    loadRegistry(),
   ]);
   const at = (address: string) => (x: { title?: unknown }) =>
     String(x.title ?? "").toLowerCase().startsWith(address.toLowerCase());
-  return buildings.map((b) => ({
+  const out = buildings.map((b) => ({
     ...b,
     listings: listings.filter(at(b.address)),
     properties: data.properties.filter(at(b.address)).map((p) => p.id),
+    registry: [] as RegistryRow[],
+    unlisted: false,
   }));
+
+  // Each registry row goes to the building with its house number. The number
+  // is taken from the address as written and, failing that, the abbreviation --
+  // the two disagree on a couple of rows, and which is the typo isn't ours to
+  // decide, so the row is attached and shown exactly as given.
+  const number = (s: string) => s.match(/^\d+/)?.[0] ?? "";
+  const extras = new Map<string, (typeof out)[number]>();
+  for (const row of registry) {
+    const byNumber = (n: string) => (n ? out.filter((b) => number(b.address) === n) : []);
+    let hits = byNumber(number(row.address));
+    if (hits.length !== 1) hits = byNumber(number(row.abbr));
+    if (hits.length === 1) {
+      hits[0].registry.push(row);
+      continue;
+    }
+    // Not in address.txt at all: still a building the admin manages, listed on
+    // its own so the gap between the two lists is visible.
+    const key = number(row.address) || row.address;
+    let extra = extras.get(key);
+    if (!extra) {
+      extra = {
+        id: "reg-" + key.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        address: row.address.replace(/\s+#?\S*$/, (m) => (/#/.test(m) ? "" : m)),
+        city: "", zip: null, neighborhood: "", units: [], parking: [], unitCount: 0,
+        listings: [], properties: [], registry: [], unlisted: true,
+      };
+      extras.set(key, extra);
+    }
+    extra.registry.push(row);
+    extra.unitCount = extra.registry.length;
+  }
+  return [...out, ...extras.values()];
+}
+
+type RegistryRow = { address: string; abbr: string; owner: string };
+
+/**
+ * The admin's own list of every building: address, the abbreviation they use
+ * for it, and its owner. Private and gitignored -- it names owners.
+ */
+async function loadRegistry(): Promise<RegistryRow[]> {
+  const f = file(REGISTRY_PATH);
+  return (await f.exists()) ? ((await f.json()).rows ?? []) : [];
 }
 
 type Unit = { label: string; detail?: string; rent: number; leasedUntil?: string; status?: string };
@@ -298,7 +344,8 @@ const server = Bun.serve({
     // The demo sign-in page lists the codes so there is something to type.
     // This goes when real accounts do.
     if (pathname === "/api/demo-codes") {
-      return json(data.demo ? data.investors.map((i) => ({ name: i.name, code: i.code })) : []);
+      // Only the made-up demo investors: a real owner's code is never offered.
+      return json(data.investors.filter((i) => i.id.startsWith("demo-")).map((i) => ({ name: i.name, code: i.code })));
     }
 
     if (pathname === "/login") return new Response(file(`${PUBLIC_DIR}/login.html`));
