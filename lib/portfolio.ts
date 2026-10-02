@@ -37,7 +37,22 @@ const STREET_SUFFIXES = new Set([
 
 const DIRECTIONALS = new Set(["n", "s", "e", "w", "ne", "nw", "se", "sw"]);
 
-const KNOWN_CITIES = ["Bellevue", "Kenmore", "Redmond", "Shoreline", "Seattle"];
+const KNOWN_CITIES = [
+  "Bellevue", "Kenmore", "Redmond", "Shoreline", "Seattle",
+  "Oakley", "Fremont", "Union City", "Sunnyvale",
+];
+
+/** Cities outside Washington. Everything else in the portfolio is in WA. */
+const CITY_STATES: Record<string, string> = {
+  Oakley: "CA",
+  Fremont: "CA",
+  "Union City": "CA",
+  Sunnyvale: "CA",
+};
+
+export function stateFor(city: string): string {
+  return CITY_STATES[city] ?? "WA";
+}
 
 /**
  * Approximate neighborhood by base address. These were inferred from the
@@ -72,6 +87,8 @@ const NEIGHBORHOODS: Record<string, string> = {
   "5830 NE 204th Pl": "Kenmore",
   "1200 Bellevue Way": "Bellevue",
   "5612 Roosevelt Way NE": "Roosevelt",
+  "5018 Delridge Way SW": "Delridge",
+  "5209 39th Ave NE": "Bryant",
 };
 
 /** Title-case a token, keeping directionals and ordinals correct (ne -> NE, 21St -> 21st). */

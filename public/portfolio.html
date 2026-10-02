@@ -112,7 +112,14 @@ Promise.all([
     );
 
     if (markers.length) {
-      map.fitBounds(L.featureGroup(markers).getBounds(), { padding: [40, 40] });
+      // Open on the main cluster rather than on every pin. A few homes are
+      // far from the rest -- in another state -- and fitting them all would
+      // shrink the Seattle properties to a single dot. The others are still
+      // there to zoom out to, and are listed by area below.
+      const mid = (list) => list.slice().sort((a, b) => a - b)[Math.floor(list.length / 2)];
+      const centre = L.latLng(mid(pins.map((p) => p.lat)), mid(pins.map((p) => p.lng)));
+      const near = markers.filter((m) => m.getLatLng().distanceTo(centre) < 80000);
+      map.fitBounds(L.featureGroup(near).getBounds(), { padding: [40, 40] });
     } else {
       map.setView([47.66, -122.31], 12);
     }

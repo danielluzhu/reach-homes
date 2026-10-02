@@ -11,7 +11,7 @@
  */
 
 import { file } from "bun";
-import { loadPortfolio } from "../lib/portfolio";
+import { loadPortfolio, stateFor } from "../lib/portfolio";
 
 const ADDRESS_PATH = `${import.meta.dir}/../address.txt`;
 const GEO_PATH = `${import.meta.dir}/../data/geo.json`;
@@ -55,7 +55,7 @@ let failed = 0;
 for (const b of buildings) {
   if (cache[b.id]) continue;
 
-  const query = `${b.address}, ${b.city}, WA${b.zip ? " " + b.zip : ""}`;
+  const query = `${b.address}, ${b.city}, ${stateFor(b.city)}${b.zip ? " " + b.zip : ""}`;
   const geo = await geocode(query);
 
   if (geo) {

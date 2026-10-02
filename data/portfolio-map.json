@@ -1,9 +1,9 @@
 {
   "stats": {
-    "properties": 28,
-    "units": 66,
-    "neighborhoods": 8,
-    "cities": 3
+    "properties": 37,
+    "units": 78,
+    "neighborhoods": 13,
+    "cities": 7
   },
   "areas": [
     {
@@ -13,8 +13,8 @@
     },
     {
       "neighborhood": "Bryant",
-      "properties": 5,
-      "units": 5
+      "properties": 6,
+      "units": 6
     },
     {
       "neighborhood": "Ravenna",
@@ -29,15 +29,40 @@
     {
       "neighborhood": "Roosevelt",
       "properties": 3,
+      "units": 5
+    },
+    {
+      "neighborhood": "Sunnyvale",
+      "properties": 3,
       "units": 3
     },
     {
       "neighborhood": "Capitol Hill",
       "properties": 2,
-      "units": 6
+      "units": 7
+    },
+    {
+      "neighborhood": "Oakley",
+      "properties": 2,
+      "units": 2
+    },
+    {
+      "neighborhood": "Delridge",
+      "properties": 1,
+      "units": 1
+    },
+    {
+      "neighborhood": "Fremont",
+      "properties": 1,
+      "units": 1
     },
     {
       "neighborhood": "Kenmore",
+      "properties": 1,
+      "units": 1
+    },
+    {
+      "neighborhood": "Union City",
       "properties": 1,
       "units": 1
     },
@@ -73,6 +98,12 @@
       "units": 1
     },
     {
+      "lat": 47.667,
+      "lng": -122.286,
+      "neighborhood": "Bryant",
+      "units": 1
+    },
+    {
       "lat": 47.668,
       "lng": -122.288,
       "neighborhood": "Bryant",
@@ -100,7 +131,7 @@
       "lat": 47.619,
       "lng": -122.317,
       "neighborhood": "Capitol Hill",
-      "units": 5
+      "units": 6
     },
     {
       "lat": 47.625,
@@ -109,9 +140,33 @@
       "units": 1
     },
     {
+      "lat": 47.557,
+      "lng": -122.362,
+      "neighborhood": "Delridge",
+      "units": 1
+    },
+    {
+      "lat": 37.551,
+      "lng": -121.937,
+      "neighborhood": "Fremont",
+      "units": 1
+    },
+    {
       "lat": 47.777,
       "lng": -122.267,
       "neighborhood": "Kenmore",
+      "units": 1
+    },
+    {
+      "lat": 37.986,
+      "lng": -121.74,
+      "neighborhood": "Oakley",
+      "units": 1
+    },
+    {
+      "lat": 37.993,
+      "lng": -121.703,
+      "neighborhood": "Oakley",
       "units": 1
     },
     {
@@ -154,12 +209,36 @@
       "lat": 47.67,
       "lng": -122.317,
       "neighborhood": "Roosevelt",
-      "units": 1
+      "units": 3
     },
     {
       "lat": 47.675,
       "lng": -122.315,
       "neighborhood": "Roosevelt",
+      "units": 1
+    },
+    {
+      "lat": 37.401,
+      "lng": -122.022,
+      "neighborhood": "Sunnyvale",
+      "units": 1
+    },
+    {
+      "lat": 37.401,
+      "lng": -122.022,
+      "neighborhood": "Sunnyvale",
+      "units": 1
+    },
+    {
+      "lat": 37.394,
+      "lng": -121.988,
+      "neighborhood": "Sunnyvale",
+      "units": 1
+    },
+    {
+      "lat": 37.587,
+      "lng": -122.006,
+      "neighborhood": "Union City",
       "units": 1
     },
     {
