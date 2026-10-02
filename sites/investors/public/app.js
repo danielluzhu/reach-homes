@@ -382,17 +382,40 @@ function portfolioTable(data) {
         <tbody>${b.map((x) => {
           const href = "#/b/" + encodeURIComponent(x.id);
           const listed = x.listings.map((l) => LISTING_STATUS[l.status || "available"]).join(", ");
-          const reg = registrySummary(x);
-          return `<tr class="clickable" data-href="${href}">
-            <td><a href="${href}">${escapeHtml(streetOf(x))}</a>${cityLine(x) ? `<br /><span class="sub">${escapeHtml(cityLine(x))}</span>` : '<br /><span class="sub">city and zip not confirmed</span>'}${reg.notes ? `<br /><span class="sub">${escapeHtml(reg.notes)}</span>` : ""}</td>
-            <td>${escapeHtml(reg.abbr) || '<span class="sub">\u2014</span>'}</td>
-            <td>${escapeHtml(reg.owners) || '<span class="sub">Not given</span>'}</td>
-            <td class="num">${escapeHtml(reg.mgmt) || '<span class="sub">\u2014</span>'}</td>
-            <td class="num">${reg.doors ?? '<span class="sub">\u2014</span>'}</td>
-            <td class="num">${reg.leases ?? '<span class="sub">\u2014</span>'}</td>
+          const dash = '<span class="sub">\u2014</span>';
+          const tail = `
             <td>${escapeHtml(x.neighborhood)}${x.city && x.city !== "Seattle" && x.city !== x.neighborhood ? ", " + escapeHtml(x.city) : ""}</td>
             <td>${listed ? escapeHtml(listed) : '<span class="sub">Not listed</span>'}</td>
-            <td>${x.properties.length ? "On file" : '<span class="sub">None</span>'}</td>
+            <td>${x.properties.length ? "On file" : '<span class="sub">None</span>'}</td>`;
+          const city = cityLine(x) ? `<br /><span class="sub">${escapeHtml(cityLine(x))}</span>` : '<br /><span class="sub">city and zip not confirmed</span>';
+          // Units of one address with different owners are different people's
+          // property: each gets a line of its own rather than a row that lists
+          // six owners and three fee rates against one address.
+          const owners = new Set((x.registry || []).map((r) => r.owner).filter(Boolean));
+          if (owners.size > 1) {
+            const number = (x.address.match(/^\d+/) || [""])[0];
+            return x.registry.map((r) => {
+              // A unit's abbreviation is its unit number unless it already
+              // carries the house number ("4316L"), in which case it stands alone.
+              const unit = r.abbr && !r.abbr.startsWith(number) ? " #" + r.abbr : "";
+              return `<tr class="clickable" data-href="${href}">
+            <td><a href="${href}">${escapeHtml(streetOf(x) + unit)}</a>${city}${r.note ? `<br /><span class="sub">${escapeHtml(r.note)}</span>` : ""}</td>
+            <td>${escapeHtml(r.abbr) || dash}</td>
+            <td>${escapeHtml(r.owner) || '<span class="sub">Not given</span>'}</td>
+            <td class="num">${r.mgmt != null ? r.mgmt + "%" : dash}</td>
+            <td class="num">${r.doors ?? dash}</td>
+            <td class="num">${r.leases ?? dash}</td>${tail}
+          </tr>`;
+            }).join("");
+          }
+          const reg = registrySummary(x);
+          return `<tr class="clickable" data-href="${href}">
+            <td><a href="${href}">${escapeHtml(streetOf(x))}</a>${city}${reg.notes ? `<br /><span class="sub">${escapeHtml(reg.notes)}</span>` : ""}</td>
+            <td>${escapeHtml(reg.abbr) || dash}</td>
+            <td>${escapeHtml(reg.owners) || '<span class="sub">Not given</span>'}</td>
+            <td class="num">${escapeHtml(reg.mgmt) || dash}</td>
+            <td class="num">${reg.doors ?? dash}</td>
+            <td class="num">${reg.leases ?? dash}</td>${tail}
           </tr>`;
         }).join("")}</tbody>
       </table></div>
