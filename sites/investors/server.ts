@@ -157,7 +157,8 @@ async function wholePortfolio(data: Portfolio) {
     extra.registry.push(row);
     extra.unitCount = extra.registry.length;
   }
-  return [...out, ...extras.values()];
+  const places = await loadPlaces();
+  return [...out, ...extras.values()].map((b) => ({ ...b, place: places[number(b.address)] ?? null }));
 }
 
 type RegistryRow = { address: string; abbr: string; owner: string };
@@ -169,6 +170,14 @@ type RegistryRow = { address: string; abbr: string; owner: string };
 async function loadRegistry(): Promise<RegistryRow[]> {
   const f = file(REGISTRY_PATH);
   return (await f.exists()) ? ((await f.json()).rows ?? []) : [];
+}
+
+type Place = { street: string; city: string; state: string; zip: string };
+
+/** Full postal addresses, keyed by house number. Blank fields are ones nobody has confirmed. */
+async function loadPlaces(): Promise<Record<string, Place>> {
+  const f = file(REGISTRY_PATH);
+  return (await f.exists()) ? ((await f.json()).places ?? {}) : {};
 }
 
 type Unit = { label: string; detail?: string; rent: number; leasedUntil?: string; status?: string };

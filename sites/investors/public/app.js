@@ -110,6 +110,14 @@ function overview(data) {
       ? `${data.buildings.length} buildings under management · ${props.length} with statements, shown at whole-property figures`
       : `${props.length} ${props.length === 1 ? "property" : "properties"} under management`}</p>
 
+    ${ADMIN && data.buildings && data.buildings.length ? (() => {
+      const t = portfolioTotals(data);
+      return `<div class="tiles">
+      <div class="tile"><div class="tile-key">Total doors</div><div class="tile-val">${t.doors}</div><div class="tile-note">across ${t.buildings} buildings${t.uncounted ? `, ${t.uncounted} with no count` : ""}</div></div>
+      <div class="tile"><div class="tile-key">Total leases</div><div class="tile-val">${t.leases}</div><div class="tile-note">from your owner list</div></div>
+    </div>`;
+    })() : ""}
+
     <div class="tiles">
       <div class="tile"><div class="tile-key">Occupancy</div><div class="tile-val">${paying} of ${units.length}</div><div class="tile-note">units and rooms leased today</div></div>
       <div class="tile"><div class="tile-key">Vacant or turning over</div><div class="tile-val">${comingUp}</div><div class="tile-note">empty, or lease ending within ${OPEN_WINDOW_DAYS} days</div></div>
@@ -338,6 +346,29 @@ function registrySummary(x) {
   };
 }
 
+/** "Seattle, WA 98105", with whatever parts are on file; empty when none are. */
+function cityLine(x) {
+  const p = x.place;
+  if (!p) return "";
+  return [[p.city, p.state].filter(Boolean).join(", "), p.zip].filter(Boolean).join(" ");
+}
+
+/** The street address as confirmed, falling back to how the building was listed. */
+function streetOf(x) {
+  return (x.place && x.place.street) || x.address;
+}
+
+/** The headline counts across everything under management, from the admin's own list. */
+function portfolioTotals(data) {
+  const regs = data.buildings.map(registrySummary);
+  return {
+    buildings: data.buildings.length,
+    doors: regs.reduce((s, r) => s + (r.doors || 0), 0),
+    leases: regs.reduce((s, r) => s + (r.leases || 0), 0),
+    uncounted: regs.filter((r) => r.doors == null).length,
+  };
+}
+
 function portfolioTable(data) {
   const b = data.buildings;
   const regs = b.map(registrySummary);
@@ -346,14 +377,14 @@ function portfolioTable(data) {
   return `
     <section class="section">
       <div class="section-heading"><h2>Whole portfolio</h2><p>${b.length} buildings, ${doors} doors, ${leases} leases, from the address list and your owner list together. Select one for everything on file.</p></div>
-      <div class="panel table-scroll"><table>
+      <div class="panel table-scroll"><table class="portfolio-table">
         <thead><tr><th>Address</th><th>Abbr</th><th>Owner</th><th class="num">M%</th><th class="num">Doors</th><th class="num">Leases</th><th>Area</th><th>Public listing</th><th>Statement</th></tr></thead>
         <tbody>${b.map((x) => {
           const href = "#/b/" + encodeURIComponent(x.id);
           const listed = x.listings.map((l) => LISTING_STATUS[l.status || "available"]).join(", ");
           const reg = registrySummary(x);
           return `<tr class="clickable" data-href="${href}">
-            <td><a href="${href}">${escapeHtml(x.address)}</a>${reg.notes ? `<br /><span class="sub">${escapeHtml(reg.notes)}</span>` : x.unlisted ? '<br /><span class="sub">not in the address list</span>' : ""}</td>
+            <td><a href="${href}">${escapeHtml(streetOf(x))}</a>${cityLine(x) ? `<br /><span class="sub">${escapeHtml(cityLine(x))}</span>` : '<br /><span class="sub">city and zip not confirmed</span>'}${reg.notes ? `<br /><span class="sub">${escapeHtml(reg.notes)}</span>` : x.unlisted ? '<br /><span class="sub">not in the address list</span>' : ""}</td>
             <td>${escapeHtml(reg.abbr) || '<span class="sub">\u2014</span>'}</td>
             <td>${escapeHtml(reg.owners) || '<span class="sub">Not given</span>'}</td>
             <td class="num">${escapeHtml(reg.mgmt) || '<span class="sub">\u2014</span>'}</td>
@@ -407,11 +438,11 @@ function listingBlock(l) {
 }
 
 function buildingView(b, data) {
-  const where = [b.address, b.city, "WA", b.zip].filter(Boolean).join(", ");
+  const where = [streetOf(b), cityLine(b)].filter(Boolean).join(", ");
   const held = data.properties.filter((p) => b.properties.includes(p.id));
   return `
     <a class="back-link" href="#/">\u2190 All properties</a>
-    <h1>${escapeHtml(b.address)}</h1>
+    <h1>${escapeHtml(streetOf(b))}</h1>
     <p class="sub">${b.unlisted ? "On your owner list, not in the address list" : escapeHtml(b.neighborhood)} \u00b7 ${escapeHtml(where)} \u00b7 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}" target="_blank" rel="noopener">Map</a></p>
 
     <div class="tiles">

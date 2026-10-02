@@ -202,3 +202,7 @@ tr.clickable:hover td { background: var(--brand-100); }
 .chat-pending ol { margin: 0 0 12px; padding-left: 22px; }
 .btn-quiet { background: none; border: 1px solid #d9cfd1; color: var(--ink); }
 .btn:disabled { opacity: 0.6; cursor: default; }
+
+/* An address is one thing to read: keep the street and the city line whole
+   and let the table scroll sideways instead of stacking them four deep. */
+.portfolio-table td:first-child { white-space: nowrap; }
