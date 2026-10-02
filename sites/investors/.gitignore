@@ -4,3 +4,10 @@ data/admin-code.txt
 
 # Admin uploads: real leases, rents and owners' figures.
 data/inbox/
+
+# The live data once the assistant has applied changes: real leases, rents,
+# owners and figures. portfolio.json stays as the committed sample.
+data/private.json
+
+# The Anthropic API key for the assistant (Bun loads .env from here).
+.env

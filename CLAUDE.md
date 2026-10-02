@@ -43,7 +43,11 @@ shares, maintenance and documents are sample data — **never commit real
 investor financials or names to this repo.** The admin view reads the
 private `address.txt` live, so its access code lives outside the repo
 (`ADMIN_CODE` or the gitignored `data/admin-code.txt`) — don't move it back
-into `portfolio.json` or onto the sign-in page. 2120's rooms are read live from
+into `portfolio.json` or onto the sign-in page. The admin's assistant (`agent.ts`) writes applied
+changes to the gitignored `data/private.json`, which then replaces
+`portfolio.json` as the live data — so check which one is live before editing
+either. Keep the assistant's tools to reading and staging data: no shell, no
+file writes of its own, nothing applied without the admin's Apply. 2120's rooms are read live from
 the microsite's data; the other properties' units are a hand copy in
 `data/portfolio.json` and need the same lease-end edits as the leasing sites.
 

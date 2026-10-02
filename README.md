@@ -102,6 +102,23 @@ gitignored, one timestamp per upload. The server stores them and nothing more
 — it does not parse them or change any data. Working an upload into the site
 is a separate, deliberate step.
 
+Above the inbox is the **assistant**: a chat panel where the admin tells
+Claude what to add or change in plain language. `sites/investors/agent.ts` runs
+it, and it is narrow on purpose. It can read the portfolio and the inbox, and
+it can *stage* changes to the investor data — units, lease end dates, rents,
+monthly statements, maintenance, owners. It has no shell, no file access
+beyond the inbox, and cannot touch code or the public sites. Staged changes
+are listed in words and applied only when the admin presses Apply, after being
+validated a second time.
+
+Applied changes are written to `sites/investors/data/private.json`
+(gitignored), which takes over from the sample `portfolio.json` once it
+exists. Delete it to go back to the sample data.
+
+It needs an Anthropic API key on the server: set `ANTHROPIC_API_KEY`, or put
+it in `sites/investors/.env` (gitignored; Bun loads it). Without one the panel
+says it isn't set up. Each message is a paid API call to `claude-opus-5-5`.
+
 The admin view is not sample data. `address.txt` holds the exact addresses of
 occupied homes and is kept out of the repo, so the admin's access code is too:
 set `ADMIN_CODE`, or put the code in `sites/investors/data/admin-code.txt`

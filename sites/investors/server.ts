@@ -23,6 +23,10 @@
 import { file } from "bun";
 import { mkdir, readdir, stat } from "node:fs/promises";
 import { loadPortfolio } from "../../lib/portfolio";
+import {
+  agentConfigured, applyChanges, conversationFor, describeChange, loadData,
+  PRIVATE_PATH, resetConversation, runTurn,
+} from "./agent";
 
 const PORT = Number(process.env.PORT ?? 8888);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
@@ -123,6 +127,9 @@ type Investor = { id: string; name: string; code: string; admin?: boolean; holdi
 type Property = { id: string; unitsFrom?: string; units?: Unit[]; [key: string]: unknown };
 type Portfolio = { demo: boolean; demoNote: string; investors: Investor[]; properties: Property[] };
 
+/** Admin sessions with an assistant turn in flight. */
+const busy = new Set<string>();
+
 /** Session token -> investor id. */
 const sessions = new Map<string, string>();
 
@@ -182,7 +189,8 @@ const server = Bun.serve({
   port: PORT,
   async fetch(req) {
     const { pathname } = new URL(req.url);
-    const data: Portfolio = await file(DATA_PATH).json();
+    // The private copy once the assistant has applied anything, the sample before.
+    const data = (await loadData()) as unknown as Portfolio;
     const token = sessionToken(req);
     const signedInAs = sessions.get(token ?? "");
     const investor = signedInAs === ADMIN.id ? ADMIN : data.investors.find((i) => i.id === signedInAs);
@@ -225,6 +233,62 @@ const server = Bun.serve({
       if (!investor?.admin) return json({ error: "Not found." }, 404);
       if (req.method === "POST") return saveUpload(req);
       return json({ uploads: await listInbox() });
+    }
+
+    // The assistant: chat in, staged changes out, applied only on request.
+    if (pathname.startsWith("/api/admin/agent")) {
+      if (!investor?.admin || !token) return json({ error: "Not found." }, 404);
+      const convo = conversationFor(token);
+      const state = () => ({
+        configured: agentConfigured(),
+        summary: convo.summary,
+        pending: convo.pending.map(describeChange),
+      });
+
+      if (pathname === "/api/admin/agent" && req.method === "GET") return json(state());
+
+      if (pathname === "/api/admin/agent" && req.method === "POST") {
+        if (!agentConfigured()) return json({ error: "The assistant isn't set up: this server has no ANTHROPIC_API_KEY." }, 503);
+        const { message } = (await req.json().catch(() => ({}))) as { message?: string };
+        const text = String(message ?? "").trim();
+        if (!text) return json({ error: "Type an instruction first." }, 400);
+        if (text.length > 200_000) return json({ error: "That's too long for one message. Upload it as a file and tell me to read it." }, 400);
+        // One turn at a time: two at once would interleave in the same history.
+        if (busy.has(token)) return json({ error: "Still working on your last message." }, 409);
+        busy.add(token);
+        try {
+          return json({ reply: await runTurn(convo, text), ...state() });
+        } finally {
+          busy.delete(token);
+        }
+      }
+
+      if (pathname === "/api/admin/agent/apply" && req.method === "POST") {
+        if (!convo.pending.length) return json({ error: "Nothing is staged." }, 400);
+        // Checked again here against the data as it is now, not as it was when staged.
+        const { data: next, errors } = applyChanges(await loadData(), convo.pending);
+        if (errors.length) return json({ error: "Couldn't apply: " + errors.join("; ") }, 400);
+        await Bun.write(PRIVATE_PATH, JSON.stringify(next, null, 2) + "\n");
+        const applied = convo.pending.length;
+        convo.pending = [];
+        convo.summary = "";
+        // So the assistant knows, next turn, that these are no longer proposals.
+        convo.messages.push({ role: "user", content: `[The admin applied the ${applied} staged change(s).]` });
+        return json({ applied, ...state() });
+      }
+
+      if (pathname === "/api/admin/agent/discard" && req.method === "POST") {
+        if (convo.pending.length) convo.messages.push({ role: "user", content: "[The admin discarded the staged changes.]" });
+        convo.pending = [];
+        convo.summary = "";
+        return json(state());
+      }
+
+      if (pathname === "/api/admin/agent/reset" && req.method === "POST") {
+        resetConversation(token);
+        return json({ configured: agentConfigured(), summary: "", pending: [] });
+      }
+      return json({ error: "Not found." }, 404);
     }
 
     // The demo sign-in page lists the codes so there is something to type.

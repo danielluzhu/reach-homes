@@ -9,5 +9,8 @@
     "gen-map": "bun scripts/gen-map.ts",
     "sync-availability": "bun scripts/sync-availability.ts",
     "build": "bun scripts/build-static.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0"
   }
 }

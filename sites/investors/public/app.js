@@ -135,7 +135,108 @@ function overview(data) {
       </table></div>
     </section>
     ${data.buildings ? portfolioTable(data) : ""}
-    ${ADMIN ? uploadSection() : ""}`;
+    ${ADMIN ? assistantSection() + uploadSection() : ""}`;
+}
+
+/**
+ * The assistant panel: instructions in plain language, staged changes back.
+ * The transcript lives in the page (the server keeps the model's own history),
+ * so it survives a Refresh but not a reload.
+ */
+const CHAT = [];
+
+function assistantSection() {
+  return `
+    <section class="section" id="assistant">
+      <div class="section-heading"><h2>Assistant</h2><p>Tell Claude what to add or change, the way you would tell a person: paste a vacancy list, a rent roll, a statement, or point it at something in the upload inbox. It proposes changes to the investor data; nothing changes until you press Apply.</p></div>
+      <div class="panel chat">
+        <div class="chat-log" id="chat-log"></div>
+        <div class="chat-pending" id="chat-pending" hidden></div>
+        <form id="chat-form">
+          <textarea name="message" rows="4" placeholder="e.g.  4316 B is leased until 8/30/27 at $1,000. Add September's statement for 4735: rent 10,200, management 816, no repairs."></textarea>
+          <div class="upload-actions">
+            <button class="btn btn-primary" type="submit" style="width:auto;margin:0">Send</button>
+            <button class="btn btn-quiet" type="button" id="chat-reset">Start over</button>
+            <span id="chat-status" role="status"></span>
+          </div>
+        </form>
+      </div>
+    </section>`;
+}
+
+function drawChat(state) {
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  log.innerHTML = CHAT.length
+    ? CHAT.map((m) => `<div class="chat-msg chat-${m.who}"><span class="chat-who">${m.who === "you" ? "You" : "Claude"}</span><div>${escapeHtml(m.text)}</div></div>`).join("")
+    : '<p class="sub">No messages yet.</p>';
+  log.scrollTop = log.scrollHeight;
+  if (!state) return;
+  const form = document.getElementById("chat-form");
+  const status = document.getElementById("chat-status");
+  if (!state.configured) {
+    form.querySelector("textarea").disabled = true;
+    form.querySelector("button[type=submit]").disabled = true;
+    status.textContent = "Not set up: this server has no Anthropic API key (ANTHROPIC_API_KEY).";
+  }
+  const pending = document.getElementById("chat-pending");
+  pending.hidden = !state.pending.length;
+  pending.innerHTML = state.pending.length ? `
+    <h3>Proposed changes \u2014 not applied yet</h3>
+    ${state.summary ? `<p>${escapeHtml(state.summary)}</p>` : ""}
+    <ol>${state.pending.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ol>
+    <div class="upload-actions">
+      <button class="btn btn-primary" type="button" id="chat-apply" style="width:auto;margin:0">Apply ${state.pending.length} change${state.pending.length === 1 ? "" : "s"}</button>
+      <button class="btn btn-quiet" type="button" id="chat-discard">Discard</button>
+    </div>` : "";
+  const post = (path) => fetch(path, { method: "POST" }).then((r) => r.json());
+  const apply = document.getElementById("chat-apply");
+  if (apply) apply.addEventListener("click", async () => {
+    apply.disabled = true;
+    const res = await post("/api/admin/agent/apply");
+    if (res.error) { status.textContent = res.error; apply.disabled = false; return; }
+    CHAT.push({ who: "claude", text: `Applied ${res.applied} change${res.applied === 1 ? "" : "s"}. The site now shows them.` });
+    // Redraw everything from the new data; the panel comes back with it.
+    await load({ keepScroll: true });
+  });
+  const discard = document.getElementById("chat-discard");
+  if (discard) discard.addEventListener("click", async () => drawChat(await post("/api/admin/agent/discard")));
+}
+
+function wireAssistant() {
+  const form = document.getElementById("chat-form");
+  if (!form) return;
+  fetch("/api/admin/agent").then((r) => r.json()).then(drawChat);
+  const status = document.getElementById("chat-status");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const box = form.querySelector("textarea");
+    const message = box.value.trim();
+    if (!message) return;
+    CHAT.push({ who: "you", text: message });
+    box.value = "";
+    drawChat();
+    const send = form.querySelector("button[type=submit]");
+    send.disabled = true;
+    status.textContent = "Claude is working\u2026 this can take a minute.";
+    try {
+      const res = await fetch("/api/admin/agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      }).then((r) => r.json());
+      status.textContent = "";
+      CHAT.push({ who: "claude", text: res.reply || res.error || "No reply." });
+      drawChat(res.pending ? res : undefined);
+    } catch {
+      status.textContent = "Couldn't reach the server.";
+    }
+    send.disabled = false;
+  });
+  document.getElementById("chat-reset").addEventListener("click", async () => {
+    CHAT.length = 0;
+    drawChat(await fetch("/api/admin/agent/reset", { method: "POST" }).then((r) => r.json()));
+  });
 }
 
 /**
@@ -440,6 +541,7 @@ function render(data) {
     tr.addEventListener("click", () => { location.hash = tr.dataset.href; }));
 
   wireUpload();
+  wireAssistant();
 
   const tip = view.querySelector(".chart-tip");
   if (tip) {
