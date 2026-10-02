@@ -3,7 +3,7 @@
  * money and the building -- and nothing about anyone else's. Runs on its own
  * port beside the public sites.
  *
- *   PORT=4000 bun run server.ts
+ *   PORT=8888 bun run server.ts
  *
  * Unlike the public sites this one is never built to static files. Which
  * properties a visitor may see is decided here, per request, from their
@@ -16,7 +16,7 @@
 
 import { file } from "bun";
 
-const PORT = Number(process.env.PORT ?? 4000);
+const PORT = Number(process.env.PORT ?? 8888);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
 const DATA_PATH = `${import.meta.dir}/data/portfolio.json`;
 const ROOMS_2120_PATH = `${import.meta.dir}/../2120/data/listings.json`;

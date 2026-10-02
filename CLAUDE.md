@@ -36,7 +36,7 @@ Edit the file by hand, or with a writer that preserves the one-line rows.
 
 ## The investor site is server-only
 
-`sites/investors/` (port 4000) shows each owner their own properties. It must
+`sites/investors/` (port 8888) shows each owner their own properties. It must
 never be added to the static build or Pages: access is enforced per request in
 `server.ts`, and static files have no one to enforce it. Its dollar figures,
 shares, maintenance and documents are sample data — **never commit real
