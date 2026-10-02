@@ -120,19 +120,12 @@ one of them into the page, keeping the `<!--IF:bundles-->` blocks on the
 long-term site and the `<!--IF:rooms-only-->` ones on the short-term site, so
 neither ships the other's markup. Each links to the other once, in the footer.
 
-One server process serves both, on its own port:
-
-```sh
-cd sites/2120 && bun run server.ts     # http://localhost:2120
-                                       # http://localhost:2120/short-term
-```
-
-`deploy/reach-2120.service` runs it under systemd alongside the main site.
+They have no server or port of their own. They are served inside the main
+site, at `/2120/` and `/2120/short-term`, by the main `server.ts`.
 
 They are also the house's detail page on the main site. Its listing carries
 `"site": "2120/"`, so the card links to `/2120/` in place of `/listing`, and
-the main `server.ts` serves the microsite there with an "All listings" link
-back; the old `/listing?id=2120-ne-54th-st` address redirects to it.
+the page carries an "All listings" link back; the old `/listing?id=2120-ne-54th-st` address redirects to it.
 
 They also publish as part of the main static build, under `/2120` on the main
 site, so they have links of their own without a second host or repo:

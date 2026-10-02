@@ -2,10 +2,11 @@
  * Renders one of the two 2120 sites from the shared template.
  *
  * The house is let on two different terms, and each has its own site: the
- * long-term one at "/", the short-term one at "/short-term/". They are the
+ * long-term one at "/", the short-term one at "/short-term/", both under
+ * /2120 on the main site. They are the
  * same page with different rents and, on the short term, without the pairs,
- * floors and whole-house options. Both the server and the static build render
- * through here, so the two cannot drift apart.
+ * floors and whole-house options. Both the main site's server and the static
+ * build render through here, so the two cannot drift apart.
  */
 
 import { file } from "bun";
@@ -55,8 +56,8 @@ function resolveBlocks(html: string, term: Term) {
 
 /**
  * The way back to the main Reach Homes site, for when these pages are served
- * inside it at /2120. On the standalone port there is no main site to go back
- * to, so the marker is simply dropped. Applied after any base-path rewrite,
+ * inside it at /2120. A standalone build (bun build.ts) has no main site to go
+ * back to, so the marker is simply dropped. Applied after any base-path rewrite,
  * since the link points outside this site's own base.
  */
 export function withBackLink(html: string, mainHref?: string) {

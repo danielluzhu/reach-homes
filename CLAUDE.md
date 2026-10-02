@@ -15,7 +15,7 @@ microsite by hand** and drifts from it — check both when either changes.
 
 That entry has `"site": "2120/"`, so its card links to the microsite, served
 inside the main site at `/2120/` (by `server.ts` live, and by the static
-build), and `/listing?id=2120-ne-54th-st` redirects there. Only the **card**
+build) — the microsite has no server or port of its own any more, and `/listing?id=2120-ne-54th-st` redirects there. Only the **card**
 still reads the mirrored fields: subtitle, summary, rent range, counts and
 date. Its `unit`, `lease`, `leaseOptions` and `photos` are no longer shown
 anywhere.
