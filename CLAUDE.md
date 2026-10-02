@@ -27,6 +27,16 @@ still reporting changes. This has happened once already.
 
 Edit the file by hand, or with a writer that preserves the one-line rows.
 
+## The investor site is server-only
+
+`sites/investors/` (port 4000) shows each owner their own properties. It must
+never be added to the static build or Pages: access is enforced per request in
+`server.ts`, and static files have no one to enforce it. Its dollar figures,
+shares, maintenance and documents are sample data — **never commit real
+investor financials or names to this repo.** 2120's rooms are read live from
+the microsite's data; the other properties' units are a hand copy in
+`data/portfolio.json` and need the same lease-end edits as the leasing sites.
+
 ## Status vocabularies — three of them, don't mix
 
 | Level | Values | Notes |

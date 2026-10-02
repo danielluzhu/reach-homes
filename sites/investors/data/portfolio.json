@@ -1,0 +1,150 @@
+{
+  "demo": true,
+  "demoNote": "Demo. Lease end dates and asking rents come from the leasing sites; every dollar figure, the ownership shares, the maintenance log and the documents are sample data, not actual accounts.",
+  "investors": [
+    {
+      "id": "demo-a",
+      "name": "Demo Investor A",
+      "code": "demo-a",
+      "holdings": [
+        { "property": "2120-ne-54th-st", "share": 1 },
+        { "property": "4316-36th-ave-ne-l", "share": 0.5 }
+      ]
+    },
+    {
+      "id": "demo-b",
+      "name": "Demo Investor B",
+      "code": "demo-b",
+      "holdings": [
+        { "property": "4735-22nd-ave-ne", "share": 1 },
+        { "property": "4316-36th-ave-ne-l", "share": 0.5 },
+        { "property": "1714-ne-55th-pl", "share": 0.25 }
+      ]
+    }
+  ],
+  "properties": [
+    {
+      "id": "2120-ne-54th-st",
+      "title": "2120 NE 54th St",
+      "neighborhood": "Ravenna",
+      "kind": "10-bedroom house, let by the room",
+      "unitNoun": "room",
+      "unitsFrom": "2120",
+      "facts": [
+        "10 bed / 6 bath across three floors, 3,000 sqft",
+        "Two kitchens and two living rooms",
+        "Garage plus driveway parking",
+        "Utilities billed to tenants at a flat $100 per person, internet included"
+      ],
+      "months": [
+        { "month": "2026-04", "rent": 7800, "management": 624, "repairs": 310, "utilities": 420, "taxesInsurance": 1150 },
+        { "month": "2026-05", "rent": 7800, "management": 624, "repairs": 0, "utilities": 380, "taxesInsurance": 1150 },
+        { "month": "2026-06", "rent": 6900, "management": 552, "repairs": 1240, "utilities": 350, "taxesInsurance": 1150 },
+        { "month": "2026-07", "rent": 7650, "management": 612, "repairs": 185, "utilities": 340, "taxesInsurance": 1150 },
+        { "month": "2026-08", "rent": 8600, "management": 688, "repairs": 0, "utilities": 365, "taxesInsurance": 1150 },
+        { "month": "2026-09", "rent": 9550, "management": 764, "repairs": 420, "utilities": 390, "taxesInsurance": 1150 }
+      ],
+      "maintenance": [
+        { "date": "2026-09-14", "item": "Lower-floor bathroom fan replaced", "cost": 420, "status": "done" },
+        { "date": "2026-07-22", "item": "Garage door opener serviced", "cost": 185, "status": "done" },
+        { "date": "2026-06-09", "item": "Main-floor kitchen dishwasher replaced", "cost": 1240, "status": "done" },
+        { "date": "2026-10-20", "item": "Gutter cleaning before winter", "cost": 300, "status": "scheduled" }
+      ],
+      "documents": ["Management agreement", "2026 insurance certificate", "September 2026 owner statement"]
+    },
+    {
+      "id": "4316-36th-ave-ne-l",
+      "title": "4316 36th Ave NE — Lower Unit",
+      "neighborhood": "Bryant",
+      "kind": "4-bedroom duplex unit, let by the room",
+      "unitNoun": "room",
+      "units": [
+        { "label": "A", "rent": 1000 },
+        { "label": "B", "rent": 1000, "leasedUntil": "2027-08-30" },
+        { "label": "C", "rent": 1050, "leasedUntil": "2027-03-30" },
+        { "label": "D", "rent": 1000, "leasedUntil": "2026-12-18" }
+      ],
+      "facts": [
+        "4 bed / 1.5 bath, 1,200 sqft, lower half of a duplex",
+        "Private entry, no internal connection to the upper unit",
+        "Laundry in the unit",
+        "Backyard co-maintained with the upper unit"
+      ],
+      "months": [
+        { "month": "2026-04", "rent": 2050, "management": 164, "repairs": 0, "utilities": 140, "taxesInsurance": 520 },
+        { "month": "2026-05", "rent": 2050, "management": 164, "repairs": 95, "utilities": 135, "taxesInsurance": 520 },
+        { "month": "2026-06", "rent": 2050, "management": 164, "repairs": 0, "utilities": 120, "taxesInsurance": 520 },
+        { "month": "2026-07", "rent": 2050, "management": 164, "repairs": 640, "utilities": 115, "taxesInsurance": 520 },
+        { "month": "2026-08", "rent": 2050, "management": 164, "repairs": 0, "utilities": 125, "taxesInsurance": 520 },
+        { "month": "2026-09", "rent": 3050, "management": 244, "repairs": 210, "utilities": 150, "taxesInsurance": 520 }
+      ],
+      "maintenance": [
+        { "date": "2026-09-03", "item": "Bedroom B repainted between tenants", "cost": 210, "status": "done" },
+        { "date": "2026-07-11", "item": "Washer drain pump replaced", "cost": 640, "status": "done" },
+        { "date": "2026-10-28", "item": "Furnace filter and annual service", "cost": 180, "status": "scheduled" }
+      ],
+      "documents": ["Management agreement", "September 2026 owner statement"]
+    },
+    {
+      "id": "4735-22nd-ave-ne",
+      "title": "4735 22nd Ave NE",
+      "neighborhood": "University District",
+      "kind": "Four-unit apartment building",
+      "unitNoun": "unit",
+      "units": [
+        { "label": "1", "detail": "2 bed", "rent": 2200, "leasedUntil": "2027-06-30" },
+        { "label": "2", "detail": "2 bed", "rent": 2200, "leasedUntil": "2027-08-31" },
+        { "label": "3", "detail": "3 bed", "rent": 2900, "leasedUntil": "2026-11-30" },
+        { "label": "4", "detail": "3 bed", "rent": 2900, "leasedUntil": "2027-08-31" }
+      ],
+      "facts": [
+        "Four units: two 2-bedroom, two 3-bedroom",
+        "3-bedroom units are 3 bed / 1 bath, 1,000 sqft",
+        "Garage and driveway parking let separately at $150 a month per space"
+      ],
+      "months": [
+        { "month": "2026-04", "rent": 10200, "management": 816, "repairs": 0, "utilities": 310, "taxesInsurance": 1480 },
+        { "month": "2026-05", "rent": 10200, "management": 816, "repairs": 450, "utilities": 295, "taxesInsurance": 1480 },
+        { "month": "2026-06", "rent": 10200, "management": 816, "repairs": 0, "utilities": 280, "taxesInsurance": 1480 },
+        { "month": "2026-07", "rent": 7300, "management": 584, "repairs": 1900, "utilities": 270, "taxesInsurance": 1480 },
+        { "month": "2026-08", "rent": 7300, "management": 584, "repairs": 320, "utilities": 285, "taxesInsurance": 1480 },
+        { "month": "2026-09", "rent": 10200, "management": 816, "repairs": 0, "utilities": 300, "taxesInsurance": 1480 }
+      ],
+      "maintenance": [
+        { "date": "2026-08-12", "item": "Unit 4 smoke detectors replaced", "cost": 320, "status": "done" },
+        { "date": "2026-07-18", "item": "Unit 4 turnover: paint, flooring repair, deep clean", "cost": 1900, "status": "done" },
+        { "date": "2026-12-02", "item": "Unit 3 turnover after lease end", "cost": 1500, "status": "scheduled" }
+      ],
+      "documents": ["Management agreement", "2026 insurance certificate", "September 2026 owner statement"]
+    },
+    {
+      "id": "1714-ne-55th-pl",
+      "title": "1714 NE 55th Pl",
+      "neighborhood": "Ravenna",
+      "kind": "8-bedroom house, let whole",
+      "unitNoun": "unit",
+      "units": [
+        { "label": "Whole house", "detail": "8 bed / 3 bath", "rent": 7600, "leasedUntil": "2027-08-31" }
+      ],
+      "facts": [
+        "8 bed / 3 bath, 2,600 sqft",
+        "Large back yard",
+        "Parking for 4–5 cars",
+        "On a private alleyway off the main road"
+      ],
+      "months": [
+        { "month": "2026-04", "rent": 7200, "management": 576, "repairs": 0, "utilities": 0, "taxesInsurance": 980 },
+        { "month": "2026-05", "rent": 7200, "management": 576, "repairs": 260, "utilities": 0, "taxesInsurance": 980 },
+        { "month": "2026-06", "rent": 7200, "management": 576, "repairs": 0, "utilities": 0, "taxesInsurance": 980 },
+        { "month": "2026-07", "rent": 7200, "management": 576, "repairs": 0, "utilities": 0, "taxesInsurance": 980 },
+        { "month": "2026-08", "rent": 0, "management": 0, "repairs": 2850, "utilities": 190, "taxesInsurance": 980 },
+        { "month": "2026-09", "rent": 7600, "management": 608, "repairs": 0, "utilities": 0, "taxesInsurance": 980 }
+      ],
+      "maintenance": [
+        { "date": "2026-08-20", "item": "Turnover between leases: paint, carpet clean, yard", "cost": 2850, "status": "done" },
+        { "date": "2026-05-06", "item": "Kitchen faucet replaced", "cost": 260, "status": "done" }
+      ],
+      "documents": ["Management agreement", "September 2026 owner statement"]
+    }
+  ]
+}

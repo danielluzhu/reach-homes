@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Sign in — Reach Homes investors</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<div class="login-wrap">
+  <form class="login-card" id="login">
+    <h1>Reach Homes investors</h1>
+    <p class="sub">Leasing, financials and building records for the properties you own.</p>
+    <label for="code">Access code</label>
+    <input id="code" name="code" autocomplete="off" autofocus />
+    <button class="btn btn-primary" type="submit">Sign in</button>
+    <p class="login-error" id="error" role="alert"></p>
+    <div class="demo-codes" id="demo-codes" hidden></div>
+  </form>
+</div>
+<script>
+const form = document.getElementById("login");
+const input = document.getElementById("code");
+
+async function signIn(code) {
+  const res = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+  if (res.ok) location.href = "/";
+  else document.getElementById("error").textContent = (await res.json()).error;
+}
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  signIn(input.value);
+});
+
+// Demo only: the codes are offered on the page so there is something to try.
+fetch("/api/demo-codes").then((r) => r.json()).then((codes) => {
+  if (!codes.length) return;
+  const el = document.getElementById("demo-codes");
+  el.hidden = false;
+  el.append("Demo — sign in as ");
+  codes.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = c.name;
+    b.addEventListener("click", () => signIn(c.code));
+    if (i) el.append(" or ");
+    el.append(b);
+  });
+  el.append(". Each sees only their own properties.");
+});
+</script>
+</body>
+</html>

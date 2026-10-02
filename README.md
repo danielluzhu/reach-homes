@@ -77,6 +77,30 @@ Two things differ from the local server, because Pages serves static files only:
   so root-relative URLs need that prefix. CI passes it via `BASE_PATH`, taken
   from the repo's Pages settings.
 
+## The investor site
+
+`sites/investors/` is a private site for property owners: the rent roll,
+monthly statement and building record for the properties they hold, and
+nothing about anyone else's. It runs on its own port:
+
+```sh
+cd sites/investors && bun run server.ts     # http://localhost:4000
+```
+
+It is a **demo**. `data/portfolio.json` holds two made-up investors, their
+access codes, and sample financials, maintenance and documents; the sign-in
+page offers both so the filtering can be seen. Lease end dates are the real
+ones, and 2120's rooms are read straight from `sites/2120/data/listings.json`.
+
+It is deliberately **not** part of `scripts/build-static.ts` or the Pages
+deploy. What an investor may see is decided by the server per request, from
+their session; a static build would hand every owner's figures to everyone.
+`deploy/reach-investors.service` runs it under systemd.
+
+Before real figures go in: real accounts in place of shared codes kept in a
+JSON file, sessions that survive a restart, HTTPS in front of it, and the data
+somewhere other than this repository.
+
 ## The 2120 microsites
 
 `sites/2120/` is a separate site for 2120 NE 54th St, whose ten bedrooms are

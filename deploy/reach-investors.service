@@ -1,0 +1,39 @@
+# The investor site, on its own port alongside reach-homes.service. Demo data
+# only -- see the README before putting real figures behind it.
+#
+#   sudo cp deploy/reach-investors.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now reach-investors
+#   journalctl -u reach-investors -f
+
+[Unit]
+Description=Reach Homes investor site (Bun)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/srv/reach-homes/sites/investors
+
+Environment=PORT=4000
+Environment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ubuntu/.bun/bin/bun run server.ts
+
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=reach-investors
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target
