@@ -2,7 +2,7 @@
   "stats": {
     "properties": 37,
     "units": 78,
-    "neighborhoods": 13,
+    "neighborhoods": 14,
     "cities": 7
   },
   "areas": [
@@ -37,14 +37,14 @@
       "units": 3
     },
     {
-      "neighborhood": "Capitol Hill",
-      "properties": 2,
-      "units": 7
-    },
-    {
       "neighborhood": "Oakley",
       "properties": 2,
       "units": 2
+    },
+    {
+      "neighborhood": "Capitol Hill",
+      "properties": 1,
+      "units": 6
     },
     {
       "neighborhood": "Delridge",
@@ -62,14 +62,19 @@
       "units": 1
     },
     {
-      "neighborhood": "Union City",
+      "neighborhood": "Laurelhurst",
+      "properties": 1,
+      "units": 2
+    },
+    {
+      "neighborhood": "Madison Valley",
       "properties": 1,
       "units": 1
     },
     {
-      "neighborhood": "Wedgwood",
+      "neighborhood": "Union City",
       "properties": 1,
-      "units": 2
+      "units": 1
     }
   ],
   "pins": [
@@ -134,12 +139,6 @@
       "units": 6
     },
     {
-      "lat": 47.625,
-      "lng": -122.297,
-      "neighborhood": "Capitol Hill",
-      "units": 1
-    },
-    {
       "lat": 47.557,
       "lng": -122.362,
       "neighborhood": "Delridge",
@@ -155,6 +154,18 @@
       "lat": 47.777,
       "lng": -122.267,
       "neighborhood": "Kenmore",
+      "units": 1
+    },
+    {
+      "lat": 47.66,
+      "lng": -122.289,
+      "neighborhood": "Laurelhurst",
+      "units": 2
+    },
+    {
+      "lat": 47.625,
+      "lng": -122.297,
+      "neighborhood": "Madison Valley",
       "units": 1
     },
     {
@@ -288,12 +299,6 @@
       "lng": -122.314,
       "neighborhood": "University District",
       "units": 1
-    },
-    {
-      "lat": 47.66,
-      "lng": -122.289,
-      "neighborhood": "Wedgwood",
-      "units": 2
     }
   ]
 }
