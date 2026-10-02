@@ -457,18 +457,45 @@ function render(data) {
   }
 }
 
-fetch("/api/portfolio").then(async (res) => {
+/** The latest portfolio, so a hash change redraws from it without refetching. */
+let DATA = null;
+
+/**
+ * Fetches the portfolio and draws it. Called once on load and again by the
+ * admin's Refresh button, which picks up data edited on the server since --
+ * a lease date, a new statement -- without losing the page they are on.
+ */
+async function load({ keepScroll = false } = {}) {
+  const res = await fetch("/api/portfolio");
   if (res.status === 401) { location.href = "/login"; return; }
-  const data = await res.json();
-  ADMIN = Boolean(data.investor.admin);
-  document.getElementById("who").textContent = data.investor.name;
-  if (data.demo) {
+  DATA = await res.json();
+  ADMIN = Boolean(DATA.investor.admin);
+  document.getElementById("who").textContent = DATA.investor.name;
+  document.getElementById("refresh").hidden = !ADMIN;
+  if (DATA.demo) {
     const banner = document.getElementById("demo-banner");
     banner.hidden = false;
-    banner.querySelector("p").textContent = data.demoNote;
+    banner.querySelector("p").textContent = DATA.demoNote;
   }
-  render(data);
-  window.addEventListener("hashchange", () => render(data));
+  const y = window.scrollY;
+  render(DATA);
+  if (keepScroll) window.scrollTo(0, y);
+}
+
+load();
+window.addEventListener("hashchange", () => DATA && render(DATA));
+
+document.getElementById("refresh").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  btn.textContent = "Refreshing…";
+  try {
+    await load({ keepScroll: true });
+    btn.textContent = "Refreshed";
+  } catch {
+    btn.textContent = "Couldn't refresh";
+  }
+  setTimeout(() => { btn.textContent = "Refresh"; btn.disabled = false; }, 1200);
 });
 
 document.getElementById("sign-out").addEventListener("click", async () => {
