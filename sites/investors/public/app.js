@@ -376,7 +376,7 @@ function portfolioTable(data) {
   const leases = regs.reduce((s, r) => s + (r.leases || 0), 0);
   return `
     <section class="section">
-      <div class="section-heading"><h2>Whole portfolio</h2><p>${b.length} buildings, ${doors} doors, ${leases} leases, from the address list and your owner list together. Select one for everything on file.</p></div>
+      <div class="section-heading"><h2>Whole portfolio</h2><p>${b.length} buildings, ${doors} doors, ${leases} leases, from your owner list. Select one for everything on file.</p></div>
       <div class="panel table-scroll"><table class="portfolio-table">
         <thead><tr><th>Address</th><th>Abbr</th><th>Owner</th><th class="num">M%</th><th class="num">Doors</th><th class="num">Leases</th><th>Area</th><th>Public listing</th><th>Statement</th></tr></thead>
         <tbody>${b.map((x) => {
@@ -384,7 +384,7 @@ function portfolioTable(data) {
           const listed = x.listings.map((l) => LISTING_STATUS[l.status || "available"]).join(", ");
           const reg = registrySummary(x);
           return `<tr class="clickable" data-href="${href}">
-            <td><a href="${href}">${escapeHtml(streetOf(x))}</a>${cityLine(x) ? `<br /><span class="sub">${escapeHtml(cityLine(x))}</span>` : '<br /><span class="sub">city and zip not confirmed</span>'}${reg.notes ? `<br /><span class="sub">${escapeHtml(reg.notes)}</span>` : x.unlisted ? '<br /><span class="sub">not in the address list</span>' : ""}</td>
+            <td><a href="${href}">${escapeHtml(streetOf(x))}</a>${cityLine(x) ? `<br /><span class="sub">${escapeHtml(cityLine(x))}</span>` : '<br /><span class="sub">city and zip not confirmed</span>'}${reg.notes ? `<br /><span class="sub">${escapeHtml(reg.notes)}</span>` : ""}</td>
             <td>${escapeHtml(reg.abbr) || '<span class="sub">\u2014</span>'}</td>
             <td>${escapeHtml(reg.owners) || '<span class="sub">Not given</span>'}</td>
             <td class="num">${escapeHtml(reg.mgmt) || '<span class="sub">\u2014</span>'}</td>
@@ -443,7 +443,7 @@ function buildingView(b, data) {
   return `
     <a class="back-link" href="#/">\u2190 All properties</a>
     <h1>${escapeHtml(streetOf(b))}</h1>
-    <p class="sub">${escapeHtml(b.neighborhood)}${b.unlisted ? " \u00b7 on your owner list, not in the address list" : ""} \u00b7 ${escapeHtml(where)} \u00b7 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}" target="_blank" rel="noopener">Map</a></p>
+    <p class="sub">${escapeHtml(b.neighborhood)} \u00b7 ${escapeHtml(where)} \u00b7 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}" target="_blank" rel="noopener">Map</a></p>
 
     <div class="tiles">
       <div class="tile"><div class="tile-key">Doors</div><div class="tile-val">${registrySummary(b).doors ?? "\u2014"}</div><div class="tile-note">${registrySummary(b).leases != null ? registrySummary(b).leases + (registrySummary(b).leases === 1 ? " lease" : " leases") : "no figure on your list"}${b.units.length ? " \u00b7 units " + escapeHtml(b.units.join(", ")) : ""}</div></div>
