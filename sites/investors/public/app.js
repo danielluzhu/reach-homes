@@ -325,20 +325,28 @@ function registrySummary(x) {
   // The building's own abbreviation is the row abbreviated to its number;
   // without one, the units' abbreviations stand in.
   const own = rows.find((r) => r.abbr === number);
+  const sum = (key) => rows.some((r) => r[key] != null) ? rows.reduce((s, r) => s + (r[key] || 0), 0) : null;
   return {
     abbr: own ? own.abbr : distinct(rows.map((r) => r.abbr)).join(", "),
     owners: distinct(rows.map((r) => r.owner)).join(", "),
+    // Doors and leases add up across a building's rows; null where the
+    // admin's list gives no figure, which is different from zero.
+    doors: sum("doors"),
+    leases: sum("leases"),
+    mgmt: distinct(rows.map((r) => (r.mgmt != null ? r.mgmt + "%" : ""))).join(", "),
   };
 }
 
 function portfolioTable(data) {
   const b = data.buildings;
-  const doors = b.reduce((s, x) => s + x.unitCount, 0);
+  const regs = b.map(registrySummary);
+  const doors = regs.reduce((s, r) => s + (r.doors || 0), 0);
+  const leases = regs.reduce((s, r) => s + (r.leases || 0), 0);
   return `
     <section class="section">
-      <div class="section-heading"><h2>Whole portfolio</h2><p>${b.length} buildings, ${doors} doors, from the address list and your owner list together. Select one for everything on file.</p></div>
+      <div class="section-heading"><h2>Whole portfolio</h2><p>${b.length} buildings, ${doors} doors, ${leases} leases, from the address list and your owner list together. Select one for everything on file.</p></div>
       <div class="panel table-scroll"><table>
-        <thead><tr><th>Address</th><th>Abbr</th><th>Owner</th><th>Area</th><th class="num">Doors</th><th>Units</th><th>Public listing</th><th>Statement</th></tr></thead>
+        <thead><tr><th>Address</th><th>Abbr</th><th>Owner</th><th class="num">M%</th><th class="num">Doors</th><th class="num">Leases</th><th>Area</th><th>Public listing</th><th>Statement</th></tr></thead>
         <tbody>${b.map((x) => {
           const href = "#/b/" + encodeURIComponent(x.id);
           const listed = x.listings.map((l) => LISTING_STATUS[l.status || "available"]).join(", ");
@@ -347,9 +355,10 @@ function portfolioTable(data) {
             <td><a href="${href}">${escapeHtml(x.address)}</a>${x.unlisted ? '<br /><span class="sub">not in the address list</span>' : ""}</td>
             <td>${escapeHtml(reg.abbr) || '<span class="sub">\u2014</span>'}</td>
             <td>${escapeHtml(reg.owners) || '<span class="sub">Not given</span>'}</td>
-            <td>${escapeHtml(x.neighborhood)}${x.city !== "Seattle" && x.city !== x.neighborhood ? ", " + escapeHtml(x.city) : ""}</td>
-            <td class="num">${x.unitCount}</td>
-            <td>${escapeHtml(x.units.join(", ") || "\u2014")}${x.parking.length ? ` <span class="sub">\u00b7 parking ${escapeHtml(x.parking.join(", "))}</span>` : ""}</td>
+            <td class="num">${escapeHtml(reg.mgmt) || '<span class="sub">\u2014</span>'}</td>
+            <td class="num">${reg.doors ?? '<span class="sub">\u2014</span>'}</td>
+            <td class="num">${reg.leases ?? '<span class="sub">\u2014</span>'}</td>
+            <td>${escapeHtml(x.neighborhood)}${x.city && x.city !== "Seattle" && x.city !== x.neighborhood ? ", " + escapeHtml(x.city) : ""}</td>
             <td>${listed ? escapeHtml(listed) : '<span class="sub">Not listed</span>'}</td>
             <td>${x.properties.length ? "On file" : '<span class="sub">None</span>'}</td>
           </tr>`;
@@ -405,17 +414,17 @@ function buildingView(b, data) {
     <p class="sub">${b.unlisted ? "On your owner list, not in the address list" : escapeHtml(b.neighborhood)} \u00b7 ${escapeHtml(where)} \u00b7 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}" target="_blank" rel="noopener">Map</a></p>
 
     <div class="tiles">
-      <div class="tile"><div class="tile-key">Doors</div><div class="tile-val">${b.unitCount}</div><div class="tile-note">${escapeHtml(b.units.length ? "Units " + b.units.join(", ") : "single home, or not broken out")}</div></div>
+      <div class="tile"><div class="tile-key">Doors</div><div class="tile-val">${registrySummary(b).doors ?? "\u2014"}</div><div class="tile-note">${registrySummary(b).leases != null ? registrySummary(b).leases + (registrySummary(b).leases === 1 ? " lease" : " leases") : "no figure on your list"}${b.units.length ? " \u00b7 units " + escapeHtml(b.units.join(", ")) : ""}</div></div>
       <div class="tile"><div class="tile-key">Parking</div><div class="tile-val">${b.parking.length || "\u2014"}</div><div class="tile-note">${escapeHtml(b.parking.join(", ") || "none listed")}</div></div>
       <div class="tile"><div class="tile-key">Public listings</div><div class="tile-val">${b.listings.length}</div><div class="tile-note">${escapeHtml(b.listings.map((l) => LISTING_STATUS[l.status || "available"]).join(", ") || "not on the leasing site")}</div></div>
       <div class="tile"><div class="tile-key">Statements</div><div class="tile-val">${held.length}</div><div class="tile-note">${held.length ? "rent roll and financials below" : "no rent roll or financials on file"}</div></div>
     </div>
 
     <section class="section">
-      <div class="section-heading"><h2>Ownership</h2><p>From your address, abbreviation and owner list, exactly as written.</p></div>
+      <div class="section-heading"><h2>Ownership</h2><p>From your address, abbreviation, owner, doors, leases and M% lists, as written.</p></div>
       ${b.registry && b.registry.length ? `<div class="panel table-scroll"><table>
-        <thead><tr><th>Address as listed</th><th>Abbr</th><th>Owner</th></tr></thead>
-        <tbody>${b.registry.map((r) => `<tr><td>${escapeHtml(r.address)}</td><td>${escapeHtml(r.abbr) || "\u2014"}</td><td>${escapeHtml(r.owner)}</td></tr>`).join("")}</tbody>
+        <thead><tr><th>Address as listed</th><th>Abbr</th><th>Owner</th><th class="num">M%</th><th class="num">Doors</th><th class="num">Leases</th></tr></thead>
+        <tbody>${b.registry.map((r) => `<tr><td>${escapeHtml(r.address)}</td><td>${escapeHtml(r.abbr) || "\u2014"}</td><td>${escapeHtml(r.owner) || "\u2014"}</td><td class="num">${r.mgmt != null ? r.mgmt + "%" : "\u2014"}</td><td class="num">${r.doors ?? "\u2014"}</td><td class="num">${r.leases ?? "\u2014"}</td></tr>`).join("")}</tbody>
       </table></div>` : `<div class="panel"><p style="padding:6px 16px">This building isn't on your owner list, so no owner or abbreviation is recorded for it.</p></div>`}
     </section>
 
