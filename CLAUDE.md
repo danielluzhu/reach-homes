@@ -49,9 +49,9 @@ changes to the gitignored `data/private.json`, which then replaces
 either. Keep the assistant's tools to reading and staging data: no shell, no
 file writes of its own, nothing applied without the admin's Apply. `data/registry.json` (gitignored) is the admin's address /
 abbreviation / owner list; the admin view merges it with `address.txt` by house
-number and shows rows exactly as written — the two lists disagree in places
-(3408 NE 37th vs 57th St, 5840 vs 5830 NE 204th Pl) and which is right is the
-owner's call, not ours. 2120's rooms are read live from
+number and shows rows exactly as written — where the two lists disagree about
+an address, ask which is right rather than picking one. (3408 is NE 57th St
+and 5830 is NE 204th Pl; the owner confirmed both.) 2120's rooms are read live from
 the microsite's data; the other properties' units are a hand copy in
 `data/portfolio.json` and need the same lease-end edits as the leasing sites.
 
