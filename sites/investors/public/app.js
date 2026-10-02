@@ -443,7 +443,7 @@ function buildingView(b, data) {
   return `
     <a class="back-link" href="#/">\u2190 All properties</a>
     <h1>${escapeHtml(streetOf(b))}</h1>
-    <p class="sub">${b.unlisted ? "On your owner list, not in the address list" : escapeHtml(b.neighborhood)} \u00b7 ${escapeHtml(where)} \u00b7 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}" target="_blank" rel="noopener">Map</a></p>
+    <p class="sub">${escapeHtml(b.neighborhood)}${b.unlisted ? " \u00b7 on your owner list, not in the address list" : ""} \u00b7 ${escapeHtml(where)} \u00b7 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}" target="_blank" rel="noopener">Map</a></p>
 
     <div class="tiles">
       <div class="tile"><div class="tile-key">Doors</div><div class="tile-val">${registrySummary(b).doors ?? "\u2014"}</div><div class="tile-note">${registrySummary(b).leases != null ? registrySummary(b).leases + (registrySummary(b).leases === 1 ? " lease" : " leases") : "no figure on your list"}${b.units.length ? " \u00b7 units " + escapeHtml(b.units.join(", ")) : ""}</div></div>

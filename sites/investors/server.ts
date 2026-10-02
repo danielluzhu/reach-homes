@@ -158,7 +158,12 @@ async function wholePortfolio(data: Portfolio) {
     extra.unitCount = extra.registry.length;
   }
   const places = await loadPlaces();
-  return [...out, ...extras.values()].map((b) => ({ ...b, place: places[number(b.address)] ?? null }));
+  return [...out, ...extras.values()].map((b) => {
+    const place = places[number(b.address)] ?? null;
+    // address.txt buildings get their neighbourhood from lib/portfolio; the
+    // ones only on the owner list get it from their confirmed address.
+    return { ...b, place, neighborhood: b.neighborhood || place?.neighborhood || "", city: b.city || place?.city || "" };
+  });
 }
 
 type RegistryRow = { address: string; abbr: string; owner: string };
@@ -172,7 +177,7 @@ async function loadRegistry(): Promise<RegistryRow[]> {
   return (await f.exists()) ? ((await f.json()).rows ?? []) : [];
 }
 
-type Place = { street: string; city: string; state: string; zip: string };
+type Place = { street: string; city: string; state: string; zip: string; neighborhood?: string };
 
 /** Full postal addresses, keyed by house number. Blank fields are ones nobody has confirmed. */
 async function loadPlaces(): Promise<Record<string, Place>> {
