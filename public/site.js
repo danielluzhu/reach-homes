@@ -63,6 +63,16 @@ function unitStatusLabel(u) {
   return UNIT_STATUS_LABELS[u.status] || null;
 }
 
+/**
+ * Where a listing's details live, relative to the site root. A listing with a
+ * site of its own -- 2120's room-by-room pages -- sends people there instead
+ * of to the generic listing page. Callers write the leading slash themselves
+ * (href="/${listingPath(l)}") so the static build's base-path rewrite sees it.
+ */
+function listingPath(l) {
+  return l.site || "listing?id=" + encodeURIComponent(l.id);
+}
+
 function isAvailable(l) {
   return (l.status || "available") === "available";
 }

@@ -129,6 +129,11 @@ cd sites/2120 && bun run server.ts     # http://localhost:2120
 
 `deploy/reach-2120.service` runs it under systemd alongside the main site.
 
+They are also the house's detail page on the main site. Its listing carries
+`"site": "2120/"`, so the card links to `/2120/` in place of `/listing`, and
+the main `server.ts` serves the microsite there with an "All listings" link
+back; the old `/listing?id=2120-ne-54th-st` address redirects to it.
+
 They also publish as part of the main static build, under `/2120` on the main
 site, so they have links of their own without a second host or repo:
 

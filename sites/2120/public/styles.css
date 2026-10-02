@@ -558,3 +558,12 @@ table.rates td.private { color: #1c6b3a; }
   .spec-row { gap: 24px; }
   .detail-actions .btn { width: 100%; }
 }
+
+/* Only present when the site is served inside the main one, at /2120. */
+.back-link {
+  display: inline-block;
+  margin-bottom: 18px;
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+.back-link:hover { text-decoration: underline; }

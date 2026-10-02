@@ -148,6 +148,14 @@ fetch("/api/listings")
       return;
     }
 
+    // A listing with a site of its own is shown there, so an old link to this
+    // page lands on the same view as the card does. The back link's href is
+    // the site root with any base path already applied.
+    if (l.site) {
+      location.replace(document.querySelector(".back-link").getAttribute("href") + l.site);
+      return;
+    }
+
     document.title = l.title + " — Reach Homes";
     const sqft = sqftLabel(l);
     // Where the lease options carry photos, they are rooms: they replace the

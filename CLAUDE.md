@@ -13,6 +13,13 @@ file is the things that have actually gone wrong, or are easy to get wrong.
 They are separate data. The main site's `2120-ne-54th-st` entry **mirrors the
 microsite by hand** and drifts from it — check both when either changes.
 
+That entry has `"site": "2120/"`, so its card links to the microsite, served
+inside the main site at `/2120/` (by `server.ts` live, and by the static
+build), and `/listing?id=2120-ne-54th-st` redirects there. Only the **card**
+still reads the mirrored fields: subtitle, summary, rent range, counts and
+date. Its `unit`, `lease`, `leaseOptions` and `photos` are no longer shown
+anywhere.
+
 ## Never reserialize data/listings.json
 
 `upcomingUnits` and `leaseOptions` rows sit on one line each; everything else

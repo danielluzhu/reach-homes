@@ -1,5 +1,7 @@
 import { file } from "bun";
 import { loadPortfolio, toMapPayload } from "./lib/portfolio";
+import { rewriter } from "./sites/2120/build";
+import { renderSite, withBackLink, type Term } from "./sites/2120/render";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
@@ -64,6 +66,38 @@ async function withPhotos(listings: Array<Record<string, unknown>>) {
       return { ...l, hasRealPhoto: false };
     }),
   );
+}
+
+/**
+ * The 2120 microsite, served inside this site at /2120 just as the static
+ * build publishes it. It is that house's detail page: the listing card links
+ * here rather than to /listing, so there is one view of the house and it is
+ * the one drawn from the room data.
+ */
+const SITE_2120 = `${import.meta.dir}/sites/2120`;
+const rewrite2120 = rewriter("/2120");
+
+async function serve2120(sub: string) {
+  if (sub === "/api/listings.json") return new Response(file(`${SITE_2120}/data/listings.json`));
+  if (sub === "/api/property.json") return new Response(file(`${SITE_2120}/data/property.json`));
+
+  const terms: Term[] = (await file(`${SITE_2120}/data/property.json`).json()).terms;
+  const route = sub.replace(/\/+$/, "");
+  const term = terms.find((t) => t.path.replace(/\/+$/, "") === route);
+  if (term) {
+    return new Response(withBackLink(rewrite2120(await renderSite(term, terms)), "/"), {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+  }
+
+  if (sub.includes("..") || sub.startsWith("/partials/")) return new Response("Not found", { status: 404 });
+  const asset = file(`${SITE_2120}/public${sub}`);
+  if (!(await asset.exists())) return new Response("Not found", { status: 404 });
+  // The script and stylesheet carry root-relative URLs of their own.
+  if (sub === "/site.js" || sub === "/styles.css") {
+    return new Response(rewrite2120(await asset.text()), { headers: { "Content-Type": asset.type } });
+  }
+  return new Response(asset);
 }
 
 function json(data: unknown, init: ResponseInit = {}) {
@@ -159,6 +193,10 @@ const server = Bun.serve({
       console.log(`New contact submission from ${name} <${email}>`);
       return json({ ok: true });
     }
+
+    // "/2120" needs its slash: the page's own links are relative to it.
+    if (pathname === "/2120") return new Response(null, { status: 302, headers: { Location: "/2120/" } });
+    if (pathname.startsWith("/2120/")) return serve2120(pathname.slice("/2120".length));
 
     if (pathname in PAGE_ROUTES) {
       return renderPage(pathname, PAGE_ROUTES[pathname]);

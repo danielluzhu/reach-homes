@@ -140,7 +140,7 @@ function card(l) {
       </div>
       <div class="card-body">
         <div class="neighborhood">${escapeHtml(l.neighborhood)}</div>
-        <h3><a href="/listing?id=${encodeURIComponent(l.id)}">${escapeHtml(l.title)}</a></h3>
+        <h3><a href="/${listingPath(l)}">${escapeHtml(l.title)}</a></h3>
         <div class="address">${escapeHtml(l.subtitle)}</div>
         <div class="stat-row">${stats}</div>
         <p class="desc">${escapeHtml(l.summary)}</p>
@@ -149,7 +149,7 @@ function card(l) {
           <div class="availability${isAvailable(l) ? (isSoon(l) ? " availability-soon" : "") : " availability-pending"}">${escapeHtml(unitCountLabel(l) || availabilityLabel(l))}</div>
         </div>
         <div class="card-actions">
-          <a class="btn btn-primary" style="flex:1" href="/listing?id=${encodeURIComponent(l.id)}">View details</a>
+          <a class="btn btn-primary" style="flex:1" href="/${listingPath(l)}">View details</a>
           <a class="btn btn-secondary" style="flex:1" href="${escapeHtml(l.zillow)}" target="_blank" rel="noopener">Zillow</a>
         </div>
       </div>

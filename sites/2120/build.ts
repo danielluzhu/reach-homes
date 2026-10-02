@@ -15,22 +15,18 @@
 
 import { file, write } from "bun";
 import { mkdir, rm, cp } from "node:fs/promises";
-import { renderSite, type Term } from "./render";
+import { renderSite, withBackLink, type Term } from "./render";
 
 const ROOT = import.meta.dir;
 
-export async function build2120(outDir: string, base: string) {
-  const publicDir = `${ROOT}/public`;
-  const dataDir = `${ROOT}/data`;
+/**
+ * Rewrites the site's root-relative URLs and API calls to sit under `base`.
+ * Shared with the main site's server, which serves these pages live at /2120
+ * the same way the static build publishes them.
+ */
+export function rewriter(base: string) {
   const BASE = base.replace(/\/+$/, "");
-
-  await rm(outDir, { recursive: true, force: true });
-  await mkdir(outDir, { recursive: true });
-  await cp(publicDir, outDir, { recursive: true });
-  await rm(`${outDir}/partials`, { recursive: true, force: true });
-  await rm(`${outDir}/index.html`, { force: true });
-
-  const rewrite = (text: string) => {
+  return (text: string) => {
     let out = text
       .replace(/fetch\("\/api\/listings"\)/g, `fetch("${BASE}/api/listings.json")`)
       .replace(/fetch\("\/api\/property"\)/g, `fetch("${BASE}/api/property.json")`);
@@ -40,6 +36,20 @@ export async function build2120(outDir: string, base: string) {
     }
     return out;
   };
+}
+
+/** `mainHref` is the main site's front page, where the build sits inside one. */
+export async function build2120(outDir: string, base: string, mainHref?: string) {
+  const publicDir = `${ROOT}/public`;
+  const dataDir = `${ROOT}/data`;
+
+  await rm(outDir, { recursive: true, force: true });
+  await mkdir(outDir, { recursive: true });
+  await cp(publicDir, outDir, { recursive: true });
+  await rm(`${outDir}/partials`, { recursive: true, force: true });
+  await rm(`${outDir}/index.html`, { force: true });
+
+  const rewrite = rewriter(base);
 
   const property = await file(`${dataDir}/property.json`).json();
   const terms: Term[] = property.terms;
@@ -48,7 +58,7 @@ export async function build2120(outDir: string, base: string) {
     // reach the shared assets and JSON by the same root-relative paths.
     const dir = `${outDir}${term.path}`.replace(/\/+$/, "");
     await mkdir(dir, { recursive: true });
-    await write(`${dir}/index.html`, rewrite(await renderSite(term, terms)));
+    await write(`${dir}/index.html`, withBackLink(rewrite(await renderSite(term, terms)), mainHref));
   }
 
   // The in-page anchors the header links to are relative to the page, so the

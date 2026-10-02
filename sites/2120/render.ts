@@ -53,6 +53,19 @@ function resolveBlocks(html: string, term: Term) {
     .replace(/<!--(?:IF|END):[a-z-]+-->/g, "");
 }
 
+/**
+ * The way back to the main Reach Homes site, for when these pages are served
+ * inside it at /2120. On the standalone port there is no main site to go back
+ * to, so the marker is simply dropped. Applied after any base-path rewrite,
+ * since the link points outside this site's own base.
+ */
+export function withBackLink(html: string, mainHref?: string) {
+  return html.replace(
+    /[ \t]*<!--BACK-->[ \t]*\n?/,
+    mainHref ? `  <a class="back-link" href="${escapeHtml(mainHref)}">\u2190 All listings</a>\n` : "",
+  );
+}
+
 export async function renderSite(term: Term, terms: Term[]) {
   const publicDir = `${ROOT}/public`;
   const [page, header, footer] = await Promise.all([

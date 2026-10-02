@@ -198,7 +198,7 @@ async function build() {
 
   // The two 2120 sites publish at /2120 and /2120/short-term under this one,
   // so they get links of their own without needing a second host or repo.
-  await build2120(`${DIST}/2120`, `${BASE}/2120`);
+  await build2120(`${DIST}/2120`, `${BASE}/2120`, `${BASE}/`);
 
   // Skip Jekyll, which would otherwise ignore files and folders beginning "_".
   await write(`${DIST}/.nojekyll`, "");

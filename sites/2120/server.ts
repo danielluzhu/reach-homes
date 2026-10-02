@@ -11,7 +11,7 @@
  */
 
 import { file } from "bun";
-import { renderSite, type Term } from "./render";
+import { renderSite, withBackLink, type Term } from "./render";
 
 const PORT = Number(process.env.PORT ?? 2120);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
@@ -40,7 +40,7 @@ const server = Bun.serve({
     const all = await terms();
     const term = all.find((t) => t.path.replace(/\/+$/, "") === (route === "/" ? "" : route));
     if (term) {
-      return new Response(await renderSite(term, all), {
+      return new Response(withBackLink(await renderSite(term, all)), {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }
