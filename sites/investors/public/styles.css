@@ -166,6 +166,7 @@ tr.clickable:hover td { background: var(--brand-100); }
 /* ---- Admin upload ---- */
 
 .upload-form { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.upload-form input[type="text"],
 .upload-form textarea {
   width: 100%;
   padding: 10px 12px;

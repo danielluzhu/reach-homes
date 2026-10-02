@@ -67,6 +67,9 @@ async function saveUpload(req: Request) {
   const form = await req.formData().catch(() => null);
   if (!form) return json({ error: "Couldn't read the upload." }, 400);
   const note = String(form.get("note") ?? "").trim();
+  // The admin's own name for the note, kept readable: spaces survive, anything
+  // that could mean something to a filesystem doesn't.
+  const title = String(form.get("title") ?? "").replace(/[^A-Za-z0-9 ._-]+/g, " ").replace(/\s+/g, " ").replace(/^[. ]+/, "").trim().slice(0, 80);
   const files = form.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
   if (!note && !files.length) return json({ error: "Nothing to upload: add a note or a file." }, 400);
   if (files.length > MAX_UPLOAD_FILES) return json({ error: `At most ${MAX_UPLOAD_FILES} files at a time.` }, 400);
@@ -79,8 +82,9 @@ async function saveUpload(req: Request) {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const saved: string[] = [];
   if (note) {
-    await Bun.write(`${INBOX_DIR}/${stamp}__note.txt`, note + "\n");
-    saved.push(`${stamp}__note.txt`);
+    const name = title ? `${stamp}__note_${title}.txt` : `${stamp}__note.txt`;
+    await Bun.write(`${INBOX_DIR}/${name}`, note + "\n");
+    saved.push(name);
   }
   for (const [i, f] of files.entries()) {
     const name = `${stamp}__${i + 1}_${safeName(f.name)}`;

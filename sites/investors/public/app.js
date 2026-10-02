@@ -249,6 +249,7 @@ function uploadSection() {
     <section class="section" id="upload">
       <div class="section-heading"><h2>Upload information</h2><p>Paste or attach anything about the properties, in whatever form you have it: lease dates, rents, owners, statements, maintenance. It is saved privately on the server and waits to be worked through; nothing on the site changes until it has been.</p></div>
       <form class="panel upload-form" id="upload-form">
+        <input type="text" name="title" maxlength="80" placeholder="Name this note (optional), e.g. October vacancies" />
         <textarea name="note" rows="7" placeholder="e.g.  5540 30th Ave NE: leased until 6/30/27 at $4,200, owner J. Smith 100%"></textarea>
         <input type="file" name="files" multiple />
         <div class="upload-actions"><button class="btn btn-primary" type="submit" style="width:auto;margin:0">Upload</button><span id="upload-status" role="status"></span></div>
@@ -258,6 +259,17 @@ function uploadSection() {
     </section>`;
 }
 
+/**
+ * What an inbox item is called on the page. Stored names carry a timestamp,
+ * and "note_<name>.txt" for a pasted note the admin named.
+ */
+function uploadLabel(name) {
+  const rest = name.replace(/^.*?__/, "");
+  const note = rest.match(/^note(?:_(.+))?\.txt$/);
+  if (note) return note[1] ? note[1] + " (note)" : "Pasted note";
+  return rest.replace(/^\d+_/, "");
+}
+
 async function refreshUploads() {
   const list = document.getElementById("upload-list");
   if (!list) return;
@@ -265,7 +277,7 @@ async function refreshUploads() {
   list.innerHTML = uploads.length
     ? `<table><thead><tr><th>Uploaded</th><th>Item</th><th class="num">Size</th></tr></thead><tbody>${uploads.map((u) => `<tr>
         <td style="white-space:nowrap">${escapeHtml(new Date(u.at).toLocaleString())}</td>
-        <td>${escapeHtml(u.name.replace(/^.*?__(\d+_)?/, "").replace(/^note\.txt$/, "Pasted note"))}</td>
+        <td>${escapeHtml(uploadLabel(u.name))}</td>
         <td class="num">${u.bytes < 1024 ? u.bytes + " B" : Math.round(u.bytes / 1024).toLocaleString() + " KB"}</td>
       </tr>`).join("")}</tbody></table>`
     : '<p class="sub" style="padding:8px 16px">Nothing uploaded yet.</p>';
