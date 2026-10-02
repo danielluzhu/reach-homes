@@ -334,6 +334,7 @@ function registrySummary(x) {
     doors: sum("doors"),
     leases: sum("leases"),
     mgmt: distinct(rows.map((r) => (r.mgmt != null ? r.mgmt + "%" : ""))).join(", "),
+    notes: distinct(rows.map((r) => r.note)).join("; "),
   };
 }
 
@@ -352,7 +353,7 @@ function portfolioTable(data) {
           const listed = x.listings.map((l) => LISTING_STATUS[l.status || "available"]).join(", ");
           const reg = registrySummary(x);
           return `<tr class="clickable" data-href="${href}">
-            <td><a href="${href}">${escapeHtml(x.address)}</a>${x.unlisted ? '<br /><span class="sub">not in the address list</span>' : ""}</td>
+            <td><a href="${href}">${escapeHtml(x.address)}</a>${reg.notes ? `<br /><span class="sub">${escapeHtml(reg.notes)}</span>` : x.unlisted ? '<br /><span class="sub">not in the address list</span>' : ""}</td>
             <td>${escapeHtml(reg.abbr) || '<span class="sub">\u2014</span>'}</td>
             <td>${escapeHtml(reg.owners) || '<span class="sub">Not given</span>'}</td>
             <td class="num">${escapeHtml(reg.mgmt) || '<span class="sub">\u2014</span>'}</td>
@@ -424,7 +425,7 @@ function buildingView(b, data) {
       <div class="section-heading"><h2>Ownership</h2><p>From your address, abbreviation, owner, doors, leases and M% lists, as written.</p></div>
       ${b.registry && b.registry.length ? `<div class="panel table-scroll"><table>
         <thead><tr><th>Address as listed</th><th>Abbr</th><th>Owner</th><th class="num">M%</th><th class="num">Doors</th><th class="num">Leases</th></tr></thead>
-        <tbody>${b.registry.map((r) => `<tr><td>${escapeHtml(r.address)}</td><td>${escapeHtml(r.abbr) || "\u2014"}</td><td>${escapeHtml(r.owner) || "\u2014"}</td><td class="num">${r.mgmt != null ? r.mgmt + "%" : "\u2014"}</td><td class="num">${r.doors ?? "\u2014"}</td><td class="num">${r.leases ?? "\u2014"}</td></tr>`).join("")}</tbody>
+        <tbody>${b.registry.map((r) => `<tr><td>${escapeHtml(r.address)}${r.note ? `<br /><span class="sub">${escapeHtml(r.note)}</span>` : ""}</td><td>${escapeHtml(r.abbr) || "\u2014"}</td><td>${escapeHtml(r.owner) || "\u2014"}</td><td class="num">${r.mgmt != null ? r.mgmt + "%" : "\u2014"}</td><td class="num">${r.doors ?? "\u2014"}</td><td class="num">${r.leases ?? "\u2014"}</td></tr>`).join("")}</tbody>
       </table></div>` : `<div class="panel"><p style="padding:6px 16px">This building isn't on your owner list, so no owner or abbreviation is recorded for it.</p></div>`}
     </section>
 
