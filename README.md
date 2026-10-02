@@ -89,7 +89,9 @@ cd sites/investors && bun run server.ts     # http://localhost:8888
 
 It is a **demo**. `data/portfolio.json` holds two made-up investors, their
 access codes, and sample financials, maintenance and documents; the sign-in
-page offers both so the filtering can be seen. Lease end dates are the real
+page offers both so the filtering can be seen. A third account flagged
+`"admin": true` (code `admin`) is the manager's view: every property at its
+whole figures, with who owns how much of each. Lease end dates are the real
 ones, and 2120's rooms are read straight from `sites/2120/data/listings.json`.
 
 It is deliberately **not** part of `scripts/build-static.ts` or the Pages

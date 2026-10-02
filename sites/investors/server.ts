@@ -23,7 +23,7 @@ const ROOMS_2120_PATH = `${import.meta.dir}/../2120/data/listings.json`;
 
 type Unit = { label: string; detail?: string; rent: number; leasedUntil?: string; status?: string };
 type Holding = { property: string; share: number };
-type Investor = { id: string; name: string; code: string; holdings: Holding[] };
+type Investor = { id: string; name: string; code: string; admin?: boolean; holdings: Holding[] };
 type Property = { id: string; unitsFrom?: string; units?: Unit[]; [key: string]: unknown };
 type Portfolio = { demo: boolean; demoNote: string; investors: Investor[]; properties: Property[] };
 
@@ -55,14 +55,29 @@ async function units(p: Property): Promise<Unit[]> {
     .map(({ label, rent, leasedUntil, status }) => ({ label, rent, leasedUntil, status }));
 }
 
-/** The investor's own properties, each with their share of it. Nothing else leaves the server. */
+/**
+ * The investor's own properties, each with their share of it. Nothing else
+ * leaves the server.
+ *
+ * An admin is the manager's view: every property, at the whole of its figures,
+ * with who owns how much of each. It is the one account that sees across
+ * owners, so it is a flag on the account, never something a request can ask for.
+ */
 async function holdingsFor(investor: Investor, data: Portfolio) {
+  const holdings: Holding[] = investor.admin
+    ? data.properties.map((p) => ({ property: p.id, share: 1 }))
+    : investor.holdings;
   const out = [];
-  for (const h of investor.holdings) {
+  for (const h of holdings) {
     const p = data.properties.find((x) => x.id === h.property);
     if (!p) continue;
     const { unitsFrom: _source, ...rest } = p;
-    out.push({ ...rest, units: await units(p), share: h.share });
+    const owners = investor.admin
+      ? data.investors.flatMap((i) =>
+          i.holdings.filter((x) => x.property === p.id).map((x) => ({ name: i.name, share: x.share })),
+        )
+      : undefined;
+    out.push({ ...rest, units: await units(p), share: h.share, owners });
   }
   return out;
 }
@@ -98,7 +113,7 @@ const server = Bun.serve({
       return json({
         demo: data.demo,
         demoNote: data.demoNote,
-        investor: { name: investor.name },
+        investor: { name: investor.name, admin: Boolean(investor.admin) },
         properties: await holdingsFor(investor, data),
       });
     }

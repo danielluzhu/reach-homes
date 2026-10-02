@@ -74,6 +74,21 @@ function shareLabel(share) {
   return Math.round(share * 100) + "%";
 }
 
+/**
+ * Set once the portfolio loads. The admin sees every property at the whole of
+ * its figures, so "your share" has no meaning there: the wording changes and
+ * the owners are named instead.
+ */
+let ADMIN = false;
+
+function ownersLabel(p) {
+  if (!p.owners || !p.owners.length) return "No owner on file";
+  const held = p.owners.reduce((s, o) => s + o.share, 0);
+  const named = p.owners.map((o) => `${o.name} ${shareLabel(o.share)}`).join(", ");
+  // Shares that don't reach 100% are worth seeing rather than hiding.
+  return held < 0.999 ? `${named} · ${shareLabel(1 - held)} unassigned` : named;
+}
+
 function nextLeaseEnd(p) {
   return p.units.map((u) => u.leasedUntil).filter((d) => d && d > isoDate(0)).sort()[0] || null;
 }
@@ -91,25 +106,25 @@ function overview(data) {
 
   return `
     <h1>${escapeHtml(data.investor.name)}</h1>
-    <p class="sub">${props.length} ${props.length === 1 ? "property" : "properties"} under management</p>
+    <p class="sub">${props.length} ${props.length === 1 ? "property" : "properties"} under management${ADMIN ? " · all owners, whole-property figures" : ""}</p>
 
     <div class="tiles">
       <div class="tile"><div class="tile-key">Occupancy</div><div class="tile-val">${paying} of ${units.length}</div><div class="tile-note">units and rooms leased today</div></div>
       <div class="tile"><div class="tile-key">Vacant or turning over</div><div class="tile-val">${comingUp}</div><div class="tile-note">empty, or lease ending within ${OPEN_WINDOW_DAYS} days</div></div>
-      <div class="tile"><div class="tile-key">Net income, ${last ? escapeHtml(monthLabel(last)) : ""}</div><div class="tile-val">${money(lastNet)}</div><div class="tile-note">your share</div></div>
-      <div class="tile"><div class="tile-key">Net income, last ${props[0] ? props[0].months.length : 0} months</div><div class="tile-val">${money(allNet)}</div><div class="tile-note">your share</div></div>
+      <div class="tile"><div class="tile-key">Net income, ${last ? escapeHtml(monthLabel(last)) : ""}</div><div class="tile-val">${money(lastNet)}</div><div class="tile-note">${ADMIN ? "all properties" : "your share"}</div></div>
+      <div class="tile"><div class="tile-key">Net income, last ${props[0] ? props[0].months.length : 0} months</div><div class="tile-val">${money(allNet)}</div><div class="tile-note">${ADMIN ? "all properties" : "your share"}</div></div>
     </div>
 
     <section class="section">
-      <div class="section-heading"><h2>Your properties</h2><p>Select one for its rent roll, statement and building record.</p></div>
+      <div class="section-heading"><h2>${ADMIN ? "All properties" : "Your properties"}</h2><p>Select one for its rent roll, statement and building record.</p></div>
       <div class="panel table-scroll"><table>
-        <thead><tr><th>Property</th><th class="num">Your share</th><th>Leased</th><th>Next lease end</th><th class="num">Net, ${last ? escapeHtml(monthLabel(last)) : ""} (your share)</th></tr></thead>
+        <thead><tr><th>Property</th>${ADMIN ? "<th>Owners</th>" : '<th class="num">Your share</th>'}<th>Leased</th><th>Next lease end</th><th class="num">Net, ${last ? escapeHtml(monthLabel(last)) : ""}${ADMIN ? "" : " (your share)"}</th></tr></thead>
         <tbody>${props.map((p) => {
           const n = net(p.months[p.months.length - 1]) * p.share;
           const end = nextLeaseEnd(p);
           return `<tr class="clickable" data-href="#/p/${encodeURIComponent(p.id)}">
             <td><a href="#/p/${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a><br /><span class="sub">${escapeHtml(p.kind)} · ${escapeHtml(p.neighborhood)}</span></td>
-            <td class="num">${shareLabel(p.share)}</td>
+            ${ADMIN ? `<td>${escapeHtml(ownersLabel(p))}</td>` : `<td class="num">${shareLabel(p.share)}</td>`}
             <td>${p.units.filter(isPaying).length} of ${p.units.length}</td>
             <td>${end ? escapeHtml(dateLabel(end)) : "—"}</td>
             <td class="num${n < 0 ? " neg" : ""}">${money(n)}</td>
@@ -194,12 +209,12 @@ function statement(p) {
   const cost = (n) => `<td class="num cost">${n ? money(-n) : "\u2014"}</td>`;
   return `
     <div class="panel table-scroll"><table>
-      <thead><tr><th>Month</th><th class="num">Rent collected</th>${COSTS.map(([, label]) => `<th class="num">${label}</th>`).join("")}<th class="num">Net</th><th class="num">Your ${shareLabel(p.share)}</th></tr></thead>
+      <thead><tr><th>Month</th><th class="num">Rent collected</th>${COSTS.map(([, label]) => `<th class="num">${label}</th>`).join("")}<th class="num">Net</th>${ADMIN ? "" : `<th class="num">Your ${shareLabel(p.share)}</th>`}</tr></thead>
       <tbody>${p.months.map((m) => `<tr>
         <td>${escapeHtml(monthLabel(m.month))}</td>
-        ${cell(m.rent)}${COSTS.map(([key]) => cost(m[key] || 0)).join("")}${cell(net(m))}${cell(net(m) * p.share)}
+        ${cell(m.rent)}${COSTS.map(([key]) => cost(m[key] || 0)).join("")}${cell(net(m))}${ADMIN ? "" : cell(net(m) * p.share)}
       </tr>`).join("")}</tbody>
-      <tfoot><tr><td>Total</td>${cell(total("rent"))}${COSTS.map(([key]) => cost(total(key))).join("")}${cell(totalNet)}${cell(totalNet * p.share)}</tr></tfoot>
+      <tfoot><tr><td>Total</td>${cell(total("rent"))}${COSTS.map(([key]) => cost(total(key))).join("")}${cell(totalNet)}${ADMIN ? "" : cell(totalNet * p.share)}</tr></tfoot>
     </table></div>`;
 }
 
@@ -229,9 +244,9 @@ function building(p) {
 
 function propertyView(p) {
   return `
-    <a class="back-link" href="#/">← All your properties</a>
+    <a class="back-link" href="#/">← ${ADMIN ? "All properties" : "All your properties"}</a>
     <h1>${escapeHtml(p.title)}</h1>
-    <p class="sub">${escapeHtml(p.kind)} · ${escapeHtml(p.neighborhood)} · you own ${shareLabel(p.share)}</p>
+    <p class="sub">${escapeHtml(p.kind)} · ${escapeHtml(p.neighborhood)} · ${ADMIN ? "Owners: " + escapeHtml(ownersLabel(p)) : "you own " + shareLabel(p.share)}</p>
 
     <section class="section">
       <div class="section-heading"><h2>Leasing</h2><p>Every ${escapeHtml(p.unitNoun)}, who is in it until when, and what is being advertised. A lease within ${OPEN_WINDOW_DAYS} days of ending is already on the leasing site.</p></div>
@@ -284,6 +299,7 @@ function render(data) {
 fetch("/api/portfolio").then(async (res) => {
   if (res.status === 401) { location.href = "/login"; return; }
   const data = await res.json();
+  ADMIN = Boolean(data.investor.admin);
   document.getElementById("who").textContent = data.investor.name;
   if (data.demo) {
     const banner = document.getElementById("demo-banner");
