@@ -106,7 +106,9 @@ function overview(data) {
 
   return `
     <h1>${escapeHtml(data.investor.name)}</h1>
-    <p class="sub">${props.length} ${props.length === 1 ? "property" : "properties"} under management${ADMIN ? " · all owners, whole-property figures" : ""}</p>
+    <p class="sub">${ADMIN && data.buildings && data.buildings.length
+      ? `${data.buildings.length} buildings under management · ${props.length} with statements, shown at whole-property figures`
+      : `${props.length} ${props.length === 1 ? "property" : "properties"} under management`}</p>
 
     <div class="tiles">
       <div class="tile"><div class="tile-key">Occupancy</div><div class="tile-val">${paying} of ${units.length}</div><div class="tile-note">units and rooms leased today</div></div>
@@ -116,7 +118,7 @@ function overview(data) {
     </div>
 
     <section class="section">
-      <div class="section-heading"><h2>${ADMIN ? "All properties" : "Your properties"}</h2><p>Select one for its rent roll, statement and building record.</p></div>
+      <div class="section-heading"><h2>${ADMIN ? "Properties with statements" : "Your properties"}</h2><p>Select one for its rent roll, statement and building record.</p></div>
       <div class="panel table-scroll"><table>
         <thead><tr><th>Property</th>${ADMIN ? "<th>Owners</th>" : '<th class="num">Your share</th>'}<th>Leased</th><th>Next lease end</th><th class="num">Net, ${last ? escapeHtml(monthLabel(last)) : ""}${ADMIN ? "" : " (your share)"}</th></tr></thead>
         <tbody>${props.map((p) => {
@@ -131,7 +133,109 @@ function overview(data) {
           </tr>`;
         }).join("")}</tbody>
       </table></div>
+    </section>
+    ${data.buildings ? portfolioTable(data) : ""}`;
+}
+
+/* ---------- The whole portfolio (admin) ---------- */
+
+const LISTING_STATUS = { available: "Listed", pending: "Application pending", taken: "Rented" };
+
+function listingRent(l) {
+  if (l.rent != null) return money(l.rent);
+  if (l.rentFrom != null && l.rentTo != null && l.rentFrom !== l.rentTo) return money(l.rentFrom) + "\u2013" + money(l.rentTo);
+  return l.rentFrom != null ? money(l.rentFrom) : "\u2014";
+}
+
+/**
+ * Every building under management, including the ones with no statement here.
+ * A row says what is actually on file for it, so a gap reads as a gap.
+ */
+function portfolioTable(data) {
+  const b = data.buildings;
+  const doors = b.reduce((s, x) => s + x.unitCount, 0);
+  return `
+    <section class="section">
+      <div class="section-heading"><h2>Whole portfolio</h2><p>${b.length} buildings, ${doors} doors, from the address list. Select one for everything on file.</p></div>
+      <div class="panel table-scroll"><table>
+        <thead><tr><th>Address</th><th>Area</th><th class="num">Doors</th><th>Units</th><th>Public listing</th><th>Statement</th></tr></thead>
+        <tbody>${b.map((x) => {
+          const href = "#/b/" + encodeURIComponent(x.id);
+          const listed = x.listings.map((l) => LISTING_STATUS[l.status || "available"]).join(", ");
+          return `<tr class="clickable" data-href="${href}">
+            <td><a href="${href}">${escapeHtml(x.address)}</a></td>
+            <td>${escapeHtml(x.neighborhood)}${x.city !== "Seattle" && x.city !== x.neighborhood ? ", " + escapeHtml(x.city) : ""}</td>
+            <td class="num">${x.unitCount}</td>
+            <td>${escapeHtml(x.units.join(", ") || "\u2014")}${x.parking.length ? ` <span class="sub">\u00b7 parking ${escapeHtml(x.parking.join(", "))}</span>` : ""}</td>
+            <td>${listed ? escapeHtml(listed) : '<span class="sub">Not listed</span>'}</td>
+            <td>${x.properties.length ? "On file" : '<span class="sub">None</span>'}</td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>
     </section>`;
+}
+
+function bullets(title, items) {
+  if (!items || !items.length) return "";
+  return `<div class="section-heading" style="margin-top:20px"><h2>${escapeHtml(title)}</h2></div>
+    <div class="panel"><ul class="plain-list">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul></div>`;
+}
+
+function listingBlock(l) {
+  const specs = [l.bedsLabel, l.baths != null ? l.baths + " ba" : "", l.sqft ? l.sqft.toLocaleString() + " sqft" : l.sqftFrom ? `${l.sqftFrom}\u2013${l.sqftTo} sqft` : ""].filter(Boolean).join(" \u00b7 ");
+  const rows = (l.leaseOptions || []).map((o) => [o.name, o.detail + (o.available ? " \u00b7 from " + dateLabel(o.available) : "") + (o.status ? " \u00b7 " + o.status : ""), o.rentLabel || money(o.rent)])
+    .concat((l.layouts || []).map((o) => [o.name, `${o.sqft} sqft \u00b7 ${o.notes || ""}`, o.rent]));
+  const units = l.upcomingUnits || [];
+  return `
+    <section class="section">
+      <div class="section-heading"><h2>Public listing: ${escapeHtml(l.title)}</h2><p>${escapeHtml(l.subtitle || "")}</p></div>
+      <div class="tiles" style="margin-top:0">
+        <div class="tile"><div class="tile-key">Status</div><div class="tile-val">${escapeHtml(LISTING_STATUS[l.status || "available"])}</div><div class="tile-note">${escapeHtml(l.availableLabel || "")}</div></div>
+        <div class="tile"><div class="tile-key">Asking rent</div><div class="tile-val">${escapeHtml(listingRent(l))}</div><div class="tile-note">per month</div></div>
+        <div class="tile"><div class="tile-key">Size</div><div class="tile-val" style="font-size:1.15rem">${escapeHtml(specs)}</div><div class="tile-note">${l.totalUnits ? l.totalUnits + " " + escapeHtml(l.unitNoun || "units") : ""}</div></div>
+      </div>
+      <p style="max-width:80ch">${escapeHtml(l.summary || "")}</p>
+      ${rows.length ? `<div class="panel table-scroll"><table>
+        <thead><tr><th>Option</th><th>Details</th><th class="num">Rent</th></tr></thead>
+        <tbody>${rows.map((r) => `<tr><td>${escapeHtml(r[0])}</td><td>${escapeHtml(r[1])}</td><td class="num">${escapeHtml(r[2])}</td></tr>`).join("")}</tbody>
+      </table></div>` : ""}
+      ${units.length ? `<div class="section-heading" style="margin-top:20px"><h2>Units tracked on the listing</h2></div><div class="panel table-scroll"><table>
+        <thead><tr><th>Unit</th><th>Status</th><th>Available</th></tr></thead>
+        <tbody>${units.map((u) => `<tr><td>${escapeHtml(u.unit)}</td>
+          <td><span class="pill ${u.status === "unavailable" ? "pill-occupied" : u.status === "pending" ? "pill-market" : "pill-vacant"}">${u.status === "unavailable" ? "Rented" : u.status === "pending" ? "Application pending" : "Open"}</span></td>
+          <td>${escapeHtml(u.available ? dateLabel(u.available) : u.availableText || "\u2014")}</td></tr>`).join("")}</tbody>
+      </table></div>` : ""}
+      <div class="two-col">
+        <div>${bullets("The building", l.building)}${bullets("Lease terms", l.lease)}</div>
+        <div>${bullets("The unit", l.unit)}</div>
+      </div>
+      <p><a href="${escapeHtml(l.zillow || "#")}" target="_blank" rel="noopener">Zillow listing</a></p>
+    </section>`;
+}
+
+function buildingView(b, data) {
+  const where = [b.address, b.city, "WA", b.zip].filter(Boolean).join(", ");
+  const held = data.properties.filter((p) => b.properties.includes(p.id));
+  return `
+    <a class="back-link" href="#/">\u2190 All properties</a>
+    <h1>${escapeHtml(b.address)}</h1>
+    <p class="sub">${escapeHtml(b.neighborhood)} \u00b7 ${escapeHtml(where)} \u00b7 <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(where)}" target="_blank" rel="noopener">Map</a></p>
+
+    <div class="tiles">
+      <div class="tile"><div class="tile-key">Doors</div><div class="tile-val">${b.unitCount}</div><div class="tile-note">${escapeHtml(b.units.length ? "Units " + b.units.join(", ") : "single home, or not broken out")}</div></div>
+      <div class="tile"><div class="tile-key">Parking</div><div class="tile-val">${b.parking.length || "\u2014"}</div><div class="tile-note">${escapeHtml(b.parking.join(", ") || "none listed")}</div></div>
+      <div class="tile"><div class="tile-key">Public listings</div><div class="tile-val">${b.listings.length}</div><div class="tile-note">${escapeHtml(b.listings.map((l) => LISTING_STATUS[l.status || "available"]).join(", ") || "not on the leasing site")}</div></div>
+      <div class="tile"><div class="tile-key">Statements</div><div class="tile-val">${held.length}</div><div class="tile-note">${held.length ? "rent roll and financials below" : "no rent roll or financials on file"}</div></div>
+    </div>
+
+    ${held.length ? `<section class="section">
+      <div class="section-heading"><h2>Rent roll and statement</h2></div>
+      <div class="panel"><ul class="plain-list">${held.map((p) => `<li><a href="#/p/${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a> \u00b7 ${escapeHtml(ownersLabel(p))}</li>`).join("")}</ul></div>
+    </section>` : ""}
+
+    ${b.listings.map(listingBlock).join("")}
+
+    ${!held.length && !b.listings.length ? `<section class="section"><div class="panel"><p style="padding:6px 16px">The address list is the only record of this building here: no lease dates, rents, owners or financials have been entered for it.</p></div></section>` : ""}`;
 }
 
 /* ---------- One property ---------- */
@@ -274,7 +378,9 @@ function render(data) {
   // Only the signed-in investor's properties were ever sent, so an id that
   // isn't theirs simply isn't found.
   const p = match && data.properties.find((x) => x.id === decodeURIComponent(match[1]));
-  view.innerHTML = p ? propertyView(p) : overview(data);
+  const bMatch = location.hash.match(/^#\/b\/(.+)$/);
+  const b = bMatch && (data.buildings || []).find((x) => x.id === decodeURIComponent(bMatch[1]));
+  view.innerHTML = p ? propertyView(p) : b ? buildingView(b, data) : overview(data);
   window.scrollTo(0, 0);
 
   view.querySelectorAll("tr[data-href]").forEach((tr) =>

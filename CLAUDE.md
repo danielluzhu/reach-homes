@@ -40,7 +40,10 @@ Edit the file by hand, or with a writer that preserves the one-line rows.
 never be added to the static build or Pages: access is enforced per request in
 `server.ts`, and static files have no one to enforce it. Its dollar figures,
 shares, maintenance and documents are sample data — **never commit real
-investor financials or names to this repo.** 2120's rooms are read live from
+investor financials or names to this repo.** The admin view reads the
+private `address.txt` live, so its access code lives outside the repo
+(`ADMIN_CODE` or the gitignored `data/admin-code.txt`) — don't move it back
+into `portfolio.json` or onto the sign-in page. 2120's rooms are read live from
 the microsite's data; the other properties' units are a hand copy in
 `data/portfolio.json` and need the same lease-end edits as the leasing sites.
 

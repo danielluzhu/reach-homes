@@ -9,17 +9,58 @@
  * properties a visitor may see is decided here, per request, from their
  * session; a static build would publish every owner's figures to all of them.
  *
- * This is a demo. The access codes sit in data/portfolio.json in the clear and
- * sessions live in memory, so a restart signs everyone out. Real use needs
- * real accounts before real figures go in.
+ * This is a demo. The investors' access codes sit in data/portfolio.json in
+ * the clear and sessions live in memory, so a restart signs everyone out. Real
+ * use needs real accounts before real figures go in.
+ *
+ * The admin is the exception, because the admin view is not sample data: it
+ * reads the whole portfolio from address.txt, the exact addresses of occupied
+ * homes that the rest of this repo is careful never to publish. Its code
+ * therefore comes from ADMIN_CODE or data/admin-code.txt, both outside the
+ * repo, and with neither set there is no admin sign-in at all.
  */
 
 import { file } from "bun";
+import { loadPortfolio } from "../../lib/portfolio";
 
 const PORT = Number(process.env.PORT ?? 8888);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
 const DATA_PATH = `${import.meta.dir}/data/portfolio.json`;
 const ROOMS_2120_PATH = `${import.meta.dir}/../2120/data/listings.json`;
+const ADMIN_CODE_PATH = `${import.meta.dir}/data/admin-code.txt`;
+const ADDRESS_PATH = `${import.meta.dir}/../../address.txt`;
+const LISTINGS_PATH = `${import.meta.dir}/../../data/listings.json`;
+
+const ADMIN: Investor = { id: "admin", name: "Reach Homes admin", code: "", admin: true, holdings: [] };
+
+async function adminCode(): Promise<string | null> {
+  const fromEnv = (process.env.ADMIN_CODE ?? "").trim();
+  if (fromEnv) return fromEnv;
+  const f = file(ADMIN_CODE_PATH);
+  return (await f.exists()) ? (await f.text()).trim() || null : null;
+}
+
+/**
+ * Every building under management, for the admin only: what address.txt says
+ * about it, the public listings at that address, and which of the properties
+ * with a statement here belong to it. Matching is by address, since the three
+ * sources each have ids of their own. address.txt is kept out of the repo, so
+ * on a machine without it the list is simply empty.
+ */
+async function wholePortfolio(data: Portfolio) {
+  if (!(await file(ADDRESS_PATH).exists())) return [];
+  const [buildings, listings] = await Promise.all([
+    loadPortfolio(ADDRESS_PATH),
+    file(LISTINGS_PATH).json() as Promise<Array<Record<string, unknown>>>,
+  ]);
+  const at = (address: string) => (x: { title?: unknown }) =>
+    String(x.title ?? "").toLowerCase().startsWith(address.toLowerCase());
+  return buildings.map((b) => ({
+    ...b,
+    listings: listings.filter(at(b.address)),
+    properties: data.properties.filter(at(b.address)).map((p) => p.id),
+  }));
+}
 
 type Unit = { label: string; detail?: string; rent: number; leasedUntil?: string; status?: string };
 type Holding = { property: string; share: number };
@@ -88,11 +129,16 @@ const server = Bun.serve({
     const { pathname } = new URL(req.url);
     const data: Portfolio = await file(DATA_PATH).json();
     const token = sessionToken(req);
-    const investor = data.investors.find((i) => i.id === sessions.get(token ?? ""));
+    const signedInAs = sessions.get(token ?? "");
+    const investor = signedInAs === ADMIN.id ? ADMIN : data.investors.find((i) => i.id === signedInAs);
 
     if (pathname === "/api/login" && req.method === "POST") {
       const { code } = (await req.json().catch(() => ({}))) as { code?: string };
-      const found = data.investors.find((i) => i.code === String(code ?? "").trim().toLowerCase());
+      const given = String(code ?? "").trim();
+      const admin = await adminCode();
+      const found = admin && given === admin
+        ? ADMIN
+        : data.investors.find((i) => i.code === given.toLowerCase());
       if (!found) return json({ error: "That access code isn't recognised." }, 401);
       const fresh = crypto.randomUUID();
       sessions.set(fresh, found.id);
@@ -115,6 +161,7 @@ const server = Bun.serve({
         demoNote: data.demoNote,
         investor: { name: investor.name, admin: Boolean(investor.admin) },
         properties: await holdingsFor(investor, data),
+        buildings: investor.admin ? await wholePortfolio(data) : undefined,
       });
     }
 

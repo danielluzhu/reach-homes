@@ -3,13 +3,6 @@
   "demoNote": "Demo. Lease end dates and asking rents come from the leasing sites; every dollar figure, the ownership shares, the maintenance log and the documents are sample data, not actual accounts.",
   "investors": [
     {
-      "id": "admin",
-      "name": "Reach Homes admin",
-      "code": "admin",
-      "admin": true,
-      "holdings": []
-    },
-    {
       "id": "demo-a",
       "name": "Demo Investor A",
       "code": "demo-a",
