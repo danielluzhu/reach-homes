@@ -111,7 +111,9 @@ const server = Bun.serve({
 
     if (pathname === "/login") return new Response(file(`${PUBLIC_DIR}/login.html`));
     if (pathname === "/") {
-      if (!investor) return Response.redirect(new URL("/login", req.url).href, 302);
+      // A relative Location, so the redirect holds behind a proxy or a forwarded
+      // port, where the host and scheme this process sees aren't the visitor's.
+      if (!investor) return new Response(null, { status: 302, headers: { Location: "/login" } });
       return new Response(file(`${PUBLIC_DIR}/index.html`), { headers: { "Cache-Control": "no-store" } });
     }
 
