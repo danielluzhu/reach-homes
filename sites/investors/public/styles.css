@@ -160,3 +160,17 @@ tr.clickable:hover td { background: var(--brand-100); }
 .login-error { color: #a12a2a; font-size: 0.88rem; min-height: 1.3em; margin: 10px 0 0; }
 .demo-codes { margin-top: 18px; font-size: 0.88rem; color: var(--muted); }
 .demo-codes button { background: none; border: 0; color: var(--brand-700); font: inherit; cursor: pointer; padding: 0; text-decoration: underline; }
+
+/* ---- Admin upload ---- */
+
+.upload-form { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.upload-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d9cfd1;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+.upload-actions { display: flex; align-items: center; gap: 14px; }
+.upload-actions span { color: var(--muted); font-size: 0.9rem; }

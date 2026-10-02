@@ -1,3 +1,6 @@
 # The admin access code. The admin view shows the private address list, so
 # its code never goes in the repo.
 data/admin-code.txt
+
+# Admin uploads: real leases, rents and owners' figures.
+data/inbox/

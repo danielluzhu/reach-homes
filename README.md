@@ -96,6 +96,12 @@ on file for it: units and parking from the address list, the public listing at
 that address, and its rent roll and statement where there is one. A building
 with nothing entered says so.
 
+The admin overview ends with an **upload inbox**: paste a note or attach files
+(up to 20, 10 MB each) and they are saved under `sites/investors/data/inbox/`,
+gitignored, one timestamp per upload. The server stores them and nothing more
+— it does not parse them or change any data. Working an upload into the site
+is a separate, deliberate step.
+
 The admin view is not sample data. `address.txt` holds the exact addresses of
 occupied homes and is kept out of the repo, so the admin's access code is too:
 set `ADMIN_CODE`, or put the code in `sites/investors/data/admin-code.txt`

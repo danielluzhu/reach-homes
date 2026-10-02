@@ -134,7 +134,60 @@ function overview(data) {
         }).join("")}</tbody>
       </table></div>
     </section>
-    ${data.buildings ? portfolioTable(data) : ""}`;
+    ${data.buildings ? portfolioTable(data) : ""}
+    ${ADMIN ? uploadSection() : ""}`;
+}
+
+/**
+ * The admin's inbox: paste anything, or attach files -- a vacancy list, a rent
+ * roll, a statement. The site stores it and changes nothing by itself; it is
+ * read and applied by a person afterwards, which is what the status line says.
+ */
+function uploadSection() {
+  return `
+    <section class="section" id="upload">
+      <div class="section-heading"><h2>Upload information</h2><p>Paste or attach anything about the properties, in whatever form you have it: lease dates, rents, owners, statements, maintenance. It is saved privately on the server and waits to be worked through; nothing on the site changes until it has been.</p></div>
+      <form class="panel upload-form" id="upload-form">
+        <textarea name="note" rows="7" placeholder="e.g.  5540 30th Ave NE: leased until 6/30/27 at $4,200, owner J. Smith 100%"></textarea>
+        <input type="file" name="files" multiple />
+        <div class="upload-actions"><button class="btn btn-primary" type="submit" style="width:auto;margin:0">Upload</button><span id="upload-status" role="status"></span></div>
+      </form>
+      <div class="section-heading" style="margin-top:20px"><h2>Waiting to be worked through</h2></div>
+      <div class="panel table-scroll" id="upload-list"><p class="sub" style="padding:8px 16px">Loading…</p></div>
+    </section>`;
+}
+
+async function refreshUploads() {
+  const list = document.getElementById("upload-list");
+  if (!list) return;
+  const { uploads } = await fetch("/api/admin/uploads").then((r) => r.json());
+  list.innerHTML = uploads.length
+    ? `<table><thead><tr><th>Uploaded</th><th>Item</th><th class="num">Size</th></tr></thead><tbody>${uploads.map((u) => `<tr>
+        <td style="white-space:nowrap">${escapeHtml(new Date(u.at).toLocaleString())}</td>
+        <td>${escapeHtml(u.name.replace(/^.*?__(\d+_)?/, "").replace(/^note\.txt$/, "Pasted note"))}</td>
+        <td class="num">${u.bytes < 1024 ? u.bytes + " B" : Math.round(u.bytes / 1024).toLocaleString() + " KB"}</td>
+      </tr>`).join("")}</tbody></table>`
+    : '<p class="sub" style="padding:8px 16px">Nothing uploaded yet.</p>';
+}
+
+function wireUpload() {
+  const form = document.getElementById("upload-form");
+  if (!form) return;
+  refreshUploads();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = document.getElementById("upload-status");
+    status.textContent = "Uploading…";
+    const res = await fetch("/api/admin/uploads", { method: "POST", body: new FormData(form) });
+    const body = await res.json();
+    if (res.ok) {
+      form.reset();
+      status.textContent = `Saved ${body.saved.length} item${body.saved.length === 1 ? "" : "s"}.`;
+      refreshUploads();
+    } else {
+      status.textContent = body.error;
+    }
+  });
 }
 
 /* ---------- The whole portfolio (admin) ---------- */
@@ -385,6 +438,8 @@ function render(data) {
 
   view.querySelectorAll("tr[data-href]").forEach((tr) =>
     tr.addEventListener("click", () => { location.hash = tr.dataset.href; }));
+
+  wireUpload();
 
   const tip = view.querySelector(".chart-tip");
   if (tip) {

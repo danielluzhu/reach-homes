@@ -21,6 +21,7 @@
  */
 
 import { file } from "bun";
+import { mkdir, readdir, stat } from "node:fs/promises";
 import { loadPortfolio } from "../../lib/portfolio";
 
 const PORT = Number(process.env.PORT ?? 8888);
@@ -30,6 +31,60 @@ const ROOMS_2120_PATH = `${import.meta.dir}/../2120/data/listings.json`;
 const ADMIN_CODE_PATH = `${import.meta.dir}/data/admin-code.txt`;
 const ADDRESS_PATH = `${import.meta.dir}/../../address.txt`;
 const LISTINGS_PATH = `${import.meta.dir}/../../data/listings.json`;
+
+/**
+ * Where the admin's uploads land: notes typed into the page and files dropped
+ * on it. Nothing here is read, parsed or acted on by the server -- it is an
+ * inbox. What an upload means, and what it changes on the site, is decided by
+ * whoever works through it afterwards. Gitignored: it will hold real leases,
+ * rents and owners' figures.
+ */
+const INBOX_DIR = `${import.meta.dir}/data/inbox`;
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MAX_UPLOAD_FILES = 20;
+
+/** A name that is safe as a single path segment, whatever was uploaded. */
+function safeName(name: string) {
+  return name.replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^\.+/, "").slice(0, 80) || "file";
+}
+
+async function listInbox() {
+  const names = await readdir(INBOX_DIR).catch(() => [] as string[]);
+  const rows = await Promise.all(
+    names.map(async (name) => {
+      const s = await stat(`${INBOX_DIR}/${name}`);
+      return { name, bytes: s.size, at: s.mtime.toISOString() };
+    }),
+  );
+  return rows.sort((a, b) => b.name.localeCompare(a.name));
+}
+
+async function saveUpload(req: Request) {
+  const form = await req.formData().catch(() => null);
+  if (!form) return json({ error: "Couldn't read the upload." }, 400);
+  const note = String(form.get("note") ?? "").trim();
+  const files = form.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
+  if (!note && !files.length) return json({ error: "Nothing to upload: add a note or a file." }, 400);
+  if (files.length > MAX_UPLOAD_FILES) return json({ error: `At most ${MAX_UPLOAD_FILES} files at a time.` }, 400);
+  const tooBig = files.find((f) => f.size > MAX_UPLOAD_BYTES);
+  if (tooBig) return json({ error: `${tooBig.name} is over 10 MB.` }, 400);
+  if (note.length > MAX_UPLOAD_BYTES) return json({ error: "That note is over 10 MB." }, 400);
+
+  await mkdir(INBOX_DIR, { recursive: true });
+  // One stamp per upload, so a note and the files sent with it sort together.
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const saved: string[] = [];
+  if (note) {
+    await Bun.write(`${INBOX_DIR}/${stamp}__note.txt`, note + "\n");
+    saved.push(`${stamp}__note.txt`);
+  }
+  for (const [i, f] of files.entries()) {
+    const name = `${stamp}__${i + 1}_${safeName(f.name)}`;
+    await Bun.write(`${INBOX_DIR}/${name}`, f);
+    saved.push(name);
+  }
+  return json({ ok: true, saved });
+}
 
 const ADMIN: Investor = { id: "admin", name: "Reach Homes admin", code: "", admin: true, holdings: [] };
 
@@ -163,6 +218,13 @@ const server = Bun.serve({
         properties: await holdingsFor(investor, data),
         buildings: investor.admin ? await wholePortfolio(data) : undefined,
       });
+    }
+
+    if (pathname === "/api/admin/uploads") {
+      // 404 rather than 403: an investor has no reason to learn this exists.
+      if (!investor?.admin) return json({ error: "Not found." }, 404);
+      if (req.method === "POST") return saveUpload(req);
+      return json({ uploads: await listInbox() });
     }
 
     // The demo sign-in page lists the codes so there is something to type.
