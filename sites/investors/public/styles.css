@@ -206,3 +206,16 @@ tr.clickable:hover td { background: var(--brand-100); }
 /* An address is one thing to read: keep the street and the city line whole
    and let the table scroll sideways instead of stacking them four deep. */
 .portfolio-table td:first-child { white-space: nowrap; }
+
+/* ---- Owner logins ---- */
+
+.code-input {
+  width: 22ch;
+  padding: 7px 10px;
+  border: 1px solid #d9cfd1;
+  border-radius: 8px;
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+}
+.code-random, .code-save { padding: 7px 12px; }

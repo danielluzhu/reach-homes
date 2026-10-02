@@ -143,7 +143,60 @@ function overview(data) {
       </table></div>
     </section>
     ${data.buildings ? portfolioTable(data) : ""}
-    ${ADMIN ? assistantSection() + uploadSection() : ""}`;
+    ${ADMIN ? codesSection() + assistantSection() + uploadSection() : ""}`;
+}
+
+/**
+ * Owner logins: each owner signs in with an access code and sees only their
+ * own properties. The admin can read every code here and change any of them.
+ */
+function codesSection() {
+  return `
+    <section class="section" id="codes">
+      <div class="section-heading"><h2>Owner logins</h2><p>Each owner signs in with their code and sees only their own properties. Change a code to replace it; anyone signed in on the old one is signed out.</p></div>
+      <div class="panel table-scroll" id="codes-list"><p class="sub" style="padding:8px 16px">Loading…</p></div>
+    </section>`;
+}
+
+/** A code nobody could guess, in the same shape as the ones created automatically. */
+function randomCode() {
+  const bytes = crypto.getRandomValues(new Uint8Array(5));
+  return "inv-" + [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function wireCodes() {
+  const list = document.getElementById("codes-list");
+  if (!list) return;
+  const { owners } = await fetch("/api/admin/codes").then((r) => r.json());
+  list.innerHTML = owners.length ? `<table>
+    <thead><tr><th>Owner</th><th>Sees</th><th>Access code</th><th></th></tr></thead>
+    <tbody>${owners.map((o) => `<tr data-owner="${escapeHtml(o.id)}">
+      <td>${escapeHtml(o.name)}</td>
+      <td>${escapeHtml(o.properties.join(", ")) || '<span class="sub">Nothing yet</span>'}</td>
+      <td><input class="code-input" type="text" value="${escapeHtml(o.code)}" maxlength="64" spellcheck="false" autocomplete="off" aria-label="Access code for ${escapeHtml(o.name)}" /></td>
+      <td style="white-space:nowrap"><button class="btn btn-quiet code-random" type="button">Generate</button> <button class="btn btn-primary code-save" type="button" style="width:auto;margin:0">Save</button> <span class="sub code-status" role="status"></span></td>
+    </tr>`).join("")}</tbody>
+  </table>` : '<p class="sub" style="padding:8px 16px">No owner has a login yet. An owner gets one when a property with a statement is assigned to them.</p>';
+
+  list.querySelectorAll("tr[data-owner]").forEach((tr) => {
+    const input = tr.querySelector(".code-input");
+    const status = tr.querySelector(".code-status");
+    tr.querySelector(".code-random").addEventListener("click", () => {
+      input.value = randomCode();
+      status.textContent = "Not saved yet";
+    });
+    tr.querySelector(".code-save").addEventListener("click", async () => {
+      status.textContent = "Saving…";
+      const res = await fetch("/api/admin/codes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: tr.dataset.owner, code: input.value }),
+      }).then((r) => r.json());
+      if (res.error) { status.textContent = res.error; return; }
+      input.value = res.code;
+      status.textContent = "Saved";
+    });
+  });
 }
 
 /**
@@ -643,6 +696,7 @@ function render(data) {
 
   wireUpload();
   wireAssistant();
+  wireCodes();
 
   const tip = view.querySelector(".chart-tip");
   if (tip) {

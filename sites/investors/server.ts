@@ -355,6 +355,42 @@ const server = Bun.serve({
       return json({ error: "Not found." }, 404);
     }
 
+    // Owners' access codes, for the admin to see and set. A code is the whole
+    // of an owner's sign-in, so this is the one place they are ever sent out.
+    if (pathname === "/api/admin/codes") {
+      if (!investor?.admin) return json({ error: "Not found." }, 404);
+      const live = await loadData();
+      if (req.method === "GET") {
+        return json({
+          owners: live.investors.map((i) => ({
+            id: i.id,
+            name: i.name,
+            code: i.code,
+            properties: i.holdings.map((h) => live.properties.find((p) => p.id === h.property)?.title ?? h.property),
+          })),
+        });
+      }
+      if (req.method === "POST") {
+        const body = (await req.json().catch(() => ({}))) as { id?: string; code?: string };
+        // Sign-in compares codes in lower case, so that is how they are kept.
+        const code = String(body.code ?? "").trim().toLowerCase();
+        const target = live.investors.find((i) => i.id === body.id);
+        if (!target) return json({ error: "No such owner." }, 400);
+        if (!/^[a-z0-9][a-z0-9_-]{5,63}$/.test(code)) {
+          return json({ error: "A code is 6 to 64 letters, numbers, hyphens or underscores." }, 400);
+        }
+        if (live.investors.some((i) => i.id !== target.id && i.code === code) || code === ((await adminCode()) ?? "").toLowerCase()) {
+          return json({ error: "That code is already in use. Each code must be different." }, 400);
+        }
+        target.code = code;
+        await Bun.write(PRIVATE_PATH, JSON.stringify(live, null, 2) + "\n");
+        // Anyone signed in on the old code is signed out: changing a code is
+        // how access is taken away.
+        for (const [session, id] of sessions) if (id === target.id) sessions.delete(session);
+        return json({ ok: true, code });
+      }
+    }
+
     // The demo sign-in page lists the codes so there is something to type.
     // This goes when real accounts do.
     if (pathname === "/api/demo-codes") {
