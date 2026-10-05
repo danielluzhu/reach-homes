@@ -1161,3 +1161,300 @@ main {
   outline: 2px solid var(--brand-600);
   outline-offset: 2px;
 }
+
+/* ==========================================================================
+   Front page
+   Scoped to body.home so the other pages keep the styles above. Headings use
+   Fraunces, a soft editorial serif, loaded on this page only; everything else
+   stays in the site's sans. Weights stay at 400 -- the no-bold rule holds.
+   ========================================================================== */
+
+.home {
+  --home-serif: "Fraunces", Georgia, "Times New Roman", serif;
+  --home-sand: #f6efe8;
+  --home-line: #e9dfd9;
+}
+
+/* Optical sizing on, so small headings get Fraunces' sturdier text cut and
+   only the large ones its high-contrast display cut. */
+.home h1, .home h2, .home h3 {
+  font-family: var(--home-serif);
+  font-optical-sizing: auto;
+  letter-spacing: -0.005em;
+}
+
+.home-kicker,
+.home-eyebrow {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+}
+
+.home-link {
+  color: var(--brand-700);
+  text-decoration: none;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.home-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- Hero ---- */
+
+.home-hero {
+  background:
+    radial-gradient(1200px 500px at 85% -10%, rgba(156, 44, 71, 0.10), transparent 60%),
+    linear-gradient(180deg, var(--home-sand), var(--paper));
+  border-bottom: 1px solid var(--home-line);
+}
+
+.home-hero-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 72px 24px 80px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 64px;
+  align-items: center;
+}
+
+.home-hero h1 {
+  margin: 0;
+  font-size: clamp(2.3rem, 4.6vw, 3.7rem);
+  line-height: 1.04;
+  color: var(--brand-900);
+}
+
+.home-lede {
+  margin: 22px 0 0;
+  max-width: 54ch;
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: #4a4f57;
+}
+
+.home-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.home-actions .btn-secondary { background: rgba(255, 255, 255, 0.6); }
+
+.home-facts {
+  margin: 44px 0 0;
+  padding-top: 26px;
+  border-top: 1px solid var(--home-line);
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  justify-content: start;
+  gap: 18px 36px;
+}
+.home-facts div { min-width: 0; }
+.home-facts dt {
+  font-family: var(--home-serif);
+  font-size: 1.75rem;
+  line-height: 1.1;
+  color: var(--brand-800);
+}
+.home-facts dd { margin: 4px 0 0; font-size: 0.82rem; color: var(--muted); }
+
+.home-hero-media {
+  position: relative;
+  padding: 0 0 56px 48px;
+}
+.home-photo-main {
+  width: 100%;
+  aspect-ratio: 4 / 4.4;
+  object-fit: cover;
+  border-radius: 28px 28px 28px 120px;
+  box-shadow: 0 30px 60px -30px rgba(43, 10, 18, 0.45);
+}
+.home-photo-inset {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 6px solid var(--paper);
+  box-shadow: 0 20px 40px -20px rgba(43, 10, 18, 0.5);
+}
+.home-badge {
+  position: absolute;
+  right: 18px;
+  top: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  color: var(--brand-900);
+  font-size: 0.88rem;
+  text-decoration: none;
+  box-shadow: 0 10px 24px -12px rgba(43, 10, 18, 0.5);
+}
+.home-badge-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2f8f5b;
+  box-shadow: 0 0 0 4px rgba(47, 143, 91, 0.18);
+}
+
+/* ---- Listings ---- */
+
+.home main { max-width: 1180px; padding-top: 72px; }
+
+.home-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-bottom: 22px;
+  scroll-margin-top: 90px;
+}
+.home-section-head h2 { margin: 0; font-size: clamp(1.9rem, 3vw, 2.5rem); color: var(--brand-900); }
+.home-section-head .count { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+.home .filter-bar { margin-bottom: 30px; }
+.home .chip { padding: 8px 16px; }
+
+.home .listing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 32px 28px;
+}
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 1px 0 var(--home-line), 0 18px 40px -28px rgba(43, 10, 18, 0.35);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.home-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1px 0 var(--home-line), 0 28px 50px -28px rgba(43, 10, 18, 0.45);
+}
+
+.home-card-photo { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; background: var(--home-sand); }
+.home-card-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+.home-card:hover .home-card-photo img { transform: scale(1.04); }
+.home-card-photo .status-flag { top: 14px; right: 14px; padding: 6px 12px; }
+
+.home-card-body { display: flex; flex-direction: column; flex: 1; padding: 22px 24px 24px; }
+.home-card-hood {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+}
+.home-card h3 { margin: 8px 0 0; font-size: 1.45rem; line-height: 1.2; }
+.home-card h3 a { color: var(--brand-900); text-decoration: none; }
+.home-card h3 a:hover { color: var(--brand-700); }
+.home-card-sub { margin: 6px 0 0; color: var(--muted); font-size: 0.93rem; }
+.home-card-meta { margin: 14px 0 0; font-size: 0.9rem; color: var(--ink); }
+.home-card-meta .dot { margin: 0 8px; color: #c9bcbc; }
+
+/* Three lines of the summary: enough to tell the homes apart, short enough
+   that one long description doesn't stretch a whole row of cards. */
+.home-card-desc {
+  margin: 14px 0 0;
+  color: #5d6370;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-card-foot {
+  margin-top: auto;
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.home-card-foot .price { font-family: var(--home-serif); font-size: 1.45rem; color: var(--brand-900); }
+.home-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--home-line);
+}
+.home-card-actions .btn { flex: 1; }
+
+/* ---- Values ---- */
+
+.home-values {
+  margin-top: 104px;
+  padding: 56px;
+  border-radius: 32px;
+  background: var(--home-sand);
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 2fr);
+  gap: 56px;
+}
+.home-values-intro h2 { margin: 0; font-size: clamp(1.8rem, 2.6vw, 2.3rem); line-height: 1.12; color: var(--brand-900); }
+.home-values-intro p { color: var(--muted); }
+.home-values-intro > p:not(.home-kicker) { margin: 14px 0 22px; }
+
+.home .value-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 34px 40px;
+  margin: 0;
+}
+.home .value-card {
+  background: none;
+  border: 0;
+  border-top: 1px solid #e3d4cc;
+  border-radius: 0;
+  padding: 22px 0 0;
+  box-shadow: none;
+  transform: none;
+}
+.home .value-card:hover { transform: none; box-shadow: none; }
+.home .value-icon { background: #fff; }
+.home .value-icon { margin-bottom: 14px; }
+.home .value-card h3 { font-size: 1.2rem; margin: 0 0 6px; color: var(--brand-900); }
+.home .value-card p { color: #5d6370; font-size: 0.94rem; line-height: 1.6; margin: 0; }
+
+/* ---- Call to action ---- */
+
+.home .home-cta {
+  margin-top: 56px;
+  padding: 48px 56px;
+  border-radius: 32px;
+  background:
+    radial-gradient(700px 300px at 100% 0%, rgba(194, 118, 27, 0.22), transparent 60%),
+    radial-gradient(600px 300px at 0% 100%, rgba(156, 44, 71, 0.45), transparent 60%),
+    var(--brand-900);
+}
+.home .home-cta h3 { font-size: 2rem; margin-bottom: 10px; }
+
+/* ---- Narrow screens ---- */
+
+@media (max-width: 900px) {
+  .home-hero-inner { grid-template-columns: 1fr; gap: 40px; padding: 44px 16px 56px; }
+  .home-hero-media { padding: 0 0 40px 28px; max-width: 560px; }
+  .home-facts { grid-template-columns: repeat(2, auto); }
+  .home main { padding-top: 52px; }
+  .home-values { grid-template-columns: 1fr; padding: 32px 22px; gap: 28px; border-radius: 24px; margin-top: 72px; }
+  .home .value-grid { grid-template-columns: 1fr; gap: 24px; }
+  .home .home-cta { padding: 32px 22px; border-radius: 24px; }
+}
+
+@media (max-width: 420px) {
+  .home .listing-grid { grid-template-columns: 1fr; }
+  .home-photo-main { border-radius: 22px 22px 22px 70px; }
+}

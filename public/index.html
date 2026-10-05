@@ -8,37 +8,48 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..500&display=swap" />
 <link rel="stylesheet" href="/styles.css" />
 </head>
-<body>
+<body class="home">
 <!--HEADER-->
 
-<section class="hero">
-  <img src="/images/photos/4544-20th-ave-ne.jpeg" alt="" />
-  <div class="hero-scrim"></div>
-  <div class="hero-overlay">
-    <p class="eyebrow">Seattle &middot; University District &middot; Ravenna &middot; Bryant &middot; Capitol Hill</p>
-    <h1>Houses and apartments near UW, managed by a local team.</h1>
-    <p class="hero-sub">Studios, apartments, and large houses across North Seattle and Capitol Hill — including new-build studios steps from the light rail. We handle leasing and maintenance ourselves, so the person you reach is the person who fixes it.</p>
-    <div class="hero-actions">
-      <a class="btn btn-primary btn-lg" href="#listings">View available homes</a>
-      <a class="btn btn-ghost btn-lg" id="hero-apply-link" href="/leasing">Start an application</a>
+<section class="home-hero">
+  <div class="home-hero-inner">
+    <div class="home-hero-copy">
+      <p class="home-eyebrow">Seattle &middot; University District &middot; Ravenna &middot; Bryant &middot; Capitol Hill</p>
+      <h1>Houses and apartments near UW, managed by a local&nbsp;team.</h1>
+      <p class="home-lede">Studios, apartments, and large houses across North Seattle and Capitol Hill — including new-build studios steps from the light rail. We handle leasing and maintenance ourselves, so the person you reach is the person who fixes it.</p>
+      <div class="home-actions">
+        <a class="btn btn-primary btn-lg" href="#listings">View available homes</a>
+        <a class="btn btn-secondary btn-lg" id="hero-apply-link" href="/leasing">Start an application</a>
+      </div>
+      <dl class="home-facts" id="stat-band">
+        <div><dt data-fact="units">100+</dt><dd>Units</dd></div>
+        <div><dt data-fact="doors">250+</dt><dd>Doors</dd></div>
+        <div><dt data-stat="neighborhoods">8</dt><dd>Neighborhoods</dd></div>
+        <div><dt>In-house</dt><dd>Leasing &amp; maintenance</dd></div>
+      </dl>
+    </div>
+    <div class="home-hero-media" aria-hidden="true">
+      <img class="home-photo-main" src="/images/photos/2120-ne-54th-st/front.jpg" alt="" />
+      <img class="home-photo-inset" src="/images/photos/4544-20th-ave-ne.jpeg" alt="" />
+      <a class="home-badge" href="#listings" tabindex="-1">
+        <span class="home-badge-dot"></span>
+        <span><span id="hero-badge-count">Homes</span> to rent now &amp; soon</span>
+      </a>
     </div>
   </div>
 </section>
 
-<section class="stat-band" id="stat-band">
-  <div class="stat-band-inner">
-    <div class="stat"><span class="stat-num" data-fact="units">100+</span><span class="stat-label">Units</span></div>
-    <div class="stat"><span class="stat-num" data-fact="doors">250+</span><span class="stat-label">Doors</span></div>
-    <div class="stat"><span class="stat-num is-text" data-fact="serviceArea">Seattle &amp; the Eastside</span><span class="stat-label">Service area &middot; <span data-stat="neighborhoods">8</span> neighborhoods</span></div>
-    <div class="stat"><span class="stat-num is-text">In-house</span><span class="stat-label">Leasing &amp; maintenance</span></div>
-  </div>
-</section>
-
 <main>
-  <div class="section-heading" id="listings">
-    <h2>Available Now &amp; Soon</h2>
+  <div class="home-section-head" id="listings">
+    <div>
+      <p class="home-kicker">Listings</p>
+      <h2>Available now &amp; soon</h2>
+    </div>
     <p class="count" id="listing-count"></p>
   </div>
 
@@ -48,10 +59,12 @@
     <div class="empty-state">Loading listings…</div>
   </div>
 
-  <section class="value-section">
-    <div class="section-heading">
+  <section class="home-values">
+    <div class="home-values-intro">
+      <p class="home-kicker">Renting with us</p>
       <h2>What renting with us looks like</h2>
-      <p class="count">The things tenants ask about most, answered up front.</p>
+      <p>The things tenants ask about most, answered up front.</p>
+      <a class="home-link" href="/leasing">Read the full leasing terms &rarr;</a>
     </div>
 
     <div class="value-grid">
@@ -105,7 +118,7 @@
     </div>
   </section>
 
-  <section class="cta-panel">
+  <section class="cta-panel home-cta">
     <div>
       <h3>Ready to apply?</h3>
       <p>Our application asks for basic personal info, proof of ID, and proof of finances. We work with a lot of students, so we're flexible about what counts.</p>
@@ -125,32 +138,28 @@ let ALL = [];
 
 function card(l) {
   const sqft = sqftLabel(l);
-  const stats = [
-    `<span><strong>${escapeHtml(l.bedsLabel)}</strong></span>`,
-    `<span><strong>${l.baths}</strong> ba</span>`,
-    sqft ? `<span><strong>${escapeHtml(sqft)}</strong></span>` : "",
-  ].filter(Boolean).join("");
+  const meta = [l.bedsLabel, l.baths + " ba", sqft].filter(Boolean).map(escapeHtml).join('<span class="dot">&middot;</span>');
 
   return `
-    <article class="card">
-      <div class="photo">
-        <img src="${escapeHtml(l.image)}" alt="${escapeHtml(l.title)}" loading="lazy" />
+    <article class="home-card">
+      <a class="home-card-photo" href="/${listingPath(l)}" tabindex="-1" aria-hidden="true">
+        <img src="${escapeHtml(l.image)}" alt="" loading="lazy" />
         ${l.promo ? `<span class="promo-flag">${escapeHtml(l.promo)}</span>` : ""}
         ${statusLabel(l) ? `<span class="status-flag${isSoon(l) ? " status-flag-soon" : ""}">${escapeHtml(statusLabel(l))}</span>` : ""}
-      </div>
-      <div class="card-body">
-        <div class="neighborhood">${escapeHtml(l.neighborhood)}</div>
+      </a>
+      <div class="home-card-body">
+        <p class="home-card-hood">${escapeHtml(l.neighborhood)}</p>
         <h3><a href="/${listingPath(l)}">${escapeHtml(l.title)}</a></h3>
-        <div class="address">${escapeHtml(l.subtitle)}</div>
-        <div class="stat-row">${stats}</div>
-        <p class="desc">${escapeHtml(l.summary)}</p>
-        <div class="card-footer">
+        <p class="home-card-sub">${escapeHtml(l.subtitle)}</p>
+        <p class="home-card-meta">${meta}</p>
+        <p class="home-card-desc">${escapeHtml(l.summary)}</p>
+        <div class="home-card-foot">
           <div class="price">${rentLabel(l)}</div>
           <div class="availability${isAvailable(l) ? (isSoon(l) ? " availability-soon" : "") : " availability-pending"}">${escapeHtml(unitCountLabel(l) || availabilityLabel(l))}</div>
         </div>
-        <div class="card-actions">
-          <a class="btn btn-primary" style="flex:1" href="/${listingPath(l)}">View details</a>
-          <a class="btn btn-secondary" style="flex:1" href="${escapeHtml(l.zillow)}" target="_blank" rel="noopener">Zillow</a>
+        <div class="home-card-actions">
+          <a class="btn btn-primary" href="/${listingPath(l)}">View details</a>
+          <a class="home-link" href="${escapeHtml(l.zillow)}" target="_blank" rel="noopener">Zillow &nearr;</a>
         </div>
       </div>
     </article>`;
@@ -179,6 +188,10 @@ fetch("/api/listings")
     const openCount = onOffer.filter((l) => isAvailable(l) && !isSoon(l)).length;
     const soonCount = onOffer.filter(isSoon).length;
     const pendingCount = onOffer.filter((l) => l.status === "pending").length;
+    // The hero's badge counts the same homes the grid shows.
+    const badge = document.getElementById("hero-badge-count");
+    if (badge) badge.textContent = onOffer.length + (onOffer.length === 1 ? " home" : " homes");
+
     document.getElementById("listing-count").textContent =
       openCount + (openCount === 1 ? " property" : " properties") + " available" +
       (soonCount ? ` · ${soonCount} available soon` : "") +
