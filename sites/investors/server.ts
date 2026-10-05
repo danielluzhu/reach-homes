@@ -162,27 +162,58 @@ async function wholePortfolio(data: Portfolio) {
     const place = places[number(b.address)] ?? null;
     // address.txt buildings get their neighbourhood from lib/portfolio; the
     // ones only on the owner list get it from their confirmed address.
-    return { ...b, place, neighborhood: b.neighborhood || place?.neighborhood || "", city: b.city || place?.city || "" };
+    // A neighbourhood the admin has set on the address wins over the one
+    // lib/portfolio infers from the street grid.
+    return { ...b, place, neighborhood: place?.neighborhood || b.neighborhood || "", city: b.city || place?.city || "" };
   });
 }
 
-type RegistryRow = { address: string; abbr: string; owner: string };
+type RegistryRow = {
+  id?: string; address: string; abbr: string; owner: string;
+  mgmt?: number; doors?: number; leases?: number; note?: string;
+};
+type Registry = { _note?: string; rows: RegistryRow[]; places: Record<string, Place> };
 
 /**
  * The admin's own list of every building: address, the abbreviation they use
  * for it, and its owner. Private and gitignored -- it names owners.
+ *
+ * Rows get a stable id the first time they are read, so the admin page can
+ * say which row it is editing without relying on position or wording.
  */
-async function loadRegistry(): Promise<RegistryRow[]> {
+async function readRegistryFile(): Promise<Registry> {
   const f = file(REGISTRY_PATH);
-  return (await f.exists()) ? ((await f.json()).rows ?? []) : [];
+  const reg: Registry = (await f.exists()) ? await f.json() : { rows: [], places: {} };
+  reg.rows ??= [];
+  reg.places ??= {};
+  if (reg.rows.some((r) => !r.id)) {
+    reg.rows.forEach((r) => { r.id ??= "row-" + crypto.randomUUID().slice(0, 8); });
+    await writeRegistryFile(reg);
+  }
+  return reg;
 }
+
+async function writeRegistryFile(reg: Registry) {
+  await Bun.write(REGISTRY_PATH, JSON.stringify(reg, null, 2) + "\n");
+}
+
+async function loadRegistry(): Promise<RegistryRow[]> {
+  return (await readRegistryFile()).rows;
+}
+
+/** An owner's login id, from their name as the registry writes it. */
+function ownerId(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "owner";
+}
+
+const CODE_RULE = /^[a-z0-9][a-z0-9_-]{5,63}$/;
+const CODE_RULE_TEXT = "A code is 6 to 64 letters, numbers, hyphens or underscores.";
 
 type Place = { street: string; city: string; state: string; zip: string; neighborhood?: string };
 
 /** Full postal addresses, keyed by house number. Blank fields are ones nobody has confirmed. */
 async function loadPlaces(): Promise<Record<string, Place>> {
-  const f = file(REGISTRY_PATH);
-  return (await f.exists()) ? ((await f.json()).places ?? {}) : {};
+  return (await readRegistryFile()).places;
 }
 
 type Unit = { label: string; detail?: string; rent: number; leasedUntil?: string; status?: string };
@@ -361,24 +392,44 @@ const server = Bun.serve({
       if (!investor?.admin) return json({ error: "Not found." }, 404);
       const live = await loadData();
       if (req.method === "GET") {
+        // Every owner on the registry is listed, with or without a login yet,
+        // so the admin can see who still needs one.
+        const regOwners = [...new Set((await loadRegistry()).map((r) => r.owner).filter(Boolean))];
+        const withLogin = new Set(live.investors.map((i) => i.name));
+        const buildingsOf = async (name: string) =>
+          (await loadRegistry()).filter((r) => r.owner === name).map((r) => r.address);
         return json({
-          owners: live.investors.map((i) => ({
-            id: i.id,
-            name: i.name,
-            code: i.code,
-            properties: i.holdings.map((h) => live.properties.find((p) => p.id === h.property)?.title ?? h.property),
-          })),
+          owners: [
+            ...(await Promise.all(live.investors.map(async (i) => ({
+              id: i.id,
+              name: i.name,
+              code: i.code,
+              properties: i.holdings.map((h) => live.properties.find((p) => p.id === h.property)?.title ?? h.property),
+              buildings: await buildingsOf(i.name),
+            })))),
+            ...(await Promise.all(regOwners.filter((n) => !withLogin.has(n)).map(async (name) => ({
+              id: null, name, code: null, properties: [], buildings: await buildingsOf(name),
+            })))),
+          ],
         });
       }
       if (req.method === "POST") {
-        const body = (await req.json().catch(() => ({}))) as { id?: string; code?: string };
+        const body = (await req.json().catch(() => ({}))) as { id?: string; name?: string; code?: string };
         // Sign-in compares codes in lower case, so that is how they are kept.
         const code = String(body.code ?? "").trim().toLowerCase();
-        const target = live.investors.find((i) => i.id === body.id);
-        if (!target) return json({ error: "No such owner." }, 400);
-        if (!/^[a-z0-9][a-z0-9_-]{5,63}$/.test(code)) {
-          return json({ error: "A code is 6 to 64 letters, numbers, hyphens or underscores." }, 400);
+        if (!CODE_RULE.test(code)) return json({ error: CODE_RULE_TEXT }, 400);
+        let target = live.investors.find((i) => i.id === body.id);
+        if (!target && body.name) {
+          // A first login for an owner who is on the registry but has none yet.
+          const name = String(body.name).trim();
+          if (!(await loadRegistry()).some((r) => r.owner === name)) return json({ error: "No such owner on the list." }, 400);
+          if (live.investors.some((i) => i.name === name)) return json({ error: "That owner already has a login." }, 400);
+          let id = ownerId(name);
+          while (live.investors.some((i) => i.id === id) || id.startsWith("demo-")) id += "-2";
+          target = { id, name, code: "", holdings: [] };
+          live.investors.push(target);
         }
+        if (!target) return json({ error: "No such owner." }, 400);
         if (live.investors.some((i) => i.id !== target.id && i.code === code) || code === ((await adminCode()) ?? "").toLowerCase()) {
           return json({ error: "That code is already in use. Each code must be different." }, 400);
         }
@@ -389,6 +440,60 @@ const server = Bun.serve({
         for (const [session, id] of sessions) if (id === target.id) sessions.delete(session);
         return json({ ok: true, code });
       }
+    }
+
+    // Editing the registry: a row's owner and figures, and a building's address.
+    if (pathname === "/api/admin/registry/row" && req.method === "POST") {
+      if (!investor?.admin) return json({ error: "Not found." }, 404);
+      const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+      const reg = await readRegistryFile();
+      const row = reg.rows.find((r) => r.id === body.id);
+      if (!row) return json({ error: "No such row." }, 400);
+      const text = (v: unknown, max: number) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+      // Blank means "not given", which is different from zero.
+      const num = (v: unknown, max: number): number | undefined | null => {
+        if (v === "" || v == null) return undefined;
+        const n = Number(v);
+        return Number.isInteger(n) && n >= 0 && n <= max ? n : null;
+      };
+      const next = { ...row, owner: text(body.owner, 60), note: text(body.note, 200) };
+      for (const [key, max] of [["mgmt", 100], ["doors", 1000], ["leases", 1000]] as const) {
+        const n = num(body[key], max);
+        if (n === null) return json({ error: `${key === "mgmt" ? "M%" : key[0].toUpperCase() + key.slice(1)} must be a whole number from 0 to ${max}, or blank.` }, 400);
+        if (n === undefined) delete next[key];
+        else next[key] = n;
+      }
+      if (!next.note) delete next.note;
+      Object.assign(row, next);
+      for (const k of ["mgmt", "doors", "leases", "note"] as const) if (!(k in next)) delete row[k];
+      await writeRegistryFile(reg);
+      return json({ ok: true, row });
+    }
+
+    if (pathname === "/api/admin/registry/place" && req.method === "POST") {
+      if (!investor?.admin) return json({ error: "Not found." }, 404);
+      const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+      const key = String(body.key ?? "");
+      const reg = await readRegistryFile();
+      const text = (v: unknown, max: number) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+      const place: Place = {
+        street: text(body.street, 120),
+        city: text(body.city, 60),
+        state: text(body.state, 20).toUpperCase(),
+        zip: text(body.zip, 10),
+        neighborhood: text(body.neighborhood, 60),
+      };
+      if (!/^\d+$/.test(key)) return json({ error: "No such building." }, 400);
+      // Buildings are matched to their rows by house number; a different
+      // number would detach this address from the building it belongs to.
+      if (!place.street.startsWith(key + " ")) {
+        return json({ error: `The street address must still start with ${key}. To change a house number, ask for the address list to be updated as well.` }, 400);
+      }
+      if (place.state && !/^[A-Z]{2}$/.test(place.state)) return json({ error: "State is two letters, e.g. WA." }, 400);
+      if (place.zip && !/^\d{5}(-\d{4})?$/.test(place.zip)) return json({ error: "Zip is five digits." }, 400);
+      reg.places[key] = place;
+      await writeRegistryFile(reg);
+      return json({ ok: true, place });
     }
 
     // The demo sign-in page lists the codes so there is something to type.

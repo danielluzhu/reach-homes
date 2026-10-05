@@ -169,14 +169,15 @@ async function wireCodes() {
   if (!list) return;
   const { owners } = await fetch("/api/admin/codes").then((r) => r.json());
   list.innerHTML = owners.length ? `<table>
-    <thead><tr><th>Owner</th><th>Sees</th><th>Access code</th><th></th></tr></thead>
-    <tbody>${owners.map((o) => `<tr data-owner="${escapeHtml(o.id)}">
+    <thead><tr><th>Owner</th><th>Buildings</th><th>Statements they see</th><th>Access code</th><th></th></tr></thead>
+    <tbody>${owners.map((o) => `<tr data-owner="${escapeHtml(o.id || "")}" data-name="${escapeHtml(o.name)}">
       <td>${escapeHtml(o.name)}</td>
-      <td>${escapeHtml(o.properties.join(", ")) || '<span class="sub">Nothing yet</span>'}</td>
-      <td><input class="code-input" type="text" value="${escapeHtml(o.code)}" maxlength="64" spellcheck="false" autocomplete="off" aria-label="Access code for ${escapeHtml(o.name)}" /></td>
-      <td style="white-space:nowrap"><button class="btn btn-quiet code-random" type="button">Generate</button> <button class="btn btn-primary code-save" type="button" style="width:auto;margin:0">Save</button> <span class="sub code-status" role="status"></span></td>
+      <td>${o.buildings.length ? escapeHtml(o.buildings.join(", ")) : '<span class="sub">None</span>'}</td>
+      <td>${escapeHtml(o.properties.join(", ")) || '<span class="sub">None yet</span>'}</td>
+      <td><input class="code-input" type="text" value="${escapeHtml(o.code || "")}" placeholder="${o.code ? "" : "No login yet"}" maxlength="64" spellcheck="false" autocomplete="off" aria-label="Access code for ${escapeHtml(o.name)}" /></td>
+      <td style="white-space:nowrap"><button class="btn btn-quiet code-random" type="button">Generate</button> <button class="btn btn-primary code-save" type="button" style="width:auto;margin:0">${o.code ? "Save" : "Create login"}</button> <span class="sub code-status" role="status"></span></td>
     </tr>`).join("")}</tbody>
-  </table>` : '<p class="sub" style="padding:8px 16px">No owner has a login yet. An owner gets one when a property with a statement is assigned to them.</p>';
+  </table>` : '<p class="sub" style="padding:8px 16px">No owners on your list yet.</p>';
 
   list.querySelectorAll("tr[data-owner]").forEach((tr) => {
     const input = tr.querySelector(".code-input");
@@ -190,9 +191,11 @@ async function wireCodes() {
       const res = await fetch("/api/admin/codes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: tr.dataset.owner, code: input.value }),
+        body: JSON.stringify({ id: tr.dataset.owner || undefined, name: tr.dataset.name, code: input.value }),
       }).then((r) => r.json());
       if (res.error) { status.textContent = res.error; return; }
+      // A first login just created: redraw so the row knows its new id.
+      if (!tr.dataset.owner) { wireCodes(); return; }
       input.value = res.code;
       status.textContent = "Saved";
     });
@@ -529,10 +532,31 @@ function buildingView(b, data) {
     </div>
 
     <section class="section">
-      <div class="section-heading"><h2>Ownership</h2><p>From your address, abbreviation, owner, doors, leases and M% lists, as written.</p></div>
-      ${b.registry && b.registry.length ? `<div class="panel table-scroll"><table>
-        <thead><tr><th>Address as listed</th><th>Abbr</th><th>Owner</th><th class="num">M%</th><th class="num">Doors</th><th class="num">Leases</th></tr></thead>
-        <tbody>${b.registry.map((r) => `<tr><td>${escapeHtml(r.address)}${r.note ? `<br /><span class="sub">${escapeHtml(r.note)}</span>` : ""}</td><td>${escapeHtml(r.abbr) || "\u2014"}</td><td>${escapeHtml(r.owner) || "\u2014"}</td><td class="num">${r.mgmt != null ? r.mgmt + "%" : "\u2014"}</td><td class="num">${r.doors ?? "\u2014"}</td><td class="num">${r.leases ?? "\u2014"}</td></tr>`).join("")}</tbody>
+      <div class="section-heading"><h2>Address</h2><p>The full postal address. The house number stays fixed here, since it's how the building is matched to your lists.</p></div>
+      <form class="panel address-form" id="address-form" data-key="${escapeHtml((b.address.match(/^\d+/) || [""])[0])}">
+        <label>Street<input name="street" value="${escapeHtml(streetOf(b))}" maxlength="120" /></label>
+        <label>City<input name="city" value="${escapeHtml((b.place && b.place.city) || "")}" maxlength="60" /></label>
+        <label>State<input name="state" value="${escapeHtml((b.place && b.place.state) || "")}" maxlength="2" /></label>
+        <label>Zip<input name="zip" value="${escapeHtml((b.place && b.place.zip) || "")}" maxlength="10" /></label>
+        <label>Neighbourhood<input name="neighborhood" value="${escapeHtml((b.place && b.place.neighborhood) || b.neighborhood || "")}" maxlength="60" /></label>
+        <div class="upload-actions"><button class="btn btn-primary" type="submit" style="width:auto;margin:0">Save address</button><span class="sub" id="address-status" role="status"></span></div>
+      </form>
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><h2>Ownership</h2><p>From your owner list. Edit a row and press Save; leave a figure blank if it isn't known.</p></div>
+      ${b.registry && b.registry.length ? `<div class="panel table-scroll"><table class="edit-table">
+        <thead><tr><th>Address as listed</th><th>Abbr</th><th>Owner</th><th class="num">M%</th><th class="num">Doors</th><th class="num">Leases</th><th>Note</th><th></th></tr></thead>
+        <tbody>${b.registry.map((r) => `<tr data-row="${escapeHtml(r.id || "")}">
+          <td>${escapeHtml(r.address)}</td>
+          <td>${escapeHtml(r.abbr) || "\u2014"}</td>
+          <td><input name="owner" value="${escapeHtml(r.owner || "")}" maxlength="60" aria-label="Owner" /></td>
+          <td class="num"><input name="mgmt" class="num-input" inputmode="numeric" value="${r.mgmt ?? ""}" aria-label="M%" /></td>
+          <td class="num"><input name="doors" class="num-input" inputmode="numeric" value="${r.doors ?? ""}" aria-label="Doors" /></td>
+          <td class="num"><input name="leases" class="num-input" inputmode="numeric" value="${r.leases ?? ""}" aria-label="Leases" /></td>
+          <td><input name="note" value="${escapeHtml(r.note || "")}" maxlength="200" aria-label="Note" /></td>
+          <td style="white-space:nowrap"><button class="btn btn-quiet row-save" type="button">Save</button> <span class="sub row-status" role="status"></span></td>
+        </tr>`).join("")}</tbody>
       </table></div>` : `<div class="panel"><p style="padding:6px 16px">This building isn't on your owner list, so no owner or abbreviation is recorded for it.</p></div>`}
     </section>
 
@@ -544,6 +568,42 @@ function buildingView(b, data) {
     ${b.listings.map(listingBlock).join("")}
 
     ${!held.length && !b.listings.length ? `<section class="section"><div class="panel"><p style="padding:6px 16px">No lease dates, rents or financials have been entered for this building.</p></div></section>` : ""}`;
+}
+
+/** Saving from the building page: its address, and each ownership row. */
+function wireRegistryEdits() {
+  const post = (path, body) =>
+    fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json());
+
+  const form = document.getElementById("address-form");
+  if (form) form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = document.getElementById("address-status");
+    status.textContent = "Saving\u2026";
+    const res = await post("/api/admin/registry/place", { key: form.dataset.key, ...Object.fromEntries(new FormData(form)) });
+    status.textContent = res.error || "Saved";
+    if (!res.error) refreshQuietly();
+  });
+
+  document.querySelectorAll("tr[data-row]").forEach((tr) => {
+    tr.querySelector(".row-save").addEventListener("click", async () => {
+      const status = tr.querySelector(".row-status");
+      status.textContent = "Saving\u2026";
+      const fields = Object.fromEntries([...tr.querySelectorAll("input")].map((i) => [i.name, i.value]));
+      const res = await post("/api/admin/registry/row", { id: tr.dataset.row, ...fields });
+      status.textContent = res.error || "Saved";
+      if (!res.error) refreshQuietly();
+    });
+  });
+}
+
+/**
+ * Picks up a saved edit everywhere else on the page -- the portfolio table,
+ * the totals -- without redrawing the form the admin is in the middle of.
+ */
+async function refreshQuietly() {
+  const res = await fetch("/api/portfolio");
+  if (res.ok) DATA = await res.json();
 }
 
 /* ---------- One property ---------- */
@@ -697,6 +757,7 @@ function render(data) {
   wireUpload();
   wireAssistant();
   wireCodes();
+  wireRegistryEdits();
 
   const tip = view.querySelector(".chart-tip");
   if (tip) {

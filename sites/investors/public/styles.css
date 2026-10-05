@@ -219,3 +219,29 @@ tr.clickable:hover td { background: var(--brand-100); }
   font-size: 0.9rem;
 }
 .code-random, .code-save { padding: 7px 12px; }
+
+/* ---- Admin editing ---- */
+
+.edit-table input,
+.address-form input {
+  width: 100%;
+  min-width: 7ch;
+  padding: 6px 8px;
+  border: 1px solid #d9cfd1;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.9rem;
+  background: #fff;
+}
+.edit-table .num-input { width: 6ch; min-width: 0; text-align: right; }
+.edit-table td { vertical-align: middle; }
+.address-form {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 0.5fr 0.8fr 1.2fr;
+  gap: 12px;
+  align-items: end;
+}
+.address-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+.address-form .upload-actions { grid-column: 1 / -1; }
+@media (max-width: 760px) { .address-form { grid-template-columns: 1fr 1fr; } }
