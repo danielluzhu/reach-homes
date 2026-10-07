@@ -101,6 +101,14 @@ function updatedLine(u) {
 
 let DATA = null;
 const filter = { month: "", address: "" };
+/** A filter value meaning every lease in a building, rather than one lease. */
+const BUILDING = "building:";
+/**
+ * Buildings let unit by unit (4544, 2120) are one collapsible row in the
+ * summary and one collapsible section in the list. Which are open survives a
+ * redraw, so selecting an amount doesn't fold the building back up.
+ */
+const OPEN = new Set();
 /** Which view of the payments below the summary: grouped by lease, or the combined log. */
 let VIEW = location.hash === "#log" ? "log" : "lease";
 
@@ -122,8 +130,17 @@ function render() {
   const ahead = payments.filter((p) => p.allocation?.kind === "last-month" && monthOf(p) !== p.date.slice(0, 7) && (monthOf(p) === LATER || monthOf(p) === UNKNOWN));
   const addresses = [...new Set(payments.map(addr))].sort((a, b) =>
     a === NO_ADDRESS ? 1 : b === NO_ADDRESS ? -1 : a.localeCompare(b, undefined, { numeric: true }));
-  const rows = payments.filter((p) =>
-    (!filter.month || monthOf(p) === filter.month) && (!filter.address || addr(p) === filter.address));
+  const buildingOf = (p) => p.building || addressOf(p) || NO_ADDRESS;
+  const leasesIn = new Map();
+  for (const a of addresses) {
+    const b = buildingOf(payments.find((p) => addr(p) === a));
+    if (!leasesIn.has(b)) leasesIn.set(b, []);
+    leasesIn.get(b).push(a);
+  }
+  const inScope = (p) => !filter.address ||
+    (filter.address.startsWith(BUILDING) ? buildingOf(p) === filter.address.slice(BUILDING.length) : addr(p) === filter.address);
+  const rows = payments.filter((p) => (!filter.month || monthOf(p) === filter.month) && inScope(p));
+  const scopeLabel = filter.address.startsWith(BUILDING) ? filter.address.slice(BUILDING.length) + ", all units" : filter.address;
   const total = rows.reduce((s, p) => s + p.amount, 0);
   const option = (value, label, current) =>
     `<option value="${escapeHtml(value)}"${value === current ? " selected" : ""}>${escapeHtml(label)}</option>`;
@@ -137,13 +154,13 @@ function render() {
     ${updatedLine(DATA.updated)}
 
     <div class="tiles">
-      <div class="tile"><div class="tile-key">Collected${filter.month ? ", " + escapeHtml(monthLabel(filter.month)) : ""}</div><div class="tile-val">${money(total)}</div><div class="tile-note">${filter.address ? escapeHtml(filter.address) : seesAll ? "all properties" : "your properties"}</div></div>
+      <div class="tile"><div class="tile-key">Collected${filter.month ? ", " + escapeHtml(monthLabel(filter.month)) : ""}</div><div class="tile-val">${money(total)}</div><div class="tile-note">${filter.address ? escapeHtml(scopeLabel) : seesAll ? "all properties" : "your properties"}</div></div>
       <div class="tile"><div class="tile-key">Payments</div><div class="tile-val">${rows.length}</div><div class="tile-note">${addresses.length} lease${addresses.length === 1 ? "" : "s"} · ${months.filter((m) => m !== LATER && m !== UNKNOWN).length} months on file</div></div>
       ${ahead.length ? `<div class="tile"><div class="tile-key">Last-month rent held</div><div class="tile-val">${money(ahead.reduce((s, p) => s + p.amount, 0))}</div><div class="tile-note">${ahead.length} prepayment${ahead.length === 1 ? "" : "s"} for later months, or leases whose end isn't known</div></div>` : ""}
       ${seesAll ? `<div class="tile"><div class="tile-key">No owner matched</div><div class="tile-val">${DATA.unassigned}</div><div class="tile-note">seen by admin and team only</div></div>` : ""}
     </div>
 
-    ${payments.length ? summary(payments, addresses, months, addr, monthOf, seesAll && ownerOf) : ""}
+    ${payments.length ? summary(payments, leasesIn, months, addr, monthOf, seesAll && ownerOf) : ""}
 
     <section class="section">
       <div class="section-heading"><h2>Payments</h2><p>${VIEW === "log"
@@ -156,12 +173,26 @@ function render() {
       </div>
       <div class="pay-filters">
         <label>Month <select id="f-month">${option("", "All months", filter.month)}${[...months].reverse().map((m) => option(m, monthLabel(m), filter.month)).join("")}</select></label>
-        <label>Lease <select id="f-address">${option("", "All leases", filter.address)}${addresses.map((a) => option(a, a, filter.address)).join("")}</select></label>
+        <label>Lease <select id="f-address">${option("", "All leases", filter.address)}${[...leasesIn].map(([b, ls]) => ls.length === 1
+          ? option(ls[0], ls[0], filter.address)
+          : `<optgroup label="${escapeHtml(b)}">${option(BUILDING + b, `All of ${b} (${ls.length} leases)`, filter.address)}${ls.map((a) => option(a, a, filter.address)).join("")}</optgroup>`).join("")}</select></label>
         ${filter.month || filter.address ? '<button class="btn btn-quiet" id="f-clear" type="button">Show all</button>' : ""}
       </div>
       ${!rows.length ? `<div class="panel"><p class="sub" style="padding:8px 16px">${payments.length ? "No payments match these filters." : "No payments on file yet."}</p></div>`
         : VIEW === "log" ? log(rows, addr, seesAll)
-        : addresses.filter((a) => rows.some((p) => addr(p) === a)).map((a) => group(a, rows.filter((p) => addr(p) === a), seesAll ? ownerOf.get(a) : undefined)).join("")}
+        : [...leasesIn].map(([b, ls]) => {
+            const shown = ls.filter((a) => rows.some((p) => addr(p) === a));
+            if (!shown.length) return "";
+            const panels = shown.map((a) => group(a, rows.filter((p) => addr(p) === a), seesAll ? ownerOf.get(a) : undefined)).join("");
+            if (ls.length === 1) return panels;
+            const here = rows.filter((p) => buildingOf(p) === b);
+            // Open when asked to, or when the filter has already narrowed to this building.
+            const open = OPEN.has(b) || (filter.address && here.length === rows.length);
+            return `<details class="bldg" data-building="${escapeHtml(b)}"${open ? " open" : ""}>
+              <summary><span><strong>${escapeHtml(b)}</strong> <span class="sub">${shown.length} lease${shown.length === 1 ? "" : "s"}</span></span><span class="sub">${here.length} payment${here.length === 1 ? "" : "s"} · <span class="pay-group-total">${money(here.reduce((s, p) => s + p.amount, 0))}</span></span></summary>
+              ${panels}
+            </details>`;
+          }).join("")}
     </section>
 
     ${viewer.kind === "admin" ? adminSection() : ""}`;
@@ -179,6 +210,17 @@ function render() {
   }));
   document.getElementById("log-csv")?.addEventListener("click", () => downloadLog(rows, addr, seesAll));
   // A cell in the summary narrows the list below to that address and month.
+  // Folding a building in the summary or the list, remembered across redraws.
+  view.querySelectorAll("[data-fold]").forEach((btn) => btn.addEventListener("click", () => {
+    const b = btn.dataset.fold;
+    const open = !OPEN.has(b);
+    if (open) OPEN.add(b); else OPEN.delete(b);
+    btn.setAttribute("aria-expanded", String(open));
+    view.querySelectorAll(`tr[data-in="${CSS.escape(b)}"]`).forEach((tr) => { tr.hidden = !open; });
+  }));
+  view.querySelectorAll("details.bldg").forEach((d) => d.addEventListener("toggle", () => {
+    if (d.open) OPEN.add(d.dataset.building); else OPEN.delete(d.dataset.building);
+  }));
   view.querySelectorAll("[data-cell]").forEach((el) => el.addEventListener("click", () => {
     filter.address = el.dataset.address || "";
     filter.month = el.dataset.month || "";
@@ -188,22 +230,44 @@ function render() {
   wireUpload();
 }
 
-/** Address down the side, month across the top, the amount collected in each. */
-function summary(payments, addresses, months, addr, monthOf, ownerOf) {
+/**
+ * Leases down the side, months across the top, the amount collected in each.
+ * A building with several leases is one total row that opens onto its units.
+ */
+function summary(payments, leasesIn, months, addr, monthOf, ownerOf) {
   const sum = (ps) => ps.reduce((s, p) => s + p.amount, 0);
   const cell = (ps, address, month, cls = "") => ps.length
     ? `<td class="num${cls}"><button class="cell-link" type="button" data-cell data-address="${escapeHtml(address)}" data-month="${month}" title="${money(sum(ps))} · ${ps.length} payment${ps.length === 1 ? "" : "s"}">${dollars(sum(ps))}</button></td>`
     : `<td class="num empty${cls}">—</td>`;
+  const ownerCell = (owners) => !ownerOf ? "" : `<td>${
+    owners.length === 1 && owners[0] ? escapeHtml(owners[0])
+    : owners.length > 1 ? `<span class="sub">${owners.length} owners</span>`
+    : '<span class="pill pill-market">No match</span>'}</td>`;
+  const row = (label, ps, scope, owners, attrs = "", cls = "") =>
+    `<tr${attrs}${cls ? ` class="${cls}"` : ""}><td>${label}</td>${ownerCell(owners)}${months.map((m) => cell(ps.filter((p) => monthOf(p) === m), scope, m)).join("")}${cell(ps, scope, "", " row-total")}</tr>`;
+  const body = [...leasesIn].map(([b, ls]) => {
+    if (ls.length === 1) {
+      const a = ls[0];
+      return row(escapeHtml(a), payments.filter((p) => addr(p) === a), a, [ownerOf && ownerOf.get(a)]);
+    }
+    const open = OPEN.has(b);
+    const here = payments.filter((p) => ls.includes(addr(p)));
+    const owners = ownerOf ? [...new Set(ls.map((a) => ownerOf.get(a)))] : [];
+    const head = row(
+      `<button class="fold" type="button" data-fold="${escapeHtml(b)}" aria-expanded="${open}">${escapeHtml(b)}</button> <span class="sub">${ls.length} leases</span>`,
+      here, BUILDING + b, owners, "", "building-row");
+    const units = ls.map((a) => row(
+      `<span class="unit-name">${escapeHtml(a.startsWith(b) ? a.slice(b.length).trim() || a : a)}</span>`,
+      payments.filter((p) => addr(p) === a), a, [ownerOf && ownerOf.get(a)],
+      ` data-in="${escapeHtml(b)}"${open ? "" : " hidden"}`, "unit-row")).join("");
+    return head + units;
+  }).join("");
   return `
     <section class="section">
-      <div class="section-heading"><h2>Summary by lease and month</h2><p>Collected on each lease — each address and unit — in the month each payment is for, to the nearest dollar. Last-month rent paid in advance counts in the lease's final month: under "Later" when that is after the newest payment, under "End unknown" until the lease's end is known. Select an amount to see its payments.</p></div>
+      <div class="section-heading"><h2>Summary by lease and month</h2><p>Collected on each lease — each address and unit — in the month each payment is for, to the nearest dollar. A building let unit by unit shows its total; open it for each unit. Last-month rent paid in advance counts in the lease's final month: under "Later" when that is after the newest payment, under "End unknown" until the lease's end is known. Select an amount to see its payments.</p></div>
       <div class="panel table-scroll"><table class="pivot">
         <thead><tr><th>Lease</th>${ownerOf ? "<th>Owner</th>" : ""}${months.map((m) => `<th class="num">${escapeHtml(shortMonth(m))}</th>`).join("")}<th class="num">Total</th></tr></thead>
-        <tbody>${addresses.map((a) => {
-          const here = payments.filter((p) => addr(p) === a);
-          const owner = ownerOf && ownerOf.get(a);
-          return `<tr><td>${escapeHtml(a)}</td>${ownerOf ? `<td>${owner ? escapeHtml(owner) : '<span class="pill pill-market">No match</span>'}</td>` : ""}${months.map((m) => cell(here.filter((p) => monthOf(p) === m), a, m)).join("")}${cell(here, a, "", " row-total")}</tr>`;
-        }).join("")}</tbody>
+        <tbody>${body}</tbody>
         <tfoot><tr><td>All leases</td>${ownerOf ? "<td></td>" : ""}${months.map((m) => cell(payments.filter((p) => monthOf(p) === m), "", m)).join("")}${cell(payments, "", "", " row-total")}</tr></tfoot>
       </table></div>
     </section>`;

@@ -279,3 +279,19 @@ tr.clickable:hover td { background: var(--brand-100); }
 .log .lease-cell { min-width: 170px; }
 .log th, .log td { padding-left: 10px; padding-right: 10px; }
 .pivot td:first-child, .pivot th:first-child { box-shadow: -8px 0 0 var(--card); }
+
+/* Buildings let unit by unit: a total row that opens onto its units. */
+.fold { background: none; border: 0; padding: 0; font: inherit; color: var(--brand-800); cursor: pointer; }
+.fold::before { content: "▸"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.fold[aria-expanded="true"]::before { transform: rotate(90deg); }
+.building-row td { background: #faf6f7; }
+.pivot .building-row td:first-child { background: #faf6f7; }
+.unit-row td:first-child .unit-name { padding-left: 1.6em; color: var(--muted); }
+.bldg { margin-bottom: 18px; }
+.bldg > summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 12px 16px; cursor: pointer; list-style: none;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.bldg > summary::-webkit-details-marker { display: none; }
+.bldg > summary > span:first-child::before { content: "▸"; display: inline-block; width: 1.1em; color: var(--brand-800); transition: transform 0.15s; }
+.bldg[open] > summary > span:first-child::before { transform: rotate(90deg); }
+.bldg[open] > summary { margin-bottom: 12px; }
+.bldg > .pay-group { margin-left: 18px; }
