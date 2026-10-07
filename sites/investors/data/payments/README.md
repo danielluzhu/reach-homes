@@ -25,7 +25,11 @@ paid is skipped. There is no payment date, so **TurboTenant payments are dated
 by their due date**. The property, unit and tenant come out of the lease title,
 which takes two shapes: `4544 104 27 Alex Smith` (house number, unit, term
 code, tenant) and `4544 20th Ave NE, 102 - September 2026`. A title with no
-house number in it (`003 27 Sam`) matches no owner.
+building in it matches no owner until it is corrected in
+`lease-titles.json` here: title as exported -> the title it should have been,
+e.g. `"003 27 Sam": "4544 003 27 Sam"`, as confirmed by the admin. The
+export itself is never edited, so the correction holds for every later export
+that repeats the title.
 
 Every payment keeps its export row whole, and the page's combined log shows it
 alongside the platform it came through. Leases are named from the confirmed

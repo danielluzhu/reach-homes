@@ -214,7 +214,20 @@ function platformOf(name: string, heads: string[]) {
 }
 
 /** One export, as rows. Columns are found by header name; unknown ones are ignored. */
-function readExport(name: string, text: string, registry: Registry) {
+/**
+ * Corrections to lease titles that don't say where they are, as the admin has
+ * confirmed them: title as exported -> the title it should have been, e.g.
+ * "003 27 Sam" -> "4544 003 27 Sam". Kept beside the exports, and private
+ * like them, since titles name tenants; the exports themselves stay as given.
+ */
+const ALIASES_PATH = `${PAYMENTS_DIR}/lease-titles.json`;
+
+async function loadAliases(): Promise<Record<string, string>> {
+  const f = file(ALIASES_PATH);
+  return (await f.exists()) ? await f.json() : {};
+}
+
+function readExport(name: string, text: string, registry: Registry, aliases: Record<string, string> = {}) {
   const [header, ...rows] = parseCsv(text);
   if (!header) return { payments: [] as Payment[], problem: "empty" };
   const heads = header.map((h) => h.trim().toLowerCase());
@@ -239,7 +252,8 @@ function readExport(name: string, text: string, registry: Registry) {
     const due = col.due === undefined ? 0 : parseAmount(get(r, "due")) || 0;
     const amount = parseAmount(get(r, "amount")) - due;
     if (!Number.isFinite(amount) || (col.due !== undefined && amount <= 0)) return;
-    const fromTitle = col.lease !== undefined && col.property === undefined ? parseLeaseTitle(get(r, "lease")) : null;
+    const title = get(r, "lease");
+    const fromTitle = col.lease !== undefined && col.property === undefined ? parseLeaseTitle(aliases[title] ?? title) : null;
     const property = fromTitle?.property ?? get(r, "property");
     const unit = fromTitle?.unit ?? get(r, "unit");
     const hit = resolveOwner(property, unit, registry.rows);
@@ -276,6 +290,7 @@ function readExport(name: string, text: string, registry: Registry) {
  * one file, identical rows are taken as the separate payments they say they are.
  */
 export async function loadPayments(registry: Registry) {
+  const aliases = await loadAliases();
   // Files are read in name order, so name them by export date: where two
   // exports carry the same reference id, the later one's row wins -- a payment
   // "In Progress" in one month's export is "Completed" in the next.
@@ -287,7 +302,7 @@ export async function loadPayments(registry: Registry) {
   const all: Payment[] = [];
   const files: Array<{ name: string; rows: number; problem: string | null; addedAt: string; through: string }> = [];
   for (const name of names) {
-    const { payments, problem } = readExport(name, await file(`${PAYMENTS_DIR}/${name}`).text(), registry);
+    const { payments, problem } = readExport(name, await file(`${PAYMENTS_DIR}/${name}`).text(), registry, aliases);
     // When the export was added here, and the last payment date it covers.
     const addedAt = (await stat(`${PAYMENTS_DIR}/${name}`)).mtime.toISOString();
     const through = payments.reduce((m, p) => (p.date > m ? p.date : m), "");
