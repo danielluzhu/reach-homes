@@ -318,13 +318,15 @@ async function holdingsFor(investor: Investor, data: Portfolio) {
   for (const h of holdings) {
     const p = data.properties.find((x) => x.id === h.property);
     if (!p) continue;
-    const { unitsFrom: _source, ...rest } = p;
+    // Income -- the monthly statements, and the net figures drawn from them --
+    // is for the admin alone. An owner's copy never carries it.
+    const { unitsFrom: _source, months: _months, ...rest } = p;
     const owners = investor.admin
       ? data.investors.flatMap((i) =>
           i.holdings.filter((x) => x.property === p.id).map((x) => ({ name: i.name, share: x.share })),
         )
       : undefined;
-    out.push({ ...rest, units: await units(p), share: h.share, owners });
+    out.push({ ...rest, ...(investor.admin ? { months: p.months } : {}), units: await units(p), share: h.share, owners });
   }
   return out;
 }

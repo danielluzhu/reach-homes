@@ -99,9 +99,11 @@ function overview(data) {
   const props = data.properties;
   const units = props.flatMap((p) => p.units);
   const paying = units.filter(isPaying).length;
-  const last = props[0] ? props[0].months[props[0].months.length - 1].month : null;
-  const lastNet = props.reduce((sum, p) => sum + net(p.months[p.months.length - 1]) * p.share, 0);
-  const allNet = props.reduce((sum, p) => sum + p.months.reduce((s, m) => s + net(m), 0) * p.share, 0);
+  // Income is the admin's alone: an owner's data arrives without statements.
+  const income = ADMIN && props.length && props.every((p) => Array.isArray(p.months) && p.months.length);
+  const last = income ? props[0].months[props[0].months.length - 1].month : null;
+  const lastNet = income ? props.reduce((sum, p) => sum + net(p.months[p.months.length - 1]), 0) : 0;
+  const allNet = income ? props.reduce((sum, p) => sum + p.months.reduce((s, m) => s + net(m), 0), 0) : 0;
   const comingUp = units.filter((u) => unitState(u) !== "occupied").length;
 
   return `
@@ -121,23 +123,25 @@ function overview(data) {
     <div class="tiles">
       <div class="tile"><div class="tile-key">Occupancy</div><div class="tile-val">${paying} of ${units.length}</div><div class="tile-note">units and rooms leased today</div></div>
       <div class="tile"><div class="tile-key">Vacant or turning over</div><div class="tile-val">${comingUp}</div><div class="tile-note">empty, or lease ending within ${OPEN_WINDOW_DAYS} days</div></div>
-      <div class="tile"><div class="tile-key">Net income, ${last ? escapeHtml(monthLabel(last)) : ""}</div><div class="tile-val">${money(lastNet)}</div><div class="tile-note">${ADMIN ? "all properties" : "your share"}</div></div>
-      <div class="tile"><div class="tile-key">Net income, last ${props[0] ? props[0].months.length : 0} months</div><div class="tile-val">${money(allNet)}</div><div class="tile-note">${ADMIN ? "all properties" : "your share"}</div></div>
+      ${income ? `<div class="tile"><div class="tile-key">Net income, ${escapeHtml(monthLabel(last))}</div><div class="tile-val">${money(lastNet)}</div><div class="tile-note">all properties</div></div>
+      <div class="tile"><div class="tile-key">Net income, last ${props[0].months.length} months</div><div class="tile-val">${money(allNet)}</div><div class="tile-note">all properties</div></div>` : ""}
     </div>
 
+    ${income ? incomeByMonth(props) : ""}
+
     <section class="section">
-      <div class="section-heading"><h2>${ADMIN ? "Properties with statements" : "Your properties"}</h2><p>Select one for its rent roll, statement and building record.</p></div>
+      <div class="section-heading"><h2>${ADMIN ? "Properties with statements" : "Your properties"}</h2><p>Select one for its ${ADMIN ? "rent roll, statement" : "rent roll"} and building record.</p></div>
       <div class="panel table-scroll"><table>
-        <thead><tr><th>Property</th>${ADMIN ? "<th>Owners</th>" : '<th class="num">Your share</th>'}<th>Leased</th><th>Next lease end</th><th class="num">Net, ${last ? escapeHtml(monthLabel(last)) : ""}${ADMIN ? "" : " (your share)"}</th></tr></thead>
+        <thead><tr><th>Property</th>${ADMIN ? "<th>Owners</th>" : '<th class="num">Your share</th>'}<th>Leased</th><th>Next lease end</th>${income ? `<th class="num">Net, ${escapeHtml(monthLabel(last))}</th>` : ""}</tr></thead>
         <tbody>${props.map((p) => {
-          const n = net(p.months[p.months.length - 1]) * p.share;
+          const n = income ? net(p.months[p.months.length - 1]) : 0;
           const end = nextLeaseEnd(p);
           return `<tr class="clickable" data-href="#/p/${encodeURIComponent(p.id)}">
             <td><a href="#/p/${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a><br /><span class="sub">${escapeHtml(p.kind)} · ${escapeHtml(p.neighborhood)}</span></td>
             ${ADMIN ? `<td>${escapeHtml(ownersLabel(p))}</td>` : `<td class="num">${shareLabel(p.share)}</td>`}
             <td>${p.units.filter(isPaying).length} of ${p.units.length}</td>
             <td>${end ? escapeHtml(dateLabel(end)) : "—"}</td>
-            <td class="num${n < 0 ? " neg" : ""}">${money(n)}</td>
+            ${income ? `<td class="num${n < 0 ? " neg" : ""}">${money(n)}</td>` : ""}
           </tr>`;
         }).join("")}</tbody>
       </table></div>
@@ -732,6 +736,32 @@ function netChart(p) {
   </div>`;
 }
 
+/**
+ * Every property with a statement, added together month by month: rent
+ * collected, each cost, and what is left. Admin only, like all income.
+ */
+function incomeByMonth(props) {
+  const months = [...new Set(props.flatMap((p) => p.months.map((m) => m.month)))].sort();
+  const totals = months.map((month) => {
+    const ms = props.map((p) => p.months.find((m) => m.month === month)).filter(Boolean);
+    const t = { month, rent: ms.reduce((s, m) => s + m.rent, 0) };
+    for (const [key] of COSTS) t[key] = ms.reduce((s, m) => s + (m[key] || 0), 0);
+    return t;
+  });
+  const sum = (key) => totals.reduce((s, t) => s + t[key], 0);
+  const cell = (n) => `<td class="num${n < 0 ? " neg" : ""}">${money(n)}</td>`;
+  const cost = (n) => `<td class="num cost">${n ? money(-n) : "\u2014"}</td>`;
+  return `
+    <section class="section">
+      <div class="section-heading"><h2>Net income by month</h2><p>All ${props.length} properties with statements, added together. Net is rent collected less management, repairs, utilities, and taxes and insurance. Seen by the admin only.</p></div>
+      <div class="panel table-scroll"><table>
+        <thead><tr><th>Month</th><th class="num">Rent collected</th>${COSTS.map(([, label]) => `<th class="num">${label}</th>`).join("")}<th class="num">Net</th></tr></thead>
+        <tbody>${totals.map((t) => `<tr><td>${escapeHtml(monthLabel(t.month))}</td>${cell(t.rent)}${COSTS.map(([key]) => cost(t[key])).join("")}${cell(net(t))}</tr>`).join("")}</tbody>
+        <tfoot><tr><td>Total</td>${cell(sum("rent"))}${COSTS.map(([key]) => cost(sum(key))).join("")}${cell(totals.reduce((s, t) => s + net(t), 0))}</tr></tfoot>
+      </table></div>
+    </section>`;
+}
+
 function statement(p) {
   const total = (key) => p.months.reduce((s, m) => s + (m[key] || 0), 0);
   const totalNet = p.months.reduce((s, m) => s + net(m), 0);
@@ -741,12 +771,12 @@ function statement(p) {
   const cost = (n) => `<td class="num cost">${n ? money(-n) : "\u2014"}</td>`;
   return `
     <div class="panel table-scroll"><table>
-      <thead><tr><th>Month</th><th class="num">Rent collected</th>${COSTS.map(([, label]) => `<th class="num">${label}</th>`).join("")}<th class="num">Net</th>${ADMIN ? "" : `<th class="num">Your ${shareLabel(p.share)}</th>`}</tr></thead>
+      <thead><tr><th>Month</th><th class="num">Rent collected</th>${COSTS.map(([, label]) => `<th class="num">${label}</th>`).join("")}<th class="num">Net</th></tr></thead>
       <tbody>${p.months.map((m) => `<tr>
         <td>${escapeHtml(monthLabel(m.month))}</td>
-        ${cell(m.rent)}${COSTS.map(([key]) => cost(m[key] || 0)).join("")}${cell(net(m))}${ADMIN ? "" : cell(net(m) * p.share)}
+        ${cell(m.rent)}${COSTS.map(([key]) => cost(m[key] || 0)).join("")}${cell(net(m))}
       </tr>`).join("")}</tbody>
-      <tfoot><tr><td>Total</td>${cell(total("rent"))}${COSTS.map(([key]) => cost(total(key))).join("")}${cell(totalNet)}${ADMIN ? "" : cell(totalNet * p.share)}</tr></tfoot>
+      <tfoot><tr><td>Total</td>${cell(total("rent"))}${COSTS.map(([key]) => cost(total(key))).join("")}${cell(totalNet)}</tr></tfoot>
     </table></div>`;
 }
 
@@ -785,15 +815,15 @@ function propertyView(p) {
       ${rentRoll(p)}
     </section>
 
-    <section class="section">
+    ${ADMIN && p.months ? `<section class="section">
       <div class="section-heading"><h2>Net income by month</h2><p>Rent collected less every cost, for the whole property.</p></div>
       ${netChart(p)}
     </section>
 
     <section class="section">
-      <div class="section-heading"><h2>Statement</h2><p>The same months, line by line.</p></div>
+      <div class="section-heading"><h2>Statement</h2><p>The same months, line by line: net is rent collected less management, repairs, utilities, and taxes and insurance.</p></div>
       ${statement(p)}
-    </section>
+    </section>` : ""}
 
     <section class="section">${building(p)}</section>`;
 }

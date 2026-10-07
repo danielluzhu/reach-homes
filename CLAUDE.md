@@ -51,7 +51,7 @@ file writes of its own, nothing applied without the admin's Apply. `data/registr
 abbreviation / owner list; the admin view merges it with `address.txt` by house
 number and shows rows exactly as written — where the two lists disagree about
 an address, ask which is right rather than picking one. (3408 is NE 57th St
-and 5830 is NE 204th Pl; the owner confirmed both.) Rental payments (`/payments`, `payments.ts`) are real tenants'
+and 5830 is NE 204th Pl; the owner confirmed both.) **Income is admin only**: the monthly statements (`months`) and every net figure drawn from them are stripped from an owner's `/api/portfolio` by the server, not just hidden on the page; keep it that way when adding any income view. Rental payments (`/payments`, `payments.ts`) are real tenants'
 names and amounts: the CSVs in `sites/investors/data/payments/` and the team's
 codes in `data/team.json` are gitignored and must stay so. An owner's view is
 filtered on the server by matching each payment's property to the registry,
