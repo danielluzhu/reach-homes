@@ -1,0 +1,221 @@
+/**
+ * Rental payment history: the CSV exports the admin drops into data/payments/
+ * each month, read as they are and never rewritten.
+ *
+ * Who may see a payment is decided here, by the server. The admin and the
+ * team see every one. An owner sees a payment only when its property resolves
+ * to exactly one owner on the registry and that owner is them -- a payment
+ * that can't be pinned down (no property given, a building with several
+ * owners, a unit whose owner is blank) stays with the admin and the team
+ * rather than being guessed at.
+ */
+
+import { mkdir, readdir } from "node:fs/promises";
+import { file } from "bun";
+
+export const PAYMENTS_DIR = `${import.meta.dir}/data/payments`;
+
+export type Payment = {
+  date: string; // YYYY-MM-DD, or "" when the export gave none we could read
+  amount: number;
+  payer: string;
+  property: string; // as written in the export
+  unit: string;
+  memo: string;
+  method: string;
+  /** Which export it came from, and which row of it. */
+  source: string;
+  /** Resolved against the registry: the owner's name and the row's address, or null. */
+  owner: string | null;
+  address: string | null;
+};
+
+type RegistryRow = { address: string; abbr: string; owner: string };
+
+/** Header names seen in bank and payment-app exports, per field. First hit wins. */
+const COLUMNS: Record<string, string[]> = {
+  date: ["date", "payment date", "paid on", "date paid", "transaction date", "posted date", "posting date", "post date", "received"],
+  amount: ["amount", "amount paid", "paid", "payment", "payment amount", "credit", "deposit", "deposits", "total"],
+  payer: ["payer", "tenant", "tenant name", "resident", "name", "from", "sender", "paid by"],
+  property: ["property", "property address", "address", "building", "abbr", "abbreviation", "property name"],
+  unit: ["unit", "room", "unit number", "apt"],
+  memo: ["memo", "description", "note", "notes", "reference", "details", "for"],
+  method: ["method", "payment method", "type", "transaction type", "channel"],
+};
+
+/** RFC 4180-ish: quoted fields, doubled quotes, commas and newlines inside quotes. */
+export function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let quoted = false;
+  text = text.replace(/^﻿/, "");
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (c === '"') quoted = false;
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field); field = "";
+      if (row.some((f) => f.trim())) rows.push(row);
+      row = [];
+    } else field += c;
+  }
+  row.push(field);
+  if (row.some((f) => f.trim())) rows.push(row);
+  return rows;
+}
+
+/** "$1,234.50" -> 1234.5, "(12.00)" -> -12. NaN when it isn't a number. */
+function parseAmount(s: string) {
+  const t = s.trim();
+  const negative = /^\(.*\)$/.test(t) || /^-/.test(t.replace(/^\$/, ""));
+  const n = Number(t.replace(/[()$,\s-]/g, ""));
+  return t && Number.isFinite(n) ? (negative ? -n : n) : NaN;
+}
+
+/** ISO, M/D/YYYY or M/D/YY. Kept as a string throughout, as the rest of the site does. */
+function parseDate(s: string) {
+  const t = s.trim();
+  let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})\b/);
+  if (m) {
+    const y = m[3].length === 2 ? "20" + m[3] : m[3];
+    return `${y}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+  }
+  return "";
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+const houseNumber = (s: string) => s.trim().match(/^\d+/)?.[0] ?? "";
+
+/**
+ * The one owner a property belongs to, or null. Tried in order: the registry's
+ * abbreviation or address exactly; an address that one begins with the other
+ * (so "2120 NE 54th St" finds "2120 ne 54th st seattle"); the house number.
+ * Each step that finds rows decides: one named owner across all of them, or
+ * nobody. A blank owner counts as unknown, not as "no one else".
+ */
+export function resolveOwner(property: string, unit: string, registry: RegistryRow[]) {
+  const keys = [norm(property + unit), norm(property)].filter(Boolean);
+  if (!keys.length) return null;
+  const steps: Array<(r: RegistryRow) => boolean> = [
+    (r) => keys.some((k) => (r.abbr && norm(r.abbr) === k) || norm(r.address) === k),
+    (r) => {
+      const a = norm(r.address);
+      return a.length >= 6 && keys.some((k) => k.length >= 6 && (a.startsWith(k) || k.startsWith(a)));
+    },
+    (r) => {
+      const n = houseNumber(property);
+      return Boolean(n) && (houseNumber(r.address) === n || houseNumber(r.abbr) === n);
+    },
+  ];
+  for (const step of steps) {
+    const hits = registry.filter(step);
+    if (!hits.length) continue;
+    const owners = new Set(hits.map((r) => r.owner.trim()));
+    if (owners.size !== 1 || owners.has("")) return null;
+    // The shortest address: the building rather than one of its units.
+    const address = hits.map((r) => r.address).sort((a, b) => a.length - b.length)[0];
+    return { owner: hits[0].owner.trim(), address };
+  }
+  return null;
+}
+
+/** One export, as rows. Columns are found by header name; unknown ones are ignored. */
+function readExport(name: string, text: string, registry: RegistryRow[]) {
+  const [header, ...rows] = parseCsv(text);
+  if (!header) return { payments: [] as Payment[], problem: "empty" };
+  const heads = header.map((h) => h.trim().toLowerCase());
+  const col: Record<string, number> = {};
+  for (const [field, names] of Object.entries(COLUMNS)) {
+    const i = names.map((n) => heads.indexOf(n)).find((i) => i >= 0);
+    if (i !== undefined) col[field] = i;
+  }
+  if (col.amount === undefined) {
+    return { payments: [], problem: `no amount column (headers: ${header.join(", ")})` };
+  }
+  const get = (r: string[], field: string) => (col[field] === undefined ? "" : (r[col[field]] ?? "").trim());
+  const payments: Payment[] = [];
+  rows.forEach((r, i) => {
+    const amount = parseAmount(get(r, "amount"));
+    if (!Number.isFinite(amount)) return;
+    const property = get(r, "property");
+    const unit = get(r, "unit");
+    const hit = resolveOwner(property, unit, registry);
+    payments.push({
+      date: parseDate(get(r, "date")),
+      amount,
+      payer: get(r, "payer"),
+      property,
+      unit,
+      memo: get(r, "memo"),
+      method: get(r, "method"),
+      source: `${name}:${i + 2}`,
+      owner: hit?.owner ?? null,
+      address: hit?.address ?? null,
+    });
+  });
+  return { payments, problem: col.property === undefined ? "no property column, so no owner can see these" : null };
+}
+
+/**
+ * Every payment on file, newest first. Months are exported one at a time and
+ * exports can overlap, so a row that appears in two files counts once; within
+ * one file, identical rows are taken as the separate payments they say they are.
+ */
+export async function loadPayments(registry: RegistryRow[]) {
+  const names = (await readdir(PAYMENTS_DIR).catch(() => [] as string[]))
+    .filter((n) => n.toLowerCase().endsWith(".csv"))
+    .sort();
+  const kept = new Map<string, number>();
+  const all: Payment[] = [];
+  const files: Array<{ name: string; rows: number; problem: string | null }> = [];
+  for (const name of names) {
+    const { payments, problem } = readExport(name, await file(`${PAYMENTS_DIR}/${name}`).text(), registry);
+    files.push({ name, rows: payments.length, problem });
+    const seen = new Map<string, number>();
+    for (const p of payments) {
+      const key = [p.date, p.amount, p.payer, p.property, p.unit, p.memo].join("\u0000");
+      const n = (seen.get(key) ?? 0) + 1;
+      seen.set(key, n);
+      if (n > (kept.get(key) ?? 0)) {
+        kept.set(key, n);
+        all.push(p);
+      }
+    }
+  }
+  all.sort((a, b) => b.date.localeCompare(a.date) || a.source.localeCompare(b.source));
+  return { payments: all, files };
+}
+
+export type Viewer = { kind: "admin" | "team" | "owner"; name: string };
+
+/** What this viewer may see. The filtering happens here; nothing else leaves the server. */
+export async function paymentsFor(viewer: Viewer, registry: RegistryRow[]) {
+  const { payments, files } = await loadPayments(registry);
+  if (viewer.kind !== "owner") return { payments, files, unassigned: payments.filter((p) => !p.owner).length };
+  // An owner gets their rows without the export's file names or the owner field.
+  return {
+    payments: payments
+      .filter((p) => p.owner === viewer.name)
+      .map(({ source: _s, owner: _o, ...rest }) => rest),
+  };
+}
+
+/** Saves an uploaded export under its own name. Never overwrites: a correction gets a new name. */
+export async function savePaymentExport(f: File) {
+  const base = f.name.replace(/\.csv$/i, "").replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^\.+/, "").slice(0, 80) || "payments";
+  const name = `${base}.csv`;
+  await mkdir(PAYMENTS_DIR, { recursive: true });
+  if (await file(`${PAYMENTS_DIR}/${name}`).exists()) return { error: `${name} is already on file. Rename the export to add it alongside.` };
+  const text = await f.text();
+  if (!parseCsv(text).length) return { error: `${f.name} is empty.` };
+  await Bun.write(`${PAYMENTS_DIR}/${name}`, text);
+  return { name };
+}

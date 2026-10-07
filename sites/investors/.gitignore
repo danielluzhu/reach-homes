@@ -14,3 +14,11 @@ data/private.json
 
 # Address, abbreviation and owner for every building, as given by the admin.
 data/registry.json
+
+# Team logins: each code opens every tenant's rental payments.
+data/team.json
+
+# The monthly payment exports: tenants' names and what they paid. Only the
+# README describing the folder is committed.
+data/payments/*
+!data/payments/README.md

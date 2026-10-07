@@ -131,6 +131,17 @@ deploy. What an investor may see is decided by the server per request, from
 their session; a static build would hand every owner's figures to everyone.
 `deploy/reach-investors.service` runs it under systemd.
 
+**Rental payments** are at `/payments`. Each month's export goes into
+`sites/investors/data/payments/` as a CSV (gitignored; the admin can upload it
+from that page), and `sites/investors/payments.ts` reads every file there,
+finding columns by header name and counting a payment that appears in two
+overlapping exports once. The admin and the **team** see every payment. An
+owner sees a payment only when its property matches exactly one named owner on
+the registry; anything ambiguous stays with the admin and team.
+Team members are staff, each with their own code, set from the admin page and
+kept in the gitignored `data/team.json`; they see the payments page and nothing
+else. `data/payments/README.md` lists the columns recognised.
+
 Before real figures go in: real accounts in place of shared codes kept in a
 JSON file, sessions that survive a restart, HTTPS in front of it, and the data
 somewhere other than this repository.

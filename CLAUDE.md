@@ -51,7 +51,13 @@ file writes of its own, nothing applied without the admin's Apply. `data/registr
 abbreviation / owner list; the admin view merges it with `address.txt` by house
 number and shows rows exactly as written — where the two lists disagree about
 an address, ask which is right rather than picking one. (3408 is NE 57th St
-and 5830 is NE 204th Pl; the owner confirmed both.) 2120's rooms are read live from
+and 5830 is NE 204th Pl; the owner confirmed both.) Rental payments (`/payments`, `payments.ts`) are real tenants'
+names and amounts: the CSVs in `sites/investors/data/payments/` and the team's
+codes in `data/team.json` are gitignored and must stay so. An owner's view is
+filtered on the server by matching each payment's property to the registry,
+and it fails closed — a building with several owners (121 12th Ave E) or a unit
+with a blank owner (2120's rooms) is shown to nobody but admin and team. Don't
+loosen that to pick one owner when the matches disagree. 2120's rooms are read live from
 the microsite's data; the other properties' units are a hand copy in
 `data/portfolio.json` and need the same lease-end edits as the leasing sites.
 

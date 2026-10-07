@@ -143,7 +143,7 @@ function overview(data) {
       </table></div>
     </section>
     ${data.buildings ? portfolioTable(data) : ""}
-    ${ADMIN ? codesSection() + assistantSection() + uploadSection() : ""}`;
+    ${ADMIN ? codesSection() + teamSection() + assistantSection() + uploadSection() : ""}`;
 }
 
 /**
@@ -198,6 +198,66 @@ async function wireCodes() {
       if (!tr.dataset.owner) { wireCodes(); return; }
       input.value = res.code;
       status.textContent = "Saved";
+    });
+  });
+}
+
+/**
+ * Team logins: Reach Homes staff. Each has their own code and sees every
+ * rental payment, and nothing else on the site.
+ */
+function teamSection() {
+  return `
+    <section class="section" id="team">
+      <div class="section-heading"><h2>Team logins</h2><p>A team member signs in with their own code and sees every rental payment, but not the owners' statements or these admin tools. Change or remove a code to take one person's access away.</p></div>
+      <div class="panel table-scroll" id="team-list"><p class="sub" style="padding:8px 16px">Loading…</p></div>
+    </section>`;
+}
+
+async function wireTeam() {
+  const list = document.getElementById("team-list");
+  if (!list) return;
+  const { members } = await fetch("/api/admin/team").then((r) => r.json());
+  const post = (body) => fetch("/api/admin/team", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  }).then((r) => r.json());
+  const codeCell = (m) => `<input class="code-input" type="text" value="${escapeHtml(m ? m.code : "")}" maxlength="64" spellcheck="false" autocomplete="off" aria-label="Access code${m ? " for " + escapeHtml(m.name) : ""}" />`;
+  list.innerHTML = `<table>
+    <thead><tr><th>Name</th><th>Access code</th><th></th></tr></thead>
+    <tbody>${members.map((m) => `<tr data-member="${escapeHtml(m.id)}">
+      <td>${escapeHtml(m.name)}</td>
+      <td>${codeCell(m)}</td>
+      <td style="white-space:nowrap"><button class="btn btn-quiet code-random" type="button">Generate</button> <button class="btn btn-primary code-save" type="button" style="width:auto;margin:0">Save</button> <button class="btn btn-quiet team-remove" type="button">Remove</button> <span class="sub code-status" role="status"></span></td>
+    </tr>`).join("")}
+    <tr data-member="">
+      <td><input class="code-input team-name" type="text" maxlength="60" placeholder="New team member's name" aria-label="New team member's name" /></td>
+      <td>${codeCell(null)}</td>
+      <td style="white-space:nowrap"><button class="btn btn-quiet code-random" type="button">Generate</button> <button class="btn btn-primary code-save" type="button" style="width:auto;margin:0">Add</button> <span class="sub code-status" role="status"></span></td>
+    </tr></tbody>
+  </table>`;
+
+  list.querySelectorAll("tr[data-member]").forEach((tr) => {
+    const id = tr.dataset.member;
+    const input = tr.querySelector("td:nth-child(2) .code-input");
+    const status = tr.querySelector(".code-status");
+    tr.querySelector(".code-random").addEventListener("click", () => {
+      input.value = randomCode().replace(/^inv-/, "team-");
+      status.textContent = "Not saved yet";
+    });
+    tr.querySelector(".code-save").addEventListener("click", async () => {
+      status.textContent = "Saving…";
+      const name = tr.querySelector(".team-name")?.value;
+      const res = await post(id ? { id, code: input.value } : { name, code: input.value });
+      if (res.error) { status.textContent = res.error; return; }
+      if (!id) { wireTeam(); return; }
+      input.value = res.code;
+      status.textContent = "Saved";
+    });
+    tr.querySelector(".team-remove")?.addEventListener("click", async () => {
+      if (!confirm(`Remove ${tr.cells[0].textContent}'s login? They are signed out at once.`)) return;
+      const res = await post({ id, remove: true });
+      if (res.error) { status.textContent = res.error; return; }
+      wireTeam();
     });
   });
 }
@@ -757,6 +817,7 @@ function render(data) {
   wireUpload();
   wireAssistant();
   wireCodes();
+  wireTeam();
   wireRegistryEdits();
 
   const tip = view.querySelector(".chart-tip");

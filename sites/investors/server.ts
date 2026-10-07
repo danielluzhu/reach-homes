@@ -27,6 +27,7 @@ import {
   agentConfigured, applyChanges, conversationFor, describeChange, loadData,
   PRIVATE_PATH, resetConversation, runTurn,
 } from "./agent";
+import { paymentsFor, savePaymentExport, type Viewer } from "./payments";
 
 const PORT = Number(process.env.PORT ?? 8888);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
@@ -36,6 +37,33 @@ const ADMIN_CODE_PATH = `${import.meta.dir}/data/admin-code.txt`;
 const ADDRESS_PATH = `${import.meta.dir}/../../address.txt`;
 const LISTINGS_PATH = `${import.meta.dir}/../../data/listings.json`;
 const REGISTRY_PATH = `${import.meta.dir}/data/registry.json`;
+
+/**
+ * Team logins: the people who work for Reach Homes. A team member sees every
+ * rental payment and nothing else on this site -- not the admin's tools, not
+ * the owners' statements. Each has their own code, so one person's access
+ * can be taken away without changing anyone else's. Gitignored, like the
+ * admin's code: these codes open real tenants' payments.
+ */
+const TEAM_PATH = `${import.meta.dir}/data/team.json`;
+
+type TeamMember = { id: string; name: string; code: string };
+
+async function loadTeam(): Promise<TeamMember[]> {
+  const f = file(TEAM_PATH);
+  return (await f.exists()) ? ((await f.json()) as { members?: TeamMember[] }).members ?? [] : [];
+}
+
+async function saveTeam(members: TeamMember[]) {
+  await Bun.write(TEAM_PATH, JSON.stringify({ members }, null, 2) + "\n");
+}
+
+/** Is this code taken by anyone other than `except` -- admin, owner or team? */
+async function codeInUse(code: string, data: Portfolio, except?: string) {
+  if (code === ((await adminCode()) ?? "").toLowerCase()) return true;
+  if (data.investors.some((i) => i.id !== except && i.code === code)) return true;
+  return (await loadTeam()).some((m) => m.id !== except && m.code === code);
+}
 
 /**
  * Where the admin's uploads land: notes typed into the page and files dropped
@@ -289,6 +317,12 @@ const server = Bun.serve({
     const token = sessionToken(req);
     const signedInAs = sessions.get(token ?? "");
     const investor = signedInAs === ADMIN.id ? ADMIN : data.investors.find((i) => i.id === signedInAs);
+    const teamMember = investor || !signedInAs ? undefined : (await loadTeam()).find((m) => m.id === signedInAs);
+    const viewer: Viewer | null = investor?.admin
+      ? { kind: "admin", name: ADMIN.name }
+      : investor ? { kind: "owner", name: investor.name }
+      : teamMember ? { kind: "team", name: teamMember.name }
+      : null;
 
     if (pathname === "/api/login" && req.method === "POST") {
       const { code } = (await req.json().catch(() => ({}))) as { code?: string };
@@ -296,7 +330,8 @@ const server = Bun.serve({
       const admin = await adminCode();
       const found = admin && given === admin
         ? ADMIN
-        : data.investors.find((i) => i.code === given.toLowerCase());
+        : data.investors.find((i) => i.code === given.toLowerCase())
+          ?? (await loadTeam()).find((m) => m.code === given.toLowerCase());
       if (!found) return json({ error: "That access code isn't recognised." }, 401);
       const fresh = crypto.randomUUID();
       sessions.set(fresh, found.id);
@@ -313,6 +348,8 @@ const server = Bun.serve({
     }
 
     if (pathname === "/api/portfolio") {
+      // A team member has no properties of their own; their page is /payments.
+      if (teamMember) return json({ error: "Not signed in.", go: "/payments" }, 401);
       if (!investor) return json({ error: "Not signed in." }, 401);
       return json({
         demo: data.demo,
@@ -321,6 +358,61 @@ const server = Bun.serve({
         properties: await holdingsFor(investor, data),
         buildings: investor.admin ? await wholePortfolio(data) : undefined,
       });
+    }
+
+    // Rental payments: everything for the admin and team, an owner's own for an owner.
+    if (pathname === "/api/payments") {
+      if (!viewer) return json({ error: "Not signed in." }, 401);
+      return json({ viewer, ...(await paymentsFor(viewer, await loadRegistry())) });
+    }
+
+    if (pathname === "/api/admin/payments" && req.method === "POST") {
+      if (!investor?.admin) return json({ error: "Not found." }, 404);
+      const form = await req.formData().catch(() => null);
+      const files = (form?.getAll("files") ?? []).filter((f): f is File => f instanceof File && f.size > 0);
+      if (!files.length) return json({ error: "Choose a CSV export first." }, 400);
+      const bad = files.find((f) => !/\.csv$/i.test(f.name) || f.size > MAX_UPLOAD_BYTES);
+      if (bad) return json({ error: `${bad.name}: payments are added as CSV files of up to 10 MB. Anything else goes in the upload inbox.` }, 400);
+      const saved: string[] = [];
+      for (const f of files) {
+        const res = await savePaymentExport(f);
+        if ("error" in res) return json({ error: res.error, saved }, 400);
+        saved.push(res.name);
+      }
+      return json({ ok: true, saved });
+    }
+
+    // Team logins, for the admin to add, re-code and remove.
+    if (pathname === "/api/admin/team") {
+      if (!investor?.admin) return json({ error: "Not found." }, 404);
+      const team = await loadTeam();
+      if (req.method === "GET") return json({ members: team });
+      const body = (await req.json().catch(() => ({}))) as { id?: string; name?: string; code?: string; remove?: boolean };
+      const target = team.find((m) => m.id === body.id);
+      const signOut = (id: string) => { for (const [s, who] of sessions) if (who === id) sessions.delete(s); };
+      if (body.remove) {
+        if (!target) return json({ error: "No such team member." }, 400);
+        await saveTeam(team.filter((m) => m !== target));
+        signOut(target.id);
+        return json({ ok: true });
+      }
+      const code = String(body.code ?? "").trim().toLowerCase();
+      if (!CODE_RULE.test(code)) return json({ error: CODE_RULE_TEXT }, 400);
+      if (await codeInUse(code, data, target?.id)) return json({ error: "That code is already in use. Each code must be different." }, 400);
+      if (target) {
+        target.code = code;
+        signOut(target.id);
+      } else {
+        const name = String(body.name ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+        if (!name) return json({ error: "Give the team member a name." }, 400);
+        if (team.some((m) => m.name.toLowerCase() === name.toLowerCase())) return json({ error: "There is already a team member by that name." }, 400);
+        // Prefixed, so a team id can never be mistaken for an owner's or the admin's.
+        let id = "team-" + ownerId(name);
+        while (team.some((m) => m.id === id)) id += "-2";
+        team.push({ id, name, code });
+      }
+      await saveTeam(team);
+      return json({ ok: true, code });
     }
 
     if (pathname === "/api/admin/uploads") {
@@ -430,7 +522,7 @@ const server = Bun.serve({
           live.investors.push(target);
         }
         if (!target) return json({ error: "No such owner." }, 400);
-        if (live.investors.some((i) => i.id !== target.id && i.code === code) || code === ((await adminCode()) ?? "").toLowerCase()) {
+        if (await codeInUse(code, live, target.id)) {
           return json({ error: "That code is already in use. Each code must be different." }, 400);
         }
         target.code = code;
@@ -504,7 +596,12 @@ const server = Bun.serve({
     }
 
     if (pathname === "/login") return new Response(file(`${PUBLIC_DIR}/login.html`));
+    if (pathname === "/payments") {
+      if (!viewer) return new Response(null, { status: 302, headers: { Location: "/login" } });
+      return new Response(file(`${PUBLIC_DIR}/payments.html`), { headers: { "Cache-Control": "no-store" } });
+    }
     if (pathname === "/") {
+      if (teamMember) return new Response(null, { status: 302, headers: { Location: "/payments" } });
       // A relative Location, so the redirect holds behind a proxy or a forwarded
       // port, where the host and scheme this process sees aren't the visitor's.
       if (!investor) return new Response(null, { status: 302, headers: { Location: "/login" } });
