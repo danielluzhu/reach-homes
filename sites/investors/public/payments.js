@@ -52,6 +52,25 @@ function cityOf(p) {
 
 const NO_ADDRESS = "No property given";
 
+/**
+ * A unit as the lease is known: "#306" for a numbered unit, "L" or "U2" or
+ * "Lower Private 3 Beds" as written otherwise. "" for a whole house.
+ */
+function unitLabel(p) {
+  const u = p.unit.trim().replace(/^#\s*/, "");
+  return !u ? "" : /^\d/.test(u) ? "#" + u : u;
+}
+
+/**
+ * The lease a payment belongs to: the address and the unit. Each lease has
+ * one owner -- 121 12th Ave is several units with several owners, so it is
+ * several leases, never one building's worth.
+ */
+function leaseOf(p) {
+  const a = addressOf(p);
+  return a ? [a, unitLabel(p)].filter(Boolean).join(" ") : NO_ADDRESS;
+}
+
 /** "Jan ’26": short enough for a column per month. */
 function shortMonth(ym) {
   const [y, m] = ym.split("-").map(Number);
@@ -73,7 +92,10 @@ const filter = { month: "", address: "" };
 function render() {
   const { viewer, payments } = DATA;
   const seesAll = viewer.kind !== "owner";
-  const addr = (p) => addressOf(p) || NO_ADDRESS;
+  const addr = leaseOf;
+  // Every payment on a lease resolves to the same owner: the match is made
+  // from the address and unit, which is what makes it one lease.
+  const ownerOf = new Map(payments.map((p) => [addr(p), p.owner]));
   const monthOf = (p) => p.date.slice(0, 7);
   const months = [...new Set(payments.map(monthOf))].sort();
   const addresses = [...new Set(payments.map(addr))].sort((a, b) =>
@@ -94,20 +116,20 @@ function render() {
 
     <div class="tiles">
       <div class="tile"><div class="tile-key">Collected${filter.month ? ", " + escapeHtml(monthLabel(filter.month)) : ""}</div><div class="tile-val">${money(total)}</div><div class="tile-note">${filter.address ? escapeHtml(filter.address) : seesAll ? "all properties" : "your properties"}</div></div>
-      <div class="tile"><div class="tile-key">Payments</div><div class="tile-val">${rows.length}</div><div class="tile-note">${addresses.length} address${addresses.length === 1 ? "" : "es"} · ${months.length} month${months.length === 1 ? "" : "s"} on file</div></div>
+      <div class="tile"><div class="tile-key">Payments</div><div class="tile-val">${rows.length}</div><div class="tile-note">${addresses.length} lease${addresses.length === 1 ? "" : "s"} · ${months.length} month${months.length === 1 ? "" : "s"} on file</div></div>
       ${seesAll ? `<div class="tile"><div class="tile-key">No owner matched</div><div class="tile-val">${DATA.unassigned}</div><div class="tile-note">seen by admin and team only</div></div>` : ""}
     </div>
 
-    ${payments.length ? summary(payments, addresses, months, addr, monthOf) : ""}
+    ${payments.length ? summary(payments, addresses, months, addr, monthOf, seesAll && ownerOf) : ""}
 
     <section class="section">
-      <div class="section-heading"><h2>Payments by address</h2><p>Each payment, grouped by the address it was for.</p></div>
+      <div class="section-heading"><h2>Payments by lease</h2><p>Each payment, grouped by the lease it was for: the address and unit.</p></div>
       <div class="pay-filters">
         <label>Month <select id="f-month">${option("", "All months", filter.month)}${[...months].reverse().map((m) => option(m, monthLabel(m), filter.month)).join("")}</select></label>
-        <label>Address <select id="f-address">${option("", "All addresses", filter.address)}${addresses.map((a) => option(a, a, filter.address)).join("")}</select></label>
+        <label>Lease <select id="f-address">${option("", "All leases", filter.address)}${addresses.map((a) => option(a, a, filter.address)).join("")}</select></label>
         ${filter.month || filter.address ? '<button class="btn btn-quiet" id="f-clear" type="button">Show all</button>' : ""}
       </div>
-      ${rows.length ? addresses.filter((a) => rows.some((p) => addr(p) === a)).map((a) => group(a, rows.filter((p) => addr(p) === a), seesAll)).join("")
+      ${rows.length ? addresses.filter((a) => rows.some((p) => addr(p) === a)).map((a) => group(a, rows.filter((p) => addr(p) === a), seesAll ? ownerOf.get(a) : undefined)).join("")
         : `<div class="panel"><p class="sub" style="padding:8px 16px">${payments.length ? "No payments match these filters." : "No payments on file yet."}</p></div>`}
     </section>
 
@@ -128,40 +150,42 @@ function render() {
 }
 
 /** Address down the side, month across the top, the amount collected in each. */
-function summary(payments, addresses, months, addr, monthOf) {
+function summary(payments, addresses, months, addr, monthOf, ownerOf) {
   const sum = (ps) => ps.reduce((s, p) => s + p.amount, 0);
   const cell = (ps, address, month, cls = "") => ps.length
     ? `<td class="num${cls}"><button class="cell-link" type="button" data-cell data-address="${escapeHtml(address)}" data-month="${month}" title="${money(sum(ps))} · ${ps.length} payment${ps.length === 1 ? "" : "s"}">${dollars(sum(ps))}</button></td>`
     : `<td class="num empty${cls}">—</td>`;
   return `
     <section class="section">
-      <div class="section-heading"><h2>Summary by address and month</h2><p>Collected at each address in each month, by payment date, to the nearest dollar. Select an amount to see its payments.</p></div>
+      <div class="section-heading"><h2>Summary by lease and month</h2><p>Collected on each lease — each address and unit — in each month, by payment date, to the nearest dollar. Select an amount to see its payments.</p></div>
       <div class="panel table-scroll"><table class="pivot">
-        <thead><tr><th>Address</th>${months.map((m) => `<th class="num">${escapeHtml(shortMonth(m))}</th>`).join("")}<th class="num">Total</th></tr></thead>
+        <thead><tr><th>Lease</th>${ownerOf ? "<th>Owner</th>" : ""}${months.map((m) => `<th class="num">${escapeHtml(shortMonth(m))}</th>`).join("")}<th class="num">Total</th></tr></thead>
         <tbody>${addresses.map((a) => {
           const here = payments.filter((p) => addr(p) === a);
-          return `<tr><td>${escapeHtml(a)}</td>${months.map((m) => cell(here.filter((p) => monthOf(p) === m), a, m)).join("")}${cell(here, a, "", " row-total")}</tr>`;
+          const owner = ownerOf && ownerOf.get(a);
+          return `<tr><td>${escapeHtml(a)}</td>${ownerOf ? `<td>${owner ? escapeHtml(owner) : '<span class="pill pill-market">No match</span>'}</td>` : ""}${months.map((m) => cell(here.filter((p) => monthOf(p) === m), a, m)).join("")}${cell(here, a, "", " row-total")}</tr>`;
         }).join("")}</tbody>
-        <tfoot><tr><td>All addresses</td>${months.map((m) => cell(payments.filter((p) => monthOf(p) === m), "", m)).join("")}${cell(payments, "", "", " row-total")}</tr></tfoot>
+        <tfoot><tr><td>All leases</td>${ownerOf ? "<td></td>" : ""}${months.map((m) => cell(payments.filter((p) => monthOf(p) === m), "", m)).join("")}${cell(payments, "", "", " row-total")}</tr></tfoot>
       </table></div>
     </section>`;
 }
 
-/** One address's payments, with its subtotal. */
-function group(address, ps, seesAll) {
+/**
+ * One lease's payments, with its subtotal. `owner` is given to the admin and
+ * team only: undefined for an owner, who sees just their own leases.
+ */
+function group(address, ps, owner) {
   const sum = ps.reduce((s, p) => s + p.amount, 0);
   const city = ps.map(cityOf).find(Boolean);
   return `
     <div class="panel table-scroll pay-group">
-      <div class="pay-group-head"><div><strong>${escapeHtml(address)}</strong>${city ? ` <span class="sub">${escapeHtml(city)}</span>` : ""}</div><div class="sub">${ps.length} payment${ps.length === 1 ? "" : "s"} · <span class="pay-group-total">${money(sum)}</span></div></div>
+      <div class="pay-group-head"><div><strong>${escapeHtml(address)}</strong>${city ? ` <span class="sub">${escapeHtml(city)}</span>` : ""}${owner === undefined ? "" : ` · ${owner ? `Owner: ${escapeHtml(owner)}` : '<span class="pill pill-market">No owner matched</span>'}`}</div><div class="sub">${ps.length} payment${ps.length === 1 ? "" : "s"} · <span class="pay-group-total">${money(sum)}</span></div></div>
       <table>
-        <thead><tr><th>Date</th><th>Unit</th><th>Paid by</th><th>Memo</th>${seesAll ? "<th>Owner</th>" : ""}<th class="num">Amount</th></tr></thead>
-        <tbody>${ps.map((p) => `<tr${seesAll ? ` title="${escapeHtml(p.source)}"` : ""}>
+        <thead><tr><th>Date</th><th>Paid by</th><th>Memo</th><th class="num">Amount</th></tr></thead>
+        <tbody>${ps.map((p) => `<tr${p.source ? ` title="${escapeHtml(p.source)}"` : ""}>
           <td style="white-space:nowrap">${escapeHtml(dateLabel(p.date))}</td>
-          <td>${escapeHtml(p.unit)}</td>
           <td>${escapeHtml(p.payer)}</td>
           <td>${escapeHtml([p.memo, p.method].filter(Boolean).join(" · "))}${p.status ? ` <span class="pill pill-market">${escapeHtml(p.status)}</span>` : ""}</td>
-          ${seesAll ? `<td>${p.owner ? escapeHtml(p.owner) : '<span class="pill pill-market">No match</span>'}</td>` : ""}
           <td class="num${p.amount < 0 ? " neg" : ""}">${money(p.amount)}</td>
         </tr>`).join("")}</tbody>
       </table>

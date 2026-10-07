@@ -126,10 +126,15 @@ export function resolveOwner(property: string, unit: string, registry: RegistryR
   const steps: Array<(r: RegistryRow) => boolean> = [
     (r) => keys.some((k) => (r.abbr && norm(r.abbr) === k) || norm(r.address) === k),
     // A unit named the way the owner list abbreviates it, at the same house
-    // number: 121 12th Ave's units are listed as "303", "306" and so on.
+    // number: 121 12th Ave's units are listed as "303", "306" and so on, and
+    // 4316's as "4316L" and "4316U" -- separate leases, matched separately.
+    // A unit row with no owner on it says nothing about who owns it (2120's
+    // rooms), so it is passed over and the building's own row decides.
     (r) => {
       const n = houseNumber(property);
-      return Boolean(n && unit) && norm(r.abbr) === norm(unit) && houseNumber(r.address) === n;
+      const u = norm(unit);
+      return Boolean(n && u) && Boolean(r.owner.trim()) && houseNumber(r.address) === n &&
+        (norm(r.abbr) === u || norm(r.abbr) === n + u || norm(r.address) === n + u);
     },
     (r) => {
       const a = norm(r.address);

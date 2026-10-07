@@ -259,6 +259,7 @@ tr.clickable:hover td { background: var(--brand-100); }
 .pivot { font-size: 0.86rem; }
 .pivot th, .pivot td { padding: 8px 8px; }
 .pivot td:first-child, .pivot th:first-child { position: sticky; left: 0; background: var(--card); white-space: nowrap; }
+.pivot td { white-space: nowrap; }
 .pivot td.empty { color: #c9c1c3; }
 .pivot .row-total { border-left: 1px solid var(--border); }
 .pivot .row-total .cell-link { color: var(--brand-800); }
