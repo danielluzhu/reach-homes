@@ -16,6 +16,8 @@ import { file } from "bun";
 export const PAYMENTS_DIR = `${import.meta.dir}/data/payments`;
 
 export type Payment = {
+  /** Where the tenant paid: "CoStar", "TurboTenant", or the export's own name. */
+  platform: string;
   date: string; // YYYY-MM-DD, or "" when the export gave none we could read
   amount: number;
   payer: string;
@@ -23,6 +25,14 @@ export type Payment = {
   unit: string;
   memo: string;
   method: string;
+  /** What the payment was for, where the export says: rent, a deposit, a late fee. */
+  category: string;
+  /** The building's confirmed street address from the owner list, or the export's own. */
+  building: string;
+  /** City, state and zip, the same way. */
+  city: string;
+  /** Every column of the export's row, as given: the whole of what was shared. */
+  fields: Record<string, string>;
   /** "" once the money is in; otherwise what the export says, e.g. "In Progress". */
   status: string;
   /** The export's own id for the payment, when it has one. */
@@ -35,6 +45,8 @@ export type Payment = {
 };
 
 type RegistryRow = { address: string; abbr: string; owner: string };
+type Place = { street: string; city?: string; state?: string; zip?: string };
+export type Registry = { rows: RegistryRow[]; places: Record<string, Place> };
 
 /**
  * Header names seen in bank and payment-app exports, per field. First hit wins,
@@ -44,9 +56,13 @@ type RegistryRow = { address: string; abbr: string; owner: string };
  * CoStar's export is a ledger rather than a list of payments: rent and bills
  * charged, credits, and payments, each a row with a Type, a Status and a
  * Credit or Debit amount. Only Type "Payment" is money received.
+ *
+ * TurboTenant's is the other way round: charges, each with the amount still
+ * due, and no payment date or property column -- only the due date and a
+ * "Lease Title" the admin typed, which names the property, unit and tenant.
  */
 const COLUMNS: Record<string, string[]> = {
-  date: ["date", "payment date", "paid on", "date paid", "completed on", "transaction date", "posted date", "posting date", "post date", "received", "initiated on"],
+  date: ["date", "payment date", "paid on", "date paid", "completed on", "transaction date", "posted date", "posting date", "post date", "received", "initiated on", "due date"],
   amount: ["amount", "amount paid", "paid", "payment", "payment amount", "credit amt", "credit amount", "credit", "deposit", "deposits", "total"],
   payer: ["payer", "tenant", "tenant name", "resident", "name", "from", "sender", "paid by", "initiated by"],
   property: ["property", "property address", "address", "building", "abbr", "abbreviation", "property name"],
@@ -55,6 +71,9 @@ const COLUMNS: Record<string, string[]> = {
   method: ["method", "payment method", "channel"],
   kind: ["type", "transaction type"],
   status: ["status"],
+  category: ["category"],
+  due: ["amount due", "balance due"],
+  lease: ["lease title", "lease", "lease name"],
   ref: ["referenceid", "reference id", "confirmation", "confirmation number"],
 };
 
@@ -118,9 +137,11 @@ const houseNumber = (s: string) => s.trim().match(/^\d+/)?.[0] ?? "";
  * abbreviation or address exactly; an address that one begins with the other
  * (so "2120 NE 54th St" finds "2120 ne 54th st seattle"); the house number.
  * Each step that finds rows decides: one named owner across all of them, or
- * nobody. A blank owner counts as unknown, not as "no one else".
+ * nobody. A row with a blank owner says nothing either way and is passed
+ * over: 2120's room rows have none, and the house's own row names Dan.
  */
-export function resolveOwner(property: string, unit: string, registry: RegistryRow[]) {
+export function resolveOwner(property: string, unit: string, allRows: RegistryRow[]) {
+  const registry = allRows.filter((r) => r.owner.trim());
   const keys = [norm(property + unit), norm(property)].filter(Boolean);
   if (!keys.length) return null;
   const steps: Array<(r: RegistryRow) => boolean> = [
@@ -128,12 +149,10 @@ export function resolveOwner(property: string, unit: string, registry: RegistryR
     // A unit named the way the owner list abbreviates it, at the same house
     // number: 121 12th Ave's units are listed as "303", "306" and so on, and
     // 4316's as "4316L" and "4316U" -- separate leases, matched separately.
-    // A unit row with no owner on it says nothing about who owns it (2120's
-    // rooms), so it is passed over and the building's own row decides.
     (r) => {
       const n = houseNumber(property);
       const u = norm(unit);
-      return Boolean(n && u) && Boolean(r.owner.trim()) && houseNumber(r.address) === n &&
+      return Boolean(n && u) && houseNumber(r.address) === n &&
         (norm(r.abbr) === u || norm(r.abbr) === n + u || norm(r.address) === n + u);
     },
     (r) => {
@@ -149,7 +168,7 @@ export function resolveOwner(property: string, unit: string, registry: RegistryR
     const hits = registry.filter(step);
     if (!hits.length) continue;
     const owners = new Set(hits.map((r) => r.owner.trim()));
-    if (owners.size !== 1 || owners.has("")) return null;
+    if (owners.size !== 1) return null;
     // The shortest address: the building rather than one of its units. Matched
     // on the house number alone, it would be any one of the units, so the
     // export's own wording is shown instead.
@@ -159,8 +178,43 @@ export function resolveOwner(property: string, unit: string, registry: RegistryR
   return null;
 }
 
+/** "Lease 27" and its kin: the admin's own term codes in a TurboTenant lease title. */
+const TERM = /^2\d([A-Za-z][A-Za-z.]*\d*)?$/;
+
+/**
+ * A TurboTenant lease title, which comes in two shapes:
+ *   "4544 104 27 Alex Smith"                -- house, unit, term, tenant
+ *   "4544 20th Ave NE, 102 - September 2026" -- address, unit, start month
+ * The unit and tenant are optional in both ("5641 27 Eva", "4735 4 27",
+ * "1832 NE Ravenna Blvd - September 2026"). A title with no house number
+ * ("003 27 Sam") comes back as written and matches no one.
+ */
+export function parseLeaseTitle(title: string) {
+  const t = title.trim().replace(/\s+/g, " ");
+  const dated = t.match(/^(.*?) - [A-Za-z]+ \d{4}$/);
+  if (dated) {
+    const [property, unit = ""] = dated[1].split(/,\s*/);
+    return { property: property.trim(), unit: unit.trim(), payer: "" };
+  }
+  const [house, ...rest] = t.split(" ");
+  if (rest.length >= 2 && TERM.test(rest[1]) && !TERM.test(rest[0])) {
+    return { property: house, unit: rest[0], payer: rest.slice(2).join(" ") };
+  }
+  if (rest.length && TERM.test(rest[0])) return { property: house, unit: "", payer: rest.slice(1).join(" ") };
+  if (rest.length === 1) return { property: house, unit: rest[0], payer: "" };
+  return { property: house, unit: "", payer: rest.join(" ") };
+}
+
+/** Which platform an export came from, by its columns, else by its file name. */
+function platformOf(name: string, heads: string[]) {
+  if (heads.includes("lease title")) return "TurboTenant";
+  if (heads.includes("initiated by") && heads.includes("credit amt")) return "CoStar";
+  const base = name.replace(/\.csv$/i, "").split(/[-_ ]/)[0];
+  return base ? base[0].toUpperCase() + base.slice(1) : "Other";
+}
+
 /** One export, as rows. Columns are found by header name; unknown ones are ignored. */
-function readExport(name: string, text: string, registry: RegistryRow[]) {
+function readExport(name: string, text: string, registry: Registry) {
   const [header, ...rows] = parseCsv(text);
   if (!header) return { payments: [] as Payment[], problem: "empty" };
   const heads = header.map((h) => h.trim().toLowerCase());
@@ -174,21 +228,34 @@ function readExport(name: string, text: string, registry: RegistryRow[]) {
     return { payments: [], problem: `no amount column (headers: ${header.join(", ")})` };
   }
   const get = (r: string[], field: string) => (col[field] === undefined ? "" : (r[col[field]] ?? "").trim());
+  const platform = platformOf(name, heads);
   const payments: Payment[] = [];
   rows.forEach((r, i) => {
     // A ledger's charges and credits are not payments; a failed one never arrived.
     if (col.kind !== undefined && !/payment/i.test(get(r, "kind"))) return;
     const status = get(r, "status");
     if (NOT_PAID.test(status)) return;
-    const amount = parseAmount(get(r, "amount"));
-    if (!Number.isFinite(amount)) return;
-    const property = get(r, "property");
-    const unit = get(r, "unit");
-    const hit = resolveOwner(property, unit, registry);
+    // A charge with some still owing has been paid only in part.
+    const due = col.due === undefined ? 0 : parseAmount(get(r, "due")) || 0;
+    const amount = parseAmount(get(r, "amount")) - due;
+    if (!Number.isFinite(amount) || (col.due !== undefined && amount <= 0)) return;
+    const fromTitle = col.lease !== undefined && col.property === undefined ? parseLeaseTitle(get(r, "lease")) : null;
+    const property = fromTitle?.property ?? get(r, "property");
+    const unit = fromTitle?.unit ?? get(r, "unit");
+    const hit = resolveOwner(property, unit, registry.rows);
+    const street = property.split(",")[0].trim();
+    const place = registry.places[houseNumber(street)];
     payments.push({
+      platform,
+      building: place?.street || street,
+      city: place
+        ? [place.city, [place.state, place.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")
+        : property.split(",").slice(1).map((x) => x.trim()).filter((x) => x && x !== "US").join(", "),
+      category: get(r, "category").replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()),
+      fields: Object.fromEntries(header.map((h, j) => [h.trim(), (r[j] ?? "").trim()])),
       date: parseDate(dateCols.map((c) => (r[c] ?? "").trim()).find(Boolean) ?? ""),
       amount,
-      payer: get(r, "payer"),
+      payer: fromTitle?.payer || get(r, "payer"),
       property,
       unit,
       memo: get(r, "memo"),
@@ -200,7 +267,7 @@ function readExport(name: string, text: string, registry: RegistryRow[]) {
       address: hit?.address ?? null,
     });
   });
-  return { payments, problem: col.property === undefined ? "no property column, so no owner can see these" : null };
+  return { payments, problem: col.property === undefined && col.lease === undefined ? "no property column, so no owner can see these" : null };
 }
 
 /**
@@ -208,7 +275,7 @@ function readExport(name: string, text: string, registry: RegistryRow[]) {
  * exports can overlap, so a row that appears in two files counts once; within
  * one file, identical rows are taken as the separate payments they say they are.
  */
-export async function loadPayments(registry: RegistryRow[]) {
+export async function loadPayments(registry: Registry) {
   // Files are read in name order, so name them by export date: where two
   // exports carry the same reference id, the later one's row wins -- a payment
   // "In Progress" in one month's export is "Completed" in the next.
@@ -249,7 +316,7 @@ export async function loadPayments(registry: RegistryRow[]) {
 export type Viewer = { kind: "admin" | "team" | "owner"; name: string };
 
 /** What this viewer may see. The filtering happens here; nothing else leaves the server. */
-export async function paymentsFor(viewer: Viewer, registry: RegistryRow[]) {
+export async function paymentsFor(viewer: Viewer, registry: Registry) {
   const { payments, files } = await loadPayments(registry);
   // How current the data is, for everyone: an owner whose last payment was in
   // July still needs to know the exports run to October. Dates only, nothing

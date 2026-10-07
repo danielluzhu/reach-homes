@@ -18,6 +18,20 @@ credits are skipped, as are Failed and Canceled payments. In Progress and Paid
 Offline payments are shown, flagged. The amount is `Credit Amt`, the date
 `Completed On` (or `Initiated On` when that is blank), the payer `Initiated By`.
 
+**TurboTenant** exports charges, not payments: each has a due date, an
+amount and the amount still due, and the "Lease Title" typed when the lease
+was set up. What was paid is Amount minus Amount Due; a charge with nothing
+paid is skipped. There is no payment date, so **TurboTenant payments are dated
+by their due date**. The property, unit and tenant come out of the lease title,
+which takes two shapes: `4544 104 27 Alex Smith` (house number, unit, term
+code, tenant) and `4544 20th Ave NE, 102 - September 2026`. A title with no
+house number in it (`003 27 Sam`) matches no owner.
+
+Every payment keeps its export row whole, and the page's combined log shows it
+alongside the platform it came through. Leases are named from the confirmed
+street address on the owner list (`places` in `registry.json`), so CoStar's
+"4544 20th Ave" and TurboTenant's "4544" land on the same lease.
+
 Columns are found by header name, so the order doesn't matter:
 
 | Field | Headers recognised |

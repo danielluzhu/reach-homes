@@ -363,7 +363,7 @@ const server = Bun.serve({
     // Rental payments: everything for the admin and team, an owner's own for an owner.
     if (pathname === "/api/payments") {
       if (!viewer) return json({ error: "Not signed in." }, 401);
-      return json({ viewer, ...(await paymentsFor(viewer, await loadRegistry())) });
+      return json({ viewer, ...(await paymentsFor(viewer, await readRegistryFile())) });
     }
 
     if (pathname === "/api/admin/payments" && req.method === "POST") {
