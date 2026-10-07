@@ -45,9 +45,9 @@ function addressOf(p) {
   return (p.property.split(",")[0] || "").trim();
 }
 
-/** The rest of the export's address -- city, state, zip -- for under the street. */
+/** City, state and zip, for under the street. */
 function cityOf(p) {
-  return p.property.split(",").slice(1).map((x) => x.trim()).filter((x) => x && x !== "US").join(", ");
+  return p.city || "";
 }
 
 const NO_ADDRESS = "No property given";
@@ -67,7 +67,7 @@ function unitLabel(p) {
  * several leases, never one building's worth.
  */
 function leaseOf(p) {
-  const a = addressOf(p);
+  const a = p.building || addressOf(p);
   return a ? [a, unitLabel(p)].filter(Boolean).join(" ") : NO_ADDRESS;
 }
 
@@ -88,6 +88,8 @@ function updatedLine(u) {
 
 let DATA = null;
 const filter = { month: "", address: "" };
+/** Which view of the payments below the summary: grouped by lease, or the combined log. */
+let VIEW = location.hash === "#log" ? "log" : "lease";
 
 function render() {
   const { viewer, payments } = DATA;
@@ -123,14 +125,22 @@ function render() {
     ${payments.length ? summary(payments, addresses, months, addr, monthOf, seesAll && ownerOf) : ""}
 
     <section class="section">
-      <div class="section-heading"><h2>Payments by lease</h2><p>Each payment, grouped by the lease it was for: the address and unit.</p></div>
+      <div class="section-heading"><h2>Payments</h2><p>${VIEW === "log"
+        ? "Every payment from every platform in one log, newest first. Select a row for everything the platform's export said about it."
+        : "Each payment, grouped by the lease it was for: the address and unit."}</p></div>
+      <div class="view-tabs" role="tablist">
+        <button type="button" role="tab" data-view="lease" aria-selected="${VIEW === "lease"}">By lease</button>
+        <button type="button" role="tab" data-view="log" aria-selected="${VIEW === "log"}">Combined log</button>
+        ${VIEW === "log" ? '<button type="button" class="btn btn-quiet" id="log-csv">Download CSV</button>' : ""}
+      </div>
       <div class="pay-filters">
         <label>Month <select id="f-month">${option("", "All months", filter.month)}${[...months].reverse().map((m) => option(m, monthLabel(m), filter.month)).join("")}</select></label>
         <label>Lease <select id="f-address">${option("", "All leases", filter.address)}${addresses.map((a) => option(a, a, filter.address)).join("")}</select></label>
         ${filter.month || filter.address ? '<button class="btn btn-quiet" id="f-clear" type="button">Show all</button>' : ""}
       </div>
-      ${rows.length ? addresses.filter((a) => rows.some((p) => addr(p) === a)).map((a) => group(a, rows.filter((p) => addr(p) === a), seesAll ? ownerOf.get(a) : undefined)).join("")
-        : `<div class="panel"><p class="sub" style="padding:8px 16px">${payments.length ? "No payments match these filters." : "No payments on file yet."}</p></div>`}
+      ${!rows.length ? `<div class="panel"><p class="sub" style="padding:8px 16px">${payments.length ? "No payments match these filters." : "No payments on file yet."}</p></div>`
+        : VIEW === "log" ? log(rows, addr, seesAll)
+        : addresses.filter((a) => rows.some((p) => addr(p) === a)).map((a) => group(a, rows.filter((p) => addr(p) === a), seesAll ? ownerOf.get(a) : undefined)).join("")}
     </section>
 
     ${viewer.kind === "admin" ? adminSection() : ""}`;
@@ -139,6 +149,14 @@ function render() {
   document.getElementById("f-month").addEventListener("change", (e) => { filter.month = e.target.value; render(); });
   document.getElementById("f-address").addEventListener("change", (e) => { filter.address = e.target.value; render(); });
   document.getElementById("f-clear")?.addEventListener("click", () => { filter.month = ""; filter.address = ""; render(); });
+  view.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => { VIEW = b.dataset.view; history.replaceState(null, "", VIEW === "log" ? "#log" : location.pathname); render(); }));
+  // A log row opens to show every column of the export's row beneath it.
+  view.querySelectorAll(".log-row").forEach((tr) => tr.addEventListener("click", () => {
+    const row = tr.nextElementSibling;
+    row.hidden = !row.hidden;
+    tr.setAttribute("aria-expanded", String(!row.hidden));
+  }));
+  document.getElementById("log-csv")?.addEventListener("click", () => downloadLog(rows, addr, seesAll));
   // A cell in the summary narrows the list below to that address and month.
   view.querySelectorAll("[data-cell]").forEach((el) => el.addEventListener("click", () => {
     filter.address = el.dataset.address || "";
@@ -181,15 +199,62 @@ function group(address, ps, owner) {
     <div class="panel table-scroll pay-group">
       <div class="pay-group-head"><div><strong>${escapeHtml(address)}</strong>${city ? ` <span class="sub">${escapeHtml(city)}</span>` : ""}${owner === undefined ? "" : ` · ${owner ? `Owner: ${escapeHtml(owner)}` : '<span class="pill pill-market">No owner matched</span>'}`}</div><div class="sub">${ps.length} payment${ps.length === 1 ? "" : "s"} · <span class="pay-group-total">${money(sum)}</span></div></div>
       <table>
-        <thead><tr><th>Date</th><th>Paid by</th><th>Memo</th><th class="num">Amount</th></tr></thead>
+        <thead><tr><th>Date</th><th>Platform</th><th>Paid by</th><th>Memo</th><th class="num">Amount</th></tr></thead>
         <tbody>${ps.map((p) => `<tr${p.source ? ` title="${escapeHtml(p.source)}"` : ""}>
           <td style="white-space:nowrap">${escapeHtml(dateLabel(p.date))}</td>
+          <td>${escapeHtml(p.platform)}</td>
           <td>${escapeHtml(p.payer)}</td>
-          <td>${escapeHtml([p.memo, p.method].filter(Boolean).join(" · "))}${p.status ? ` <span class="pill pill-market">${escapeHtml(p.status)}</span>` : ""}</td>
+          <td>${escapeHtml([p.category, p.memo, p.method].filter(Boolean).join(" · "))}${p.status ? ` <span class="pill pill-market">${escapeHtml(p.status)}</span>` : ""}</td>
           <td class="num${p.amount < 0 ? " neg" : ""}">${money(p.amount)}</td>
         </tr>`).join("")}</tbody>
       </table>
     </div>`;
+}
+
+/**
+ * Every payment from every platform, newest first, in one table. The columns
+ * are the ones the platforms share; each row's details hold the rest -- every
+ * column of the export's row, exactly as it was given.
+ */
+function log(rows, addr, seesAll) {
+  const total = rows.reduce((s, p) => s + p.amount, 0);
+  return `
+    <div class="panel table-scroll"><table class="log">
+      <thead><tr><th>Date</th><th>Platform</th><th>Lease</th>${seesAll ? "<th>Owner</th>" : ""}<th>Paid by</th><th>For</th><th>Memo</th><th class="num">Amount</th></tr></thead>
+      <tbody>${rows.map((p) => `<tr class="clickable log-row" aria-expanded="false" title="Show everything the export said">
+        <td style="white-space:nowrap">${escapeHtml(dateLabel(p.date))}</td>
+        <td>${escapeHtml(p.platform)}</td>
+        <td class="lease-cell">${escapeHtml(addr(p))}</td>
+        ${seesAll ? `<td>${p.owner ? escapeHtml(p.owner) : '<span class="pill pill-market">No match</span>'}</td>` : ""}
+        <td>${escapeHtml(p.payer)}</td>
+        <td>${escapeHtml(p.category)}</td>
+        <td>${escapeHtml([p.memo, p.method].filter(Boolean).join(" · "))}${p.status ? ` <span class="pill pill-market">${escapeHtml(p.status)}</span>` : ""}</td>
+        <td class="num${p.amount < 0 ? " neg" : ""}">${money(p.amount)}</td>
+      </tr>
+      <tr class="fields-row" hidden><td colspan="${seesAll ? 8 : 7}"><dl class="fields">${Object.entries(p.fields).map(([k, v]) =>
+          `<dt>${escapeHtml(k)}</dt><dd>${v ? escapeHtml(v) : '<span class="sub">—</span>'}</dd>`).join("")}${p.source ? `<dt>File</dt><dd>${escapeHtml(p.source)}</dd>` : ""}</dl></td></tr>`).join("")}</tbody>
+      <tfoot><tr><td colspan="${seesAll ? 7 : 6}">Total, ${rows.length} payment${rows.length === 1 ? "" : "s"}</td><td class="num">${money(total)}</td></tr></tfoot>
+    </table></div>`;
+}
+
+/**
+ * The log as a spreadsheet: the shared columns first, then every column any
+ * platform's export had, blank where a platform has no such column. Built
+ * from what the server already sent, so it holds no more than the page does.
+ */
+function downloadLog(rows, addr, seesAll) {
+  const own = ["Date", "Platform", "Lease", ...(seesAll ? ["Owner"] : []), "Paid by", "For", "Memo", "Status", "Amount"];
+  const extra = [...new Set(rows.flatMap((p) => Object.keys(p.fields)))];
+  const cell = (v) => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
+  const lines = [[...own, ...extra.map((k) => k)].map(cell).join(",")];
+  for (const p of rows) {
+    const mine = [p.date, p.platform, addr(p), ...(seesAll ? [p.owner || ""] : []), p.payer, p.category, p.memo, p.status || "Paid", p.amount.toFixed(2)];
+    lines.push([...mine, ...extra.map((k) => p.fields[k] ?? "")].map(cell).join(","));
+  }
+  const url = URL.createObjectURL(new Blob([lines.join("\n") + "\n"], { type: "text/csv" }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: `payment-log-${new Date().toISOString().slice(0, 10)}.csv` });
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /**

@@ -266,3 +266,15 @@ tr.clickable:hover td { background: var(--brand-100); }
 .cell-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; font-variant-numeric: tabular-nums; }
 .cell-link:hover { color: var(--brand-700); text-decoration: underline; }
 .pay-filters .btn { padding: 5px 12px; }
+.view-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 14px; }
+.view-tabs [role="tab"] { background: none; border: 1px solid #d9cfd1; border-radius: 999px; padding: 5px 14px; font: inherit; font-size: 0.9rem; cursor: pointer; color: var(--ink); }
+.view-tabs [role="tab"][aria-selected="true"] { background: var(--brand-700); border-color: var(--brand-700); color: #fff; }
+.view-tabs .btn { margin-left: auto; padding: 5px 12px; font-size: 0.9rem; }
+.log td { vertical-align: top; }
+.log-row[aria-expanded="true"] td { background: var(--brand-100); }
+.fields-row td { border-top: 0; padding-top: 0; background: var(--paper); }
+.fields { display: grid; grid-template-columns: max-content 1fr; gap: 3px 16px; margin: 0; padding: 10px 0; font-size: 0.84rem; }
+.fields dt { color: var(--muted); white-space: nowrap; }
+.fields dd { margin: 0; overflow-wrap: anywhere; }
+.log .lease-cell { min-width: 170px; }
+.log th, .log td { padding-left: 10px; padding-right: 10px; }
