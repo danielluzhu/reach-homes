@@ -252,3 +252,16 @@ tr.clickable:hover td { background: var(--brand-100); }
 .pay-filters { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 14px; font-size: 0.9rem; color: var(--muted); }
 .pay-filters select { margin-left: 6px; padding: 6px 8px; border: 1px solid #d9cfd1; border-radius: 8px; font: inherit; color: var(--ink); background: var(--card); }
 .updated { margin: 6px 0 0; font-size: 0.85rem; color: var(--muted); }
+
+.pay-group { margin-bottom: 18px; }
+.pay-group-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 10px 14px 6px; }
+.pay-group-total { color: var(--brand-800); }
+.pivot { font-size: 0.86rem; }
+.pivot th, .pivot td { padding: 8px 8px; }
+.pivot td:first-child, .pivot th:first-child { position: sticky; left: 0; background: var(--card); white-space: nowrap; }
+.pivot td.empty { color: #c9c1c3; }
+.pivot .row-total { border-left: 1px solid var(--border); }
+.pivot .row-total .cell-link { color: var(--brand-800); }
+.cell-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; font-variant-numeric: tabular-nums; }
+.cell-link:hover { color: var(--brand-700); text-decoration: underline; }
+.pay-filters .btn { padding: 5px 12px; }
