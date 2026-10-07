@@ -36,6 +36,15 @@ function propertyLabel(p) {
   return p.address || given || "";
 }
 
+/** "Updated Oct 7, 2026 · payments through Oct 6, 2026", from the newest export. */
+function updatedLine(u) {
+  if (!u || !u.addedAt) return "";
+  const added = new Date(u.addedAt);
+  const pad = (n) => String(n).padStart(2, "0");
+  const addedIso = `${added.getFullYear()}-${pad(added.getMonth() + 1)}-${pad(added.getDate())}`;
+  return `<p class="updated">Last updated ${escapeHtml(dateLabel(addedIso))}${u.through ? ` · payments through ${escapeHtml(dateLabel(u.through))}` : ""}</p>`;
+}
+
 let DATA = null;
 const filter = { month: "", property: "" };
 /** The property filter's value for payments that name no property. */
@@ -60,6 +69,7 @@ function render() {
     <p class="sub">${seesAll
       ? "Every payment on file, from the monthly exports."
       : "Payments received for your properties."}</p>
+    ${updatedLine(DATA.updated)}
 
     <div class="tiles">
       <div class="tile"><div class="tile-key">Collected${filter.month ? ", " + escapeHtml(monthLabel(filter.month)) : ""}</div><div class="tile-val">${money(total)}</div><div class="tile-note">${filter.property ? escapeHtml(filter.property === NONE ? "no property given" : filter.property) : seesAll ? "all properties" : "your properties"}</div></div>
@@ -108,8 +118,8 @@ function adminSection() {
       </form>
       <div class="section-heading" style="margin-top:20px"><h2>Exports on file</h2></div>
       <div class="panel table-scroll">${files.length ? `<table>
-        <thead><tr><th>File</th><th class="num">Payments read</th><th>Note</th></tr></thead>
-        <tbody>${files.map((f) => `<tr><td>${escapeHtml(f.name)}</td><td class="num">${f.rows}</td><td>${f.problem ? escapeHtml(f.problem) : ""}</td></tr>`).join("")}</tbody>
+        <thead><tr><th>File</th><th>Added</th><th>Payments through</th><th class="num">Payments read</th><th>Note</th></tr></thead>
+        <tbody>${files.map((f) => `<tr><td>${escapeHtml(f.name)}</td><td style="white-space:nowrap">${escapeHtml(new Date(f.addedAt).toLocaleString())}</td><td style="white-space:nowrap">${escapeHtml(dateLabel(f.through))}</td><td class="num">${f.rows}</td><td>${f.problem ? escapeHtml(f.problem) : ""}</td></tr>`).join("")}</tbody>
       </table>` : '<p class="sub" style="padding:8px 16px">None yet.</p>'}</div>
     </section>`;
 }

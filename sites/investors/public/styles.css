@@ -251,3 +251,4 @@ tr.clickable:hover td { background: var(--brand-100); }
 
 .pay-filters { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 14px; font-size: 0.9rem; color: var(--muted); }
 .pay-filters select { margin-left: 6px; padding: 6px 8px; border: 1px solid #d9cfd1; border-radius: 8px; font: inherit; color: var(--ink); background: var(--card); }
+.updated { margin: 6px 0 0; font-size: 0.85rem; color: var(--muted); }

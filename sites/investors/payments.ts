@@ -10,7 +10,7 @@
  * rather than being guessed at.
  */
 
-import { mkdir, readdir } from "node:fs/promises";
+import { mkdir, readdir, stat } from "node:fs/promises";
 import { file } from "bun";
 
 export const PAYMENTS_DIR = `${import.meta.dir}/data/payments`;
@@ -213,10 +213,13 @@ export async function loadPayments(registry: RegistryRow[]) {
     .sort();
   const kept = new Map<string, number>();
   const all: Payment[] = [];
-  const files: Array<{ name: string; rows: number; problem: string | null }> = [];
+  const files: Array<{ name: string; rows: number; problem: string | null; addedAt: string; through: string }> = [];
   for (const name of names) {
     const { payments, problem } = readExport(name, await file(`${PAYMENTS_DIR}/${name}`).text(), registry);
-    files.push({ name, rows: payments.length, problem });
+    // When the export was added here, and the last payment date it covers.
+    const addedAt = (await stat(`${PAYMENTS_DIR}/${name}`)).mtime.toISOString();
+    const through = payments.reduce((m, p) => (p.date > m ? p.date : m), "");
+    files.push({ name, rows: payments.length, problem, addedAt, through });
     const seen = new Map<string, number>();
     for (const p of payments) {
       if (p.ref) {
@@ -243,9 +246,17 @@ export type Viewer = { kind: "admin" | "team" | "owner"; name: string };
 /** What this viewer may see. The filtering happens here; nothing else leaves the server. */
 export async function paymentsFor(viewer: Viewer, registry: RegistryRow[]) {
   const { payments, files } = await loadPayments(registry);
-  if (viewer.kind !== "owner") return { payments, files, unassigned: payments.filter((p) => !p.owner).length };
+  // How current the data is, for everyone: an owner whose last payment was in
+  // July still needs to know the exports run to October. Dates only, nothing
+  // about anyone else's payments.
+  const updated = {
+    addedAt: files.reduce((m, f) => (f.addedAt > m ? f.addedAt : m), ""),
+    through: files.reduce((m, f) => (f.through > m ? f.through : m), ""),
+  };
+  if (viewer.kind !== "owner") return { payments, files, updated, unassigned: payments.filter((p) => !p.owner).length };
   // An owner gets their rows without the export's file names or the owner field.
   return {
+    updated,
     payments: payments
       .filter((p) => p.owner === viewer.name)
       .map(({ source: _s, owner: _o, ...rest }) => rest),
