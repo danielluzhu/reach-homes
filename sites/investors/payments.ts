@@ -23,6 +23,10 @@ export type Payment = {
   unit: string;
   memo: string;
   method: string;
+  /** "" once the money is in; otherwise what the export says, e.g. "In Progress". */
+  status: string;
+  /** The export's own id for the payment, when it has one. */
+  ref: string;
   /** Which export it came from, and which row of it. */
   source: string;
   /** Resolved against the registry: the owner's name and the row's address, or null. */
@@ -32,16 +36,31 @@ export type Payment = {
 
 type RegistryRow = { address: string; abbr: string; owner: string };
 
-/** Header names seen in bank and payment-app exports, per field. First hit wins. */
+/**
+ * Header names seen in bank and payment-app exports, per field. First hit wins,
+ * except for the date, where each row takes the first of these columns it has
+ * filled in: CoStar leaves "Completed On" blank on a payment made offline.
+ *
+ * CoStar's export is a ledger rather than a list of payments: rent and bills
+ * charged, credits, and payments, each a row with a Type, a Status and a
+ * Credit or Debit amount. Only Type "Payment" is money received.
+ */
 const COLUMNS: Record<string, string[]> = {
-  date: ["date", "payment date", "paid on", "date paid", "transaction date", "posted date", "posting date", "post date", "received"],
-  amount: ["amount", "amount paid", "paid", "payment", "payment amount", "credit", "deposit", "deposits", "total"],
-  payer: ["payer", "tenant", "tenant name", "resident", "name", "from", "sender", "paid by"],
+  date: ["date", "payment date", "paid on", "date paid", "completed on", "transaction date", "posted date", "posting date", "post date", "received", "initiated on"],
+  amount: ["amount", "amount paid", "paid", "payment", "payment amount", "credit amt", "credit amount", "credit", "deposit", "deposits", "total"],
+  payer: ["payer", "tenant", "tenant name", "resident", "name", "from", "sender", "paid by", "initiated by"],
   property: ["property", "property address", "address", "building", "abbr", "abbreviation", "property name"],
   unit: ["unit", "room", "unit number", "apt"],
   memo: ["memo", "description", "note", "notes", "reference", "details", "for"],
-  method: ["method", "payment method", "type", "transaction type", "channel"],
+  method: ["method", "payment method", "channel"],
+  kind: ["type", "transaction type"],
+  status: ["status"],
+  ref: ["referenceid", "reference id", "confirmation", "confirmation number"],
 };
+
+/** Statuses under which no money arrived. Anything else not "completed" is shown, flagged. */
+const NOT_PAID = /^(failed|canceled|cancelled|declined|returned|reversed|voided?)$/i;
+const PAID = /^(completed?|paid|posted|settled|cleared|)$/i;
 
 /** RFC 4180-ish: quoted fields, doubled quotes, commas and newlines inside quotes. */
 export function parseCsv(text: string): string[][] {
@@ -106,6 +125,12 @@ export function resolveOwner(property: string, unit: string, registry: RegistryR
   if (!keys.length) return null;
   const steps: Array<(r: RegistryRow) => boolean> = [
     (r) => keys.some((k) => (r.abbr && norm(r.abbr) === k) || norm(r.address) === k),
+    // A unit named the way the owner list abbreviates it, at the same house
+    // number: 121 12th Ave's units are listed as "303", "306" and so on.
+    (r) => {
+      const n = houseNumber(property);
+      return Boolean(n && unit) && norm(r.abbr) === norm(unit) && houseNumber(r.address) === n;
+    },
     (r) => {
       const a = norm(r.address);
       return a.length >= 6 && keys.some((k) => k.length >= 6 && (a.startsWith(k) || k.startsWith(a)));
@@ -115,13 +140,15 @@ export function resolveOwner(property: string, unit: string, registry: RegistryR
       return Boolean(n) && (houseNumber(r.address) === n || houseNumber(r.abbr) === n);
     },
   ];
-  for (const step of steps) {
+  for (const [i, step] of steps.entries()) {
     const hits = registry.filter(step);
     if (!hits.length) continue;
     const owners = new Set(hits.map((r) => r.owner.trim()));
     if (owners.size !== 1 || owners.has("")) return null;
-    // The shortest address: the building rather than one of its units.
-    const address = hits.map((r) => r.address).sort((a, b) => a.length - b.length)[0];
+    // The shortest address: the building rather than one of its units. Matched
+    // on the house number alone, it would be any one of the units, so the
+    // export's own wording is shown instead.
+    const address = i === steps.length - 1 ? null : hits.map((r) => r.address).sort((a, b) => a.length - b.length)[0];
     return { owner: hits[0].owner.trim(), address };
   }
   return null;
@@ -137,25 +164,32 @@ function readExport(name: string, text: string, registry: RegistryRow[]) {
     const i = names.map((n) => heads.indexOf(n)).find((i) => i >= 0);
     if (i !== undefined) col[field] = i;
   }
+  const dateCols = COLUMNS.date.map((n) => heads.indexOf(n)).filter((i) => i >= 0);
   if (col.amount === undefined) {
     return { payments: [], problem: `no amount column (headers: ${header.join(", ")})` };
   }
   const get = (r: string[], field: string) => (col[field] === undefined ? "" : (r[col[field]] ?? "").trim());
   const payments: Payment[] = [];
   rows.forEach((r, i) => {
+    // A ledger's charges and credits are not payments; a failed one never arrived.
+    if (col.kind !== undefined && !/payment/i.test(get(r, "kind"))) return;
+    const status = get(r, "status");
+    if (NOT_PAID.test(status)) return;
     const amount = parseAmount(get(r, "amount"));
     if (!Number.isFinite(amount)) return;
     const property = get(r, "property");
     const unit = get(r, "unit");
     const hit = resolveOwner(property, unit, registry);
     payments.push({
-      date: parseDate(get(r, "date")),
+      date: parseDate(dateCols.map((c) => (r[c] ?? "").trim()).find(Boolean) ?? ""),
       amount,
       payer: get(r, "payer"),
       property,
       unit,
       memo: get(r, "memo"),
       method: get(r, "method"),
+      status: PAID.test(status) ? "" : status,
+      ref: get(r, "ref"),
       source: `${name}:${i + 2}`,
       owner: hit?.owner ?? null,
       address: hit?.address ?? null,
@@ -170,6 +204,10 @@ function readExport(name: string, text: string, registry: RegistryRow[]) {
  * one file, identical rows are taken as the separate payments they say they are.
  */
 export async function loadPayments(registry: RegistryRow[]) {
+  // Files are read in name order, so name them by export date: where two
+  // exports carry the same reference id, the later one's row wins -- a payment
+  // "In Progress" in one month's export is "Completed" in the next.
+  const byRef = new Map<string, number>();
   const names = (await readdir(PAYMENTS_DIR).catch(() => [] as string[]))
     .filter((n) => n.toLowerCase().endsWith(".csv"))
     .sort();
@@ -181,6 +219,12 @@ export async function loadPayments(registry: RegistryRow[]) {
     files.push({ name, rows: payments.length, problem });
     const seen = new Map<string, number>();
     for (const p of payments) {
+      if (p.ref) {
+        const at = byRef.get(p.ref);
+        if (at === undefined) { byRef.set(p.ref, all.length); all.push(p); }
+        else all[at] = p;
+        continue;
+      }
       const key = [p.date, p.amount, p.payer, p.property, p.unit, p.memo].join("\u0000");
       const n = (seen.get(key) ?? 0) + 1;
       seen.set(key, n);

@@ -78,7 +78,7 @@ function render() {
           <td style="white-space:nowrap">${escapeHtml(dateLabel(p.date))}</td>
           <td>${escapeHtml(propertyLabel(p)) || '<span class="sub">Not given</span>'}${p.address && (p.property || p.unit) ? `<br /><span class="sub">${escapeHtml([p.property, p.unit].filter(Boolean).join(" "))}</span>` : ""}</td>
           <td>${escapeHtml(p.payer)}</td>
-          <td>${escapeHtml([p.memo, p.method].filter(Boolean).join(" · "))}</td>
+          <td>${escapeHtml([p.memo, p.method].filter(Boolean).join(" · "))}${p.status ? ` <span class="pill pill-market">${escapeHtml(p.status)}</span>` : ""}</td>
           ${seesAll ? `<td>${p.owner ? escapeHtml(p.owner) : '<span class="pill pill-market">No match</span>'}</td>` : ""}
           <td class="num${p.amount < 0 ? " neg" : ""}">${money(p.amount)}</td>
         </tr>`).join("")}</tbody>
