@@ -38,9 +38,11 @@ Edit the file by hand, or with a writer that preserves the one-line rows.
 
 `sites/investors/` (port 8888) shows each owner their own properties. It must
 never be added to the static build or Pages: access is enforced per request in
-`server.ts`, and static files have no one to enforce it. Its dollar figures,
-shares, maintenance and documents are sample data — **never commit real
-investor financials or names to this repo.** The admin view reads the
+`server.ts`, and static files have no one to enforce it. The committed
+`portfolio.json` holds sample statements, shares, maintenance and documents;
+the real figures are the gitignored payment exports, from which net income is
+computed (all rent collected, no costs off) — **never commit real investor
+financials or names to this repo.** The admin view reads the
 private `address.txt` live, so its access code lives outside the repo
 (`ADMIN_CODE` or the gitignored `data/admin-code.txt`) — don't move it back
 into `portfolio.json` or onto the sign-in page. The admin's assistant (`agent.ts`) writes applied
@@ -51,7 +53,7 @@ file writes of its own, nothing applied without the admin's Apply. `data/registr
 abbreviation / owner list; the admin view merges it with `address.txt` by house
 number and shows rows exactly as written — where the two lists disagree about
 an address, ask which is right rather than picking one. (3408 is NE 57th St
-and 5830 is NE 204th Pl; the owner confirmed both.) **Income is admin only**: the monthly statements (`months`) and every net figure drawn from them are stripped from an owner's `/api/portfolio` by the server, not just hidden on the page; keep it that way when adding any income view. Rental payments (`/payments`, `payments.ts`) are real tenants'
+and 5830 is NE 204th Pl; the owner confirmed both.) **Income is admin only**: `/api/portfolio` sends `income` (net income = all rent collected, by month and platform, from `payments.ts`) to the admin and to no one else, and the old hand-entered `months` statements to nobody; keep it that way when adding any income view. Rental payments (`/payments`, `payments.ts`) are real tenants'
 names and amounts: the CSVs in `sites/investors/data/payments/` and the team's
 codes in `data/team.json` are gitignored and must stay so. An owner's view is
 filtered on the server by matching each payment's property to the registry,

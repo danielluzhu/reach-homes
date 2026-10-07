@@ -59,17 +59,6 @@ function isPaying(u) {
   return unitState(u) !== "vacant";
 }
 
-const COSTS = [
-  ["management", "Management"],
-  ["repairs", "Repairs"],
-  ["utilities", "Utilities"],
-  ["taxesInsurance", "Taxes & insurance"],
-];
-
-function net(m) {
-  return m.rent - COSTS.reduce((sum, [key]) => sum + (m[key] || 0), 0);
-}
-
 function shareLabel(share) {
   return Math.round(share * 100) + "%";
 }
@@ -99,11 +88,13 @@ function overview(data) {
   const props = data.properties;
   const units = props.flatMap((p) => p.units);
   const paying = units.filter(isPaying).length;
-  // Income is the admin's alone: an owner's data arrives without statements.
-  const income = ADMIN && props.length && props.every((p) => Array.isArray(p.months) && p.months.length);
-  const last = income ? props[0].months[props[0].months.length - 1].month : null;
-  const lastNet = income ? props.reduce((sum, p) => sum + net(p.months[p.months.length - 1]), 0) : 0;
-  const allNet = income ? props.reduce((sum, p) => sum + p.months.reduce((s, m) => s + net(m), 0), 0) : 0;
+  // Income is the admin's alone: the server sends it to no one else. Net
+  // income is all the rent collected, from the payment exports.
+  const income = ADMIN && data.income && data.income.months.length ? data.income : null;
+  const last = income ? lastFullMonth(income.through) : null;
+  const inMonth = (rows, m) => (rows || []).find((r) => r.month === m)?.total || 0;
+  const lastNet = income ? inMonth(income.months, last) : 0;
+  const allNet = income ? income.months.reduce((s, r) => s + r.total, 0) : 0;
   const comingUp = units.filter((u) => unitState(u) !== "occupied").length;
 
   return `
@@ -123,18 +114,21 @@ function overview(data) {
     <div class="tiles">
       <div class="tile"><div class="tile-key">Occupancy</div><div class="tile-val">${paying} of ${units.length}</div><div class="tile-note">units and rooms leased today</div></div>
       <div class="tile"><div class="tile-key">Vacant or turning over</div><div class="tile-val">${comingUp}</div><div class="tile-note">empty, or lease ending within ${OPEN_WINDOW_DAYS} days</div></div>
-      ${income ? `<div class="tile"><div class="tile-key">Net income, ${escapeHtml(monthLabel(last))}</div><div class="tile-val">${money(lastNet)}</div><div class="tile-note">all properties</div></div>
-      <div class="tile"><div class="tile-key">Net income, last ${props[0].months.length} months</div><div class="tile-val">${money(allNet)}</div><div class="tile-note">all properties</div></div>` : ""}
+      ${income ? `<div class="tile"><div class="tile-key">Net income, ${escapeHtml(monthLabel(last))}</div><div class="tile-val">${money(lastNet)}</div><div class="tile-note">all rent collected, every building</div></div>
+      <div class="tile"><div class="tile-key">Net income, all on file</div><div class="tile-val">${money(allNet)}</div><div class="tile-note">through ${escapeHtml(dateLabel(income.through))}</div></div>` : ""}
     </div>
 
-    ${income ? incomeByMonth(props) : ""}
+    ${income ? `<section class="section">
+      <div class="section-heading"><h2>Net income by month</h2><p>Net income is all the rent collected, across every building, from the CoStar and TurboTenant payments: no costs are taken off. Each payment counts in the month it is for, as on the <a href="/payments">payments page</a>. Seen by the admin only.</p></div>
+      ${incomeTable(income.months, income.platforms)}
+    </section>` : ""}
 
     <section class="section">
-      <div class="section-heading"><h2>${ADMIN ? "Properties with statements" : "Your properties"}</h2><p>Select one for its ${ADMIN ? "rent roll, statement" : "rent roll"} and building record.</p></div>
+      <div class="section-heading"><h2>${ADMIN ? "Properties with statements" : "Your properties"}</h2><p>Select one for its ${ADMIN ? "rent roll, income" : "rent roll"} and building record.</p></div>
       <div class="panel table-scroll"><table>
         <thead><tr><th>Property</th>${ADMIN ? "<th>Owners</th>" : '<th class="num">Your share</th>'}<th>Leased</th><th>Next lease end</th>${income ? `<th class="num">Net, ${escapeHtml(monthLabel(last))}</th>` : ""}</tr></thead>
         <tbody>${props.map((p) => {
-          const n = income ? net(p.months[p.months.length - 1]) : 0;
+          const n = income ? inMonth(p.income, last) : 0;
           const end = nextLeaseEnd(p);
           return `<tr class="clickable" data-href="#/p/${encodeURIComponent(p.id)}">
             <td><a href="#/p/${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a><br /><span class="sub">${escapeHtml(p.kind)} · ${escapeHtml(p.neighborhood)}</span></td>
@@ -692,91 +686,72 @@ function rentRoll(p) {
     </table></div>`;
 }
 
+/** "Later" and "unknown" are where last month's rent paid ahead waits, as on the payments page. */
+function incomeMonthLabel(m) {
+  return m === "later" ? "Later months (last month's rent paid ahead)" : m === "unknown" ? "Lease end not known (last month's rent paid ahead)" : monthLabel(m);
+}
+
+/** The last month the payments cover in full: the newest payment's month, or the one before when it is partway through. */
+function lastFullMonth(through) {
+  if (!through) return null;
+  const [y, m, d] = through.split("-").map(Number);
+  const daysIn = new Date(y, m, 0).getDate();
+  if (d === daysIn) return through.slice(0, 7);
+  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`;
+}
+
 /**
- * Net income by month, one bar each. A single series in the brand colour: the
- * heading names it, so there is no legend, and the statement below is the
- * table view of the same numbers. Bars grow from a zero line because a
- * turnover month can go negative.
+ * Net income by month, one bar each: all the rent collected, so it never goes
+ * below zero. A single series in the brand colour; the heading names it, and
+ * the table below is the same numbers.
  */
-function netChart(p) {
-  const W = 640, H = 220, left = 52, right = 10, top = 14, bottom = 26;
-  const values = p.months.map(net);
-  const hi = Math.max(0, ...values), lo = Math.min(0, ...values);
+function netChart(title, rows) {
+  const series = rows.filter((r) => /^\d{4}-\d{2}$/.test(r.month));
+  if (!series.length) return '<div class="panel"><p class="sub" style="padding:8px 16px">No payments on file for this property.</p></div>';
+  const W = 640, H = 220, left = 60, right = 10, top = 14, bottom = 26;
+  const values = series.map((r) => r.total);
+  const hi = Math.max(0, ...values);
   // Round the scale out to a tidy step so the gridlines land on round figures.
-  const step = [500, 1000, 2000, 2500, 5000, 10000].find((s) => (hi - lo) / s <= 5) || 20000;
-  const max = Math.ceil(hi / step) * step, min = Math.floor(lo / step) * step;
-  const y = (v) => top + ((max - v) / (max - min || 1)) * (H - top - bottom);
+  const step = [500, 1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000].find((s) => hi / s <= 5) || 100000;
+  const max = Math.max(step, Math.ceil(hi / step) * step);
+  const y = (v) => top + ((max - v) / max) * (H - top - bottom);
   const slot = (W - left - right) / values.length;
   const barW = Math.min(36, slot * 0.5);
 
   let grid = "";
-  for (let v = min; v <= max; v += step) {
+  for (let v = 0; v <= max; v += step) {
     grid += `<line class="${v === 0 ? "zero-line" : "grid-line"}" x1="${left}" x2="${W - right}" y1="${y(v)}" y2="${y(v)}" />
       <text x="${left - 8}" y="${y(v) + 4}" text-anchor="end">${escapeHtml(money(v))}</text>`;
   }
-
   const bars = values.map((v, i) => {
     const x = left + slot * i + (slot - barW) / 2;
     const y0 = y(0), y1 = y(v);
     const r = Math.min(4, Math.abs(y1 - y0));
     // Rounded at the data end only; square where it meets the zero line.
-    const d = v >= 0
-      ? `M${x},${y0} V${y1 + r} Q${x},${y1} ${x + r},${y1} H${x + barW - r} Q${x + barW},${y1} ${x + barW},${y1 + r} V${y0} Z`
-      : `M${x},${y0} V${y1 - r} Q${x},${y1} ${x + r},${y1} H${x + barW - r} Q${x + barW},${y1} ${x + barW},${y1 - r} V${y0} Z`;
-    return `<g data-tip="${escapeHtml(monthLabel(p.months[i].month) + ": " + money(v))}" data-x="${x + barW / 2}" data-y="${Math.min(y0, y1)}">
+    const d = `M${x},${y0} V${y1 + r} Q${x},${y1} ${x + r},${y1} H${x + barW - r} Q${x + barW},${y1} ${x + barW},${y1 + r} V${y0} Z`;
+    return `<g data-tip="${escapeHtml(monthLabel(series[i].month) + ": " + money(v))}" data-x="${x + barW / 2}" data-y="${Math.min(y0, y1)}">
       <rect class="hit" x="${left + slot * i}" y="${top}" width="${slot}" height="${H - top - bottom}" />
       <path class="bar" d="${d}" />
-      <text x="${x + barW / 2}" y="${H - 8}" text-anchor="middle">${escapeHtml(MONTHS[Number(p.months[i].month.split("-")[1]) - 1])}</text>
+      <text x="${x + barW / 2}" y="${H - 8}" text-anchor="middle">${escapeHtml(MONTHS[Number(series[i].month.split("-")[1]) - 1])}</text>
     </g>`;
   }).join("");
-
   return `<div class="panel chart">
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Net income by month for ${escapeHtml(p.title)}">${grid}${bars}</svg>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Net income by month for ${escapeHtml(title)}">${grid}${bars}</svg>
     <div class="chart-tip" hidden></div>
   </div>`;
 }
 
 /**
- * Every property with a statement, added together month by month: rent
- * collected, each cost, and what is left. Admin only, like all income.
+ * Net income month by month: the rent collected, split by the platform it
+ * came through. Admin only -- the server sends it to no one else.
  */
-function incomeByMonth(props) {
-  const months = [...new Set(props.flatMap((p) => p.months.map((m) => m.month)))].sort();
-  const totals = months.map((month) => {
-    const ms = props.map((p) => p.months.find((m) => m.month === month)).filter(Boolean);
-    const t = { month, rent: ms.reduce((s, m) => s + m.rent, 0) };
-    for (const [key] of COSTS) t[key] = ms.reduce((s, m) => s + (m[key] || 0), 0);
-    return t;
-  });
-  const sum = (key) => totals.reduce((s, t) => s + t[key], 0);
-  const cell = (n) => `<td class="num${n < 0 ? " neg" : ""}">${money(n)}</td>`;
-  const cost = (n) => `<td class="num cost">${n ? money(-n) : "\u2014"}</td>`;
-  return `
-    <section class="section">
-      <div class="section-heading"><h2>Net income by month</h2><p>All ${props.length} properties with statements, added together. Net is rent collected less management, repairs, utilities, and taxes and insurance. Seen by the admin only.</p></div>
-      <div class="panel table-scroll"><table>
-        <thead><tr><th>Month</th><th class="num">Rent collected</th>${COSTS.map(([, label]) => `<th class="num">${label}</th>`).join("")}<th class="num">Net</th></tr></thead>
-        <tbody>${totals.map((t) => `<tr><td>${escapeHtml(monthLabel(t.month))}</td>${cell(t.rent)}${COSTS.map(([key]) => cost(t[key])).join("")}${cell(net(t))}</tr>`).join("")}</tbody>
-        <tfoot><tr><td>Total</td>${cell(sum("rent"))}${COSTS.map(([key]) => cost(sum(key))).join("")}${cell(totals.reduce((s, t) => s + net(t), 0))}</tr></tfoot>
-      </table></div>
-    </section>`;
-}
-
-function statement(p) {
-  const total = (key) => p.months.reduce((s, m) => s + (m[key] || 0), 0);
-  const totalNet = p.months.reduce((s, m) => s + net(m), 0);
-  // Red is for a month or a total that lost money, not for every cost: a
-  // statement where each expense shouts hides the one line that matters.
-  const cell = (n) => `<td class="num${n < 0 ? " neg" : ""}">${money(n)}</td>`;
-  const cost = (n) => `<td class="num cost">${n ? money(-n) : "\u2014"}</td>`;
+function incomeTable(rows, platforms) {
+  const total = (f) => rows.reduce((s, r) => s + f(r), 0);
   return `
     <div class="panel table-scroll"><table>
-      <thead><tr><th>Month</th><th class="num">Rent collected</th>${COSTS.map(([, label]) => `<th class="num">${label}</th>`).join("")}<th class="num">Net</th></tr></thead>
-      <tbody>${p.months.map((m) => `<tr>
-        <td>${escapeHtml(monthLabel(m.month))}</td>
-        ${cell(m.rent)}${COSTS.map(([key]) => cost(m[key] || 0)).join("")}${cell(net(m))}
-      </tr>`).join("")}</tbody>
-      <tfoot><tr><td>Total</td>${cell(total("rent"))}${COSTS.map(([key]) => cost(total(key))).join("")}${cell(totalNet)}</tr></tfoot>
+      <thead><tr><th>Month</th>${platforms.map((pl) => `<th class="num">${escapeHtml(pl)}</th>`).join("")}<th class="num">Payments</th><th class="num">Net income</th></tr></thead>
+      <tbody>${rows.map((r) => `<tr><td>${escapeHtml(incomeMonthLabel(r.month))}</td>${platforms.map((pl) => `<td class="num${r.byPlatform[pl] ? "" : " cost"}">${r.byPlatform[pl] ? money(r.byPlatform[pl]) : "—"}</td>`).join("")}<td class="num">${r.payments}</td><td class="num">${money(r.total)}</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td>Total</td>${platforms.map((pl) => `<td class="num">${money(total((r) => r.byPlatform[pl] || 0))}</td>`).join("")}<td class="num">${total((r) => r.payments)}</td><td class="num">${money(total((r) => r.total))}</td></tr></tfoot>
     </table></div>`;
 }
 
@@ -815,14 +790,14 @@ function propertyView(p) {
       ${rentRoll(p)}
     </section>
 
-    ${ADMIN && p.months ? `<section class="section">
-      <div class="section-heading"><h2>Net income by month</h2><p>Rent collected less every cost, for the whole property.</p></div>
-      ${netChart(p)}
+    ${ADMIN && p.income ? `<section class="section">
+      <div class="section-heading"><h2>Net income by month</h2><p>All the rent collected for this property, from the payment exports, in the month each payment is for.</p></div>
+      ${netChart(p.title, p.income)}
     </section>
 
     <section class="section">
-      <div class="section-heading"><h2>Statement</h2><p>The same months, line by line: net is rent collected less management, repairs, utilities, and taxes and insurance.</p></div>
-      ${statement(p)}
+      <div class="section-heading"><h2>By month and platform</h2><p>The same months, with the platform the rent came through.</p></div>
+      ${incomeTable(p.income, [...new Set(p.income.flatMap((r) => Object.keys(r.byPlatform)))].sort())}
     </section>` : ""}
 
     <section class="section">${building(p)}</section>`;

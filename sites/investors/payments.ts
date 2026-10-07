@@ -420,6 +420,47 @@ function allocate(p: Payment, ends: LeaseEnds, known: KnownLeaseEnd[]) {
   p.allocation = { kind: "last-month", basis: "Lease end not known: held until it is" };
 }
 
+/**
+ * Rental income, month by month, from the payments: net income is the whole
+ * of the rent collected, with no costs taken off. A payment counts in the
+ * month it is for, exactly as on the payments page, so the two agree: last
+ * month's rent paid ahead counts in the lease's final month, gathered under
+ * "later" when that is after the newest payment and "unknown" when the
+ * lease's end isn't known. Admin only.
+ */
+export function incomeByMonth(payments: Payment[], asOf?: string) {
+  // One property is measured against the newest payment overall, so its
+  // "later" means the same months as everyone else's.
+  const newest = asOf ?? payments.reduce((m, p) => (p.date > m ? p.date : m), "");
+  const newestMonth = newest.slice(0, 7);
+  const key = (p: Payment) => (p.appliesTo === "" ? "unknown" : p.appliesTo > newestMonth ? "later" : p.appliesTo);
+  const rows = new Map<string, { month: string; byPlatform: Record<string, number>; total: number; payments: number }>();
+  for (const p of payments) {
+    const k = key(p);
+    const row = rows.get(k) ?? { month: k, byPlatform: {}, total: 0, payments: 0 };
+    row.byPlatform[p.platform] = (row.byPlatform[p.platform] ?? 0) + p.amount;
+    row.total += p.amount;
+    row.payments += 1;
+    rows.set(k, row);
+  }
+  const order = (m: string) => (m === "later" ? "9998" : m === "unknown" ? "9999" : m);
+  return {
+    through: newest,
+    platforms: [...new Set(payments.map((p) => p.platform))].sort(),
+    months: [...rows.values()].sort((a, b) => order(a.month).localeCompare(order(b.month))),
+  };
+}
+
+/**
+ * The payments that belong to a property on the investor site: same house
+ * number, and for a property that is one part of a building ("— Lower Unit"),
+ * units in that part only ("L", "L B").
+ */
+export function paymentsOfProperty(payments: Payment[], house: string, prefix: string) {
+  return payments.filter((p) => houseNumber(p.building) === house &&
+    (!prefix || p.unit.trim().split(/\s+/)[0]?.toUpperCase() === prefix));
+}
+
 export type Viewer = { kind: "admin" | "team" | "owner"; name: string };
 
 /** What this viewer may see. The filtering happens here; nothing else leaves the server. */

@@ -27,7 +27,9 @@ import {
   agentConfigured, applyChanges, conversationFor, describeChange, loadData,
   PRIVATE_PATH, resetConversation, runTurn,
 } from "./agent";
-import { paymentsFor, savePaymentExport, type KnownLeaseEnd, type Viewer } from "./payments";
+import {
+  incomeByMonth, paymentsFor, paymentsOfProperty, savePaymentExport, type KnownLeaseEnd, type Viewer,
+} from "./payments";
 
 const PORT = Number(process.env.PORT ?? 8888);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
@@ -287,13 +289,17 @@ async function units(p: Property): Promise<Unit[]> {
  * microsite; the rest are the portfolio's hand copy. A property that is one
  * part of a building says so in its title ("— Lower Unit").
  */
+/** A property's house number, and the part of the building it is when it is one ("— Lower Unit"). */
+function partOf(p: Property) {
+  const title = String(p.title ?? "");
+  return { house: title.match(/^\d+/)?.[0] ?? "", prefix: /— Lower/i.test(title) ? "L" : /— Upper/i.test(title) ? "U" : "" };
+}
+
 async function knownLeaseEnds(data: Portfolio): Promise<KnownLeaseEnd[]> {
   const out: KnownLeaseEnd[] = [];
   for (const p of data.properties) {
-    const title = String(p.title ?? "");
-    const house = title.match(/^\d+/)?.[0];
+    const { house, prefix } = partOf(p);
     if (!house) continue;
-    const prefix = /— Lower/i.test(title) ? "L" : /— Upper/i.test(title) ? "U" : "";
     const us = await units(p);
     for (const u of us) {
       if (u.leasedUntil) out.push({ house, prefix, label: u.label, end: u.leasedUntil, single: us.length === 1 });
@@ -318,15 +324,15 @@ async function holdingsFor(investor: Investor, data: Portfolio) {
   for (const h of holdings) {
     const p = data.properties.find((x) => x.id === h.property);
     if (!p) continue;
-    // Income -- the monthly statements, and the net figures drawn from them --
-    // is for the admin alone. An owner's copy never carries it.
+    // The hand-entered monthly statements were sample figures; income now
+    // comes from the payments, and only for the admin (see /api/portfolio).
     const { unitsFrom: _source, months: _months, ...rest } = p;
     const owners = investor.admin
       ? data.investors.flatMap((i) =>
           i.holdings.filter((x) => x.property === p.id).map((x) => ({ name: i.name, share: x.share })),
         )
       : undefined;
-    out.push({ ...rest, ...(investor.admin ? { months: p.months } : {}), units: await units(p), share: h.share, owners });
+    out.push({ ...rest, units: await units(p), share: h.share, owners });
   }
   return out;
 }
@@ -374,11 +380,24 @@ const server = Bun.serve({
       // A team member has no properties of their own; their page is /payments.
       if (teamMember) return json({ error: "Not signed in.", go: "/payments" }, 401);
       if (!investor) return json({ error: "Not signed in." }, 401);
+      const properties = await holdingsFor(investor, data);
+      // Income is the admin's alone: net income is all the rent collected,
+      // from the payment exports, month by month, overall and per property.
+      let income;
+      if (investor.admin) {
+        const { payments } = await paymentsFor({ kind: "admin", name: ADMIN.name }, await readRegistryFile(), await knownLeaseEnds(data));
+        income = incomeByMonth(payments);
+        for (const p of properties) {
+          const { house, prefix } = partOf(p as Property);
+          Object.assign(p, { income: incomeByMonth(paymentsOfProperty(payments, house, prefix), income.through).months });
+        }
+      }
       return json({
         demo: data.demo,
         demoNote: data.demoNote,
         investor: { name: investor.name, admin: Boolean(investor.admin) },
-        properties: await holdingsFor(investor, data),
+        properties,
+        income,
         buildings: investor.admin ? await wholePortfolio(data) : undefined,
       });
     }
