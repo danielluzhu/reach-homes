@@ -30,7 +30,17 @@ function dateLabel(iso) {
   return `${MONTHS[m - 1]} ${d}, ${y}`;
 }
 
+/**
+ * Months a payment can count in besides the calendar ones: last-month rent
+ * paid in advance for a month after the newest payment on file, and that for
+ * a lease whose end isn't known yet.
+ */
+const LATER = "later";
+const UNKNOWN = "unknown";
+
 function monthLabel(ym) {
+  if (ym === LATER) return "Later months";
+  if (ym === UNKNOWN) return "Lease end not known";
   if (!ym) return "No date";
   const [y, m] = ym.split("-").map(Number);
   return `${MONTHS[m - 1]} ${y}`;
@@ -67,12 +77,15 @@ function unitLabel(p) {
  * several leases, never one building's worth.
  */
 function leaseOf(p) {
+  if (p.lease) return p.lease;
   const a = p.building || addressOf(p);
   return a ? [a, unitLabel(p)].filter(Boolean).join(" ") : NO_ADDRESS;
 }
 
 /** "Jan ’26": short enough for a column per month. */
 function shortMonth(ym) {
+  if (ym === LATER) return "Later";
+  if (ym === UNKNOWN) return "End unknown";
   const [y, m] = ym.split("-").map(Number);
   return `${MONTHS[m - 1]} ’${String(y).slice(2)}`;
 }
@@ -98,8 +111,15 @@ function render() {
   // Every payment on a lease resolves to the same owner: the match is made
   // from the address and unit, which is what makes it one lease.
   const ownerOf = new Map(payments.map((p) => [addr(p), p.owner]));
-  const monthOf = (p) => p.date.slice(0, 7);
-  const months = [...new Set(payments.map(monthOf))].sort();
+  // A payment counts in the month it pays for: the month it was paid, except
+  // last-month rent paid in advance, which the server places in the lease's
+  // final month. Months after the newest payment are gathered as "later".
+  const newest = payments.reduce((m, p) => (p.date > m ? p.date : m), "").slice(0, 7);
+  const monthOf = (p) => (p.appliesTo === "" ? UNKNOWN : p.appliesTo > newest ? LATER : p.appliesTo || p.date.slice(0, 7));
+  const buckets = new Set(payments.map(monthOf));
+  const months = [...buckets].filter((m) => m !== LATER && m !== UNKNOWN).sort()
+    .concat(buckets.has(LATER) ? [LATER] : [], buckets.has(UNKNOWN) ? [UNKNOWN] : []);
+  const ahead = payments.filter((p) => p.allocation?.kind === "last-month" && monthOf(p) !== p.date.slice(0, 7) && (monthOf(p) === LATER || monthOf(p) === UNKNOWN));
   const addresses = [...new Set(payments.map(addr))].sort((a, b) =>
     a === NO_ADDRESS ? 1 : b === NO_ADDRESS ? -1 : a.localeCompare(b, undefined, { numeric: true }));
   const rows = payments.filter((p) =>
@@ -118,7 +138,8 @@ function render() {
 
     <div class="tiles">
       <div class="tile"><div class="tile-key">Collected${filter.month ? ", " + escapeHtml(monthLabel(filter.month)) : ""}</div><div class="tile-val">${money(total)}</div><div class="tile-note">${filter.address ? escapeHtml(filter.address) : seesAll ? "all properties" : "your properties"}</div></div>
-      <div class="tile"><div class="tile-key">Payments</div><div class="tile-val">${rows.length}</div><div class="tile-note">${addresses.length} lease${addresses.length === 1 ? "" : "s"} · ${months.length} month${months.length === 1 ? "" : "s"} on file</div></div>
+      <div class="tile"><div class="tile-key">Payments</div><div class="tile-val">${rows.length}</div><div class="tile-note">${addresses.length} lease${addresses.length === 1 ? "" : "s"} · ${months.filter((m) => m !== LATER && m !== UNKNOWN).length} months on file</div></div>
+      ${ahead.length ? `<div class="tile"><div class="tile-key">Last-month rent held</div><div class="tile-val">${money(ahead.reduce((s, p) => s + p.amount, 0))}</div><div class="tile-note">${ahead.length} prepayment${ahead.length === 1 ? "" : "s"} for later months, or leases whose end isn't known</div></div>` : ""}
       ${seesAll ? `<div class="tile"><div class="tile-key">No owner matched</div><div class="tile-val">${DATA.unassigned}</div><div class="tile-note">seen by admin and team only</div></div>` : ""}
     </div>
 
@@ -175,7 +196,7 @@ function summary(payments, addresses, months, addr, monthOf, ownerOf) {
     : `<td class="num empty${cls}">—</td>`;
   return `
     <section class="section">
-      <div class="section-heading"><h2>Summary by lease and month</h2><p>Collected on each lease — each address and unit — in each month, by payment date, to the nearest dollar. Select an amount to see its payments.</p></div>
+      <div class="section-heading"><h2>Summary by lease and month</h2><p>Collected on each lease — each address and unit — in the month each payment is for, to the nearest dollar. Last-month rent paid in advance counts in the lease's final month: under "Later" when that is after the newest payment, under "End unknown" until the lease's end is known. Select an amount to see its payments.</p></div>
       <div class="panel table-scroll"><table class="pivot">
         <thead><tr><th>Lease</th>${ownerOf ? "<th>Owner</th>" : ""}${months.map((m) => `<th class="num">${escapeHtml(shortMonth(m))}</th>`).join("")}<th class="num">Total</th></tr></thead>
         <tbody>${addresses.map((a) => {
@@ -204,11 +225,20 @@ function group(address, ps, owner) {
           <td style="white-space:nowrap">${escapeHtml(dateLabel(p.date))}</td>
           <td>${escapeHtml(p.platform)}</td>
           <td>${escapeHtml(p.payer)}</td>
-          <td>${escapeHtml([p.category, p.memo, p.method].filter(Boolean).join(" · "))}${p.status ? ` <span class="pill pill-market">${escapeHtml(p.status)}</span>` : ""}</td>
+          <td>${escapeHtml([p.category, p.memo, p.method].filter(Boolean).join(" · "))}${p.status ? ` <span class="pill pill-market">${escapeHtml(p.status)}</span>` : ""}${allocationPill(p)}</td>
           <td class="num${p.amount < 0 ? " neg" : ""}">${money(p.amount)}</td>
         </tr>`).join("")}</tbody>
       </table>
     </div>`;
+}
+
+/** Where a payment counts, when that isn't the month it was paid; why, on hover. */
+function allocationPill(p) {
+  const a = p.allocation;
+  if (!a) return "";
+  const text = a.kind === "combined" ? "First + last month, not split"
+    : p.appliesTo ? `Last month's rent → ${monthLabel(p.appliesTo)}` : "Last month's rent → lease end not known";
+  return ` <span class="pill ${a.kind === "combined" || !p.appliesTo ? "pill-market" : "pill-vacant"}" title="${escapeHtml(a.basis)}">${escapeHtml(text)}</span>`;
 }
 
 /**
@@ -228,7 +258,7 @@ function log(rows, addr, seesAll) {
         ${seesAll ? `<td>${p.owner ? escapeHtml(p.owner) : '<span class="pill pill-market">No match</span>'}</td>` : ""}
         <td>${escapeHtml(p.payer)}</td>
         <td>${escapeHtml(p.category)}</td>
-        <td>${escapeHtml([p.memo, p.method].filter(Boolean).join(" · "))}${p.status ? ` <span class="pill pill-market">${escapeHtml(p.status)}</span>` : ""}</td>
+        <td>${escapeHtml([p.memo, p.method].filter(Boolean).join(" · "))}${p.status ? ` <span class="pill pill-market">${escapeHtml(p.status)}</span>` : ""}${allocationPill(p)}</td>
         <td class="num${p.amount < 0 ? " neg" : ""}">${money(p.amount)}</td>
       </tr>
       <tr class="fields-row" hidden><td colspan="${seesAll ? 8 : 7}"><dl class="fields">${Object.entries(p.fields).map(([k, v]) =>
@@ -243,12 +273,12 @@ function log(rows, addr, seesAll) {
  * from what the server already sent, so it holds no more than the page does.
  */
 function downloadLog(rows, addr, seesAll) {
-  const own = ["Date", "Platform", "Lease", ...(seesAll ? ["Owner"] : []), "Paid by", "For", "Memo", "Status", "Amount"];
+  const own = ["Date", "Counts in", "Allocation", "Platform", "Lease", ...(seesAll ? ["Owner"] : []), "Paid by", "For", "Memo", "Status", "Amount"];
   const extra = [...new Set(rows.flatMap((p) => Object.keys(p.fields)))];
   const cell = (v) => /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v);
   const lines = [[...own, ...extra.map((k) => k)].map(cell).join(",")];
   for (const p of rows) {
-    const mine = [p.date, p.platform, addr(p), ...(seesAll ? [p.owner || ""] : []), p.payer, p.category, p.memo, p.status || "Paid", p.amount.toFixed(2)];
+    const mine = [p.date, p.appliesTo === "" ? "lease end not known" : p.appliesTo || p.date.slice(0, 7), p.allocation ? p.allocation.basis : "", p.platform, addr(p), ...(seesAll ? [p.owner || ""] : []), p.payer, p.category, p.memo, p.status || "Paid", p.amount.toFixed(2)];
     lines.push([...mine, ...extra.map((k) => p.fields[k] ?? "")].map(cell).join(","));
   }
   const url = URL.createObjectURL(new Blob([lines.join("\n") + "\n"], { type: "text/csv" }));

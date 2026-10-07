@@ -278,3 +278,4 @@ tr.clickable:hover td { background: var(--brand-100); }
 .fields dd { margin: 0; overflow-wrap: anywhere; }
 .log .lease-cell { min-width: 170px; }
 .log th, .log td { padding-left: 10px; padding-right: 10px; }
+.pivot td:first-child, .pivot th:first-child { box-shadow: -8px 0 0 var(--card); }

@@ -36,6 +36,16 @@ alongside the platform it came through. Leases are named from the confirmed
 street address on the owner list (`places` in `registry.json`), so CoStar's
 "4544 20th Ave" and TurboTenant's "4544" land on the same lease.
 
+**Last month's rent paid in advance** (a memo saying "last month") counts in
+the lease's final month, not the month it was paid. That month comes, in
+order, from `lease-ends.json` here (`leases`: a lease's final month by its
+name on the page, as the admin gives it); from a lease end the site records
+for that unit (2120's rooms, the portfolio's units) falling within a year of
+the payment; from TurboTenant's lease code (`codes`: "27" -> "2027-08", the
+year and season the lease ends); otherwise it is held under "End unknown".
+A payment for first and last month together stays where it was paid, flagged,
+since the exports don't say how it splits. Totals collected are unaffected.
+
 Columns are found by header name, so the order doesn't matter:
 
 | Field | Headers recognised |

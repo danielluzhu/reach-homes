@@ -39,6 +39,16 @@ export type Payment = {
   ref: string;
   /** Which export it came from, and which row of it. */
   source: string;
+  /** The lease it belongs to: the building and unit, e.g. "4544 20th Ave NE #104". */
+  lease: string;
+  /**
+   * The month it counts towards. The month it was paid, except for last-month
+   * rent paid in advance, which counts in the lease's final month: "" while
+   * that month isn't known.
+   */
+  appliesTo: string;
+  /** Why it counts where it does, when that isn't the month it was paid. */
+  allocation: { kind: "last-month" | "combined"; basis: string } | null;
   /** Resolved against the registry: the owner's name and the row's address, or null. */
   owner: string | null;
   address: string | null;
@@ -178,6 +188,12 @@ export function resolveOwner(property: string, unit: string, allRows: RegistryRo
   return null;
 }
 
+/** A unit as a lease is known: "#306" for a numbered one, "L" or "M5 Room with Private Bath" as written. */
+function unitLabel(unit: string) {
+  const u = unit.trim().replace(/^#\s*/, "");
+  return !u ? "" : /^\d/.test(u) ? "#" + u : u;
+}
+
 /** "Lease 27" and its kin: the admin's own term codes in a TurboTenant lease title. */
 const TERM = /^2\d([A-Za-z][A-Za-z.]*\d*)?$/;
 
@@ -259,15 +275,20 @@ function readExport(name: string, text: string, registry: Registry, aliases: Rec
     const hit = resolveOwner(property, unit, registry.rows);
     const street = property.split(",")[0].trim();
     const place = registry.places[houseNumber(street)];
+    const building = place?.street || street || "No property given";
+    const date = parseDate(dateCols.map((c) => (r[c] ?? "").trim()).find(Boolean) ?? "");
     payments.push({
       platform,
-      building: place?.street || street,
+      building,
+      lease: [building, unitLabel(unit)].filter(Boolean).join(" "),
+      appliesTo: date.slice(0, 7),
+      allocation: null,
       city: place
         ? [place.city, [place.state, place.zip].filter(Boolean).join(" ")].filter(Boolean).join(", ")
         : property.split(",").slice(1).map((x) => x.trim()).filter((x) => x && x !== "US").join(", "),
       category: get(r, "category").replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase()),
       fields: Object.fromEntries(header.map((h, j) => [h.trim(), (r[j] ?? "").trim()])),
-      date: parseDate(dateCols.map((c) => (r[c] ?? "").trim()).find(Boolean) ?? ""),
+      date,
       amount,
       payer: fromTitle?.payer || get(r, "payer"),
       property,
@@ -328,11 +349,84 @@ export async function loadPayments(registry: Registry) {
   return { payments: all, files };
 }
 
+/**
+ * A lease end date the site already records -- 2120's rooms, and the units
+ * kept by hand in the portfolio -- for matching to the payments by building
+ * and unit. `prefix` is the part of the building a unit sits in ("L" for
+ * 4316's lower unit, whose rooms are A to D; CoStar writes "L B").
+ */
+export type KnownLeaseEnd = { house: string; prefix: string; label: string; end: string; single: boolean };
+
+/**
+ * Where last-month rent paid in advance should count, as the admin has said:
+ * `leases` gives a lease's final month by its name on the page; `codes` gives
+ * the final month for each of TurboTenant's lease-title codes ("27", "26S").
+ */
+const LEASE_ENDS_PATH = `${PAYMENTS_DIR}/lease-ends.json`;
+type LeaseEnds = { codes: Record<string, string>; leases: Record<string, string> };
+
+async function loadLeaseEnds(): Promise<LeaseEnds> {
+  const f = file(LEASE_ENDS_PATH);
+  const got = (await f.exists()) ? await f.json() : {};
+  return { codes: got.codes ?? {}, leases: got.leases ?? {} };
+}
+
+const monthsBetween = (a: string, b: string) =>
+  (Number(b.slice(0, 4)) - Number(a.slice(0, 4))) * 12 + Number(b.slice(5, 7)) - Number(a.slice(5, 7));
+
+/**
+ * Last-month rent paid in advance counts in the month it pays for: the
+ * lease's last. That month is taken, in order, from what the admin has said
+ * for the lease; from a lease end the site records for that unit, when it
+ * falls within a year after the payment (an older tenant's lease has since
+ * been replaced); from the TurboTenant lease code; and otherwise it is not
+ * known, and the payment is held apart rather than guessed at.
+ *
+ * A payment for first and last month together is left where it was paid and
+ * flagged: how much of it was the last month isn't in the export.
+ */
+function allocate(p: Payment, ends: LeaseEnds, known: KnownLeaseEnd[]) {
+  if (!/last\s*month/i.test(p.memo)) return;
+  if (/first|firsat/i.test(p.memo)) {
+    p.allocation = { kind: "combined", basis: "First and last month together; the split isn't in the export, so it counts where it was paid" };
+    return;
+  }
+  const given = ends.leases[p.lease];
+  if (given) {
+    p.appliesTo = given.slice(0, 7);
+    p.allocation = { kind: "last-month", basis: `Lease ends ${given} (as given)` };
+    return;
+  }
+  const house = houseNumber(p.building);
+  const tokens = p.unit.replace(/#/g, " ").trim().split(/\s+/).filter(Boolean).map((t) => t.toLowerCase().replace(/^0+(?=\d)/, ""));
+  const record = known.find((k) => {
+    if (k.house !== house || !p.date || k.end < p.date || monthsBetween(p.date, k.end) > 12) return false;
+    if (k.single) return true;
+    const label = k.label.toLowerCase();
+    return k.prefix ? tokens[0] === k.prefix.toLowerCase() && tokens[1] === label : tokens[0] === label;
+  });
+  if (record) {
+    p.appliesTo = record.end.slice(0, 7);
+    p.allocation = { kind: "last-month", basis: `Lease ends ${record.end} (site records)` };
+    return;
+  }
+  const code = (p.fields["Lease Title"] ?? "").trim().split(/\s+/).slice(1).find((t) => TERM.test(t));
+  if (code && ends.codes[code]) {
+    p.appliesTo = ends.codes[code];
+    p.allocation = { kind: "last-month", basis: `Lease code ${code}: ends ${ends.codes[code]}` };
+    return;
+  }
+  p.appliesTo = "";
+  p.allocation = { kind: "last-month", basis: "Lease end not known: held until it is" };
+}
+
 export type Viewer = { kind: "admin" | "team" | "owner"; name: string };
 
 /** What this viewer may see. The filtering happens here; nothing else leaves the server. */
-export async function paymentsFor(viewer: Viewer, registry: Registry) {
+export async function paymentsFor(viewer: Viewer, registry: Registry, known: KnownLeaseEnd[] = []) {
   const { payments, files } = await loadPayments(registry);
+  const ends = await loadLeaseEnds();
+  for (const p of payments) allocate(p, ends, known);
   // How current the data is, for everyone: an owner whose last payment was in
   // July still needs to know the exports run to October. Dates only, nothing
   // about anyone else's payments.

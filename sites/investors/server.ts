@@ -27,7 +27,7 @@ import {
   agentConfigured, applyChanges, conversationFor, describeChange, loadData,
   PRIVATE_PATH, resetConversation, runTurn,
 } from "./agent";
-import { paymentsFor, savePaymentExport, type Viewer } from "./payments";
+import { paymentsFor, savePaymentExport, type KnownLeaseEnd, type Viewer } from "./payments";
 
 const PORT = Number(process.env.PORT ?? 8888);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
@@ -282,6 +282,27 @@ async function units(p: Property): Promise<Unit[]> {
 }
 
 /**
+ * Every lease end the site records, for placing last-month rent paid in
+ * advance in the month it pays for. 2120's rooms come live from the
+ * microsite; the rest are the portfolio's hand copy. A property that is one
+ * part of a building says so in its title ("— Lower Unit").
+ */
+async function knownLeaseEnds(data: Portfolio): Promise<KnownLeaseEnd[]> {
+  const out: KnownLeaseEnd[] = [];
+  for (const p of data.properties) {
+    const title = String(p.title ?? "");
+    const house = title.match(/^\d+/)?.[0];
+    if (!house) continue;
+    const prefix = /— Lower/i.test(title) ? "L" : /— Upper/i.test(title) ? "U" : "";
+    const us = await units(p);
+    for (const u of us) {
+      if (u.leasedUntil) out.push({ house, prefix, label: u.label, end: u.leasedUntil, single: us.length === 1 });
+    }
+  }
+  return out;
+}
+
+/**
  * The investor's own properties, each with their share of it. Nothing else
  * leaves the server.
  *
@@ -363,7 +384,7 @@ const server = Bun.serve({
     // Rental payments: everything for the admin and team, an owner's own for an owner.
     if (pathname === "/api/payments") {
       if (!viewer) return json({ error: "Not signed in." }, 401);
-      return json({ viewer, ...(await paymentsFor(viewer, await readRegistryFile())) });
+      return json({ viewer, ...(await paymentsFor(viewer, await readRegistryFile(), await knownLeaseEnds(data))) });
     }
 
     if (pathname === "/api/admin/payments" && req.method === "POST") {
