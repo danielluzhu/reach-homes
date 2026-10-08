@@ -12,9 +12,14 @@ Name each file by its export date (`costar-2026-10-06.csv`): files are read in
 name order, and where two share a reference id the later file's row wins, so a
 payment "In Progress" in one export is "Completed" in the next.
 
-**CoStar** exports are a ledger, not a list of payments. Only rows of Type
-`Payment` are read; charges (rent due, bills, late fees, move-in costs) and
-credits are skipped, as are Failed and Canceled payments. In Progress and Paid
+**CoStar** exports are a ledger, not a list of payments. Rows of Type
+`Payment` are read; charges (rent due, bills, late fees, move-in costs) are
+skipped, as are Failed and Canceled payments. Of the `Credit` rows, only those
+whose memo says Venmo or Zelle are read -- rent paid outside CoStar and logged
+there by hand -- and they show as "Venmo (via CoStar)" or "Zelle (via CoStar)".
+A credit applying last month's rent prepaid earlier is not new money and is
+skipped even when it names Venmo; so are concessions ("43 Tours", "housing
+hassle"). In Progress and Paid
 Offline payments are shown, flagged. The amount is `Credit Amt`, the date
 `Completed On` (or `Initiated On` when that is blank), the payer `Initiated By`.
 

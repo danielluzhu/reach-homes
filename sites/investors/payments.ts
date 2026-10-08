@@ -87,6 +87,9 @@ const COLUMNS: Record<string, string[]> = {
   ref: ["referenceid", "reference id", "confirmation", "confirmation number"],
 };
 
+/** Money paid outside a platform and recorded in it by hand. */
+const OFF_PLATFORM = /\b(venmo|zelle)\b/i;
+
 /** Statuses under which no money arrived. Anything else not "completed" is shown, flagged. */
 const NOT_PAID = /^(failed|canceled|cancelled|declined|returned|reversed|voided?)$/i;
 const PAID = /^(completed?|paid|posted|settled|cleared|)$/i;
@@ -260,8 +263,14 @@ function readExport(name: string, text: string, registry: Registry, aliases: Rec
   const platform = platformOf(name, heads);
   const payments: Payment[] = [];
   rows.forEach((r, i) => {
-    // A ledger's charges and credits are not payments; a failed one never arrived.
-    if (col.kind !== undefined && !/payment/i.test(get(r, "kind"))) return;
+    // A ledger's charges and credits are not payments; a failed one never
+    // arrived. The exception is rent paid outside the platform, by Venmo or
+    // Zelle, which CoStar records as a credit: that is money received. A
+    // credit applying last month's rent prepaid long ago is not, even when
+    // its memo says how it was paid ("Prepaid last month rent Venmo 23.05.08").
+    const kind = get(r, "kind");
+    const offPlatform = /^credit$/i.test(kind) && OFF_PLATFORM.test(get(r, "memo")) && !/prepa/i.test(get(r, "memo"));
+    if (col.kind !== undefined && !/payment/i.test(kind) && !offPlatform) return;
     const status = get(r, "status");
     if (NOT_PAID.test(status)) return;
     // A charge with some still owing has been paid only in part.
@@ -277,8 +286,9 @@ function readExport(name: string, text: string, registry: Registry, aliases: Rec
     const place = registry.places[houseNumber(street)];
     const building = place?.street || street || "No property given";
     const date = parseDate(dateCols.map((c) => (r[c] ?? "").trim()).find(Boolean) ?? "");
+    const via = offPlatform ? get(r, "memo").match(OFF_PLATFORM)![1] : "";
     payments.push({
-      platform,
+      platform: via ? `${via[0].toUpperCase()}${via.slice(1).toLowerCase()} (via ${platform})` : platform,
       building,
       lease: [building, unitLabel(unit)].filter(Boolean).join(" "),
       appliesTo: date.slice(0, 7),
