@@ -1,0 +1,54 @@
+# Runs the investor site (sites/investors, port 8888) under systemd.
+#
+# The investor site is server-only: access is checked per request, so it must
+# never be served as static files. This unit keeps that server up.
+#
+#   sudo cp deploy/reach-homes-investors.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now reach-homes-investors
+#   journalctl -u reach-homes-investors -f
+#
+# Secrets stay out of the repo, in /etc/reach-homes/investors.env (optional):
+#   ANTHROPIC_API_KEY=...   turns on the admin's assistant (agent.ts)
+#   ADMIN_CODE=...          otherwise read from data/admin-code.txt
+#
+# Adjust User and the paths to match the box you deploy on.
+
+[Unit]
+Description=Reach Homes investor site (Bun)
+Documentation=https://github.com/danielluzhu/reach-homes
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/srv/reach-homes/sites/investors
+
+Environment=PORT=8888
+Environment=PATH=/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=-/etc/reach-homes/investors.env
+ExecStart=/home/ubuntu/.bun/bin/bun run server.ts
+
+Restart=always
+RestartSec=2
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=reach-homes-investors
+
+# Reads the repo (address.txt, the listings, 2120's rooms); writes only its own
+# data/: private.json, registry.json, team.json, the inbox and payment uploads.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/srv/reach-homes/sites/investors/data
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target
