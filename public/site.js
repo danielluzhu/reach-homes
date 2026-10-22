@@ -121,8 +121,23 @@ function optionAvailability(o) {
     : `<span class="pill-now">Available now</span>`;
 }
 
+/**
+ * The first date a listing can be moved into, while that is still ahead: the
+ * listing's own date where the whole of it opens later, otherwise the earliest
+ * open lease option carrying a future date. Null once anything is open today
+ * and nothing later is dated.
+ */
+function nextAvailable(l) {
+  if (isSoon(l)) return l.available;
+  const dates = (l.leaseOptions || [])
+    .filter((o) => !o.status && isFuture(o.available))
+    .map((o) => o.available)
+    .sort();
+  return dates[0] || null;
+}
+
 function statusLabel(l) {
-  return STATUS_LABELS[l.status] || (isSoon(l) ? "Available soon" : null);
+  return STATUS_LABELS[l.status] || (isSoon(l) ? "Next available " + fmtShortDate(l.available) : null);
 }
 
 function statusNote(l) {
@@ -176,18 +191,20 @@ function unitCounts(l) {
  * rest are spoken for, "4/10 available, 3 pending". Pending is named rather
  * than folded into the unavailable remainder: an application can fall through,
  * so it is a different thing to a renter than a place that is gone. Units
- * opening later are split out the same way -- "1/4 available, 1 soon", or
- * "7/10 available soon" where none can be had today.
+ * opening later are split out the same way, with the date they open --
+ * "1/4 available, 1 from 12/18", or "7/10 available 11/12" where none can be
+ * had today.
  */
 function unitCountLabel(l) {
   const c = unitCounts(l);
   if (!c) return null;
   const now = c.available - c.soon;
+  const next = nextAvailable(l);
   const open = !c.soon
     ? c.available + "/" + c.total + " available"
     : !now
-      ? c.soon + "/" + c.total + " available soon"
-      : now + "/" + c.total + " available, " + c.soon + " soon";
+      ? c.soon + "/" + c.total + " available " + (next ? fmtShortDate(next) : "soon")
+      : now + "/" + c.total + " available, " + c.soon + (next ? " from " + fmtShortDate(next) : " soon");
   return open + (c.pending ? `, ${c.pending} pending` : "");
 }
 
@@ -220,6 +237,14 @@ function fmtDate(iso) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+/** "2026-11-12" -> "11/12"; a date in another year keeps it: "1/5/27". */
+function fmtShortDate(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-").map(Number);
+  const md = m + "/" + d;
+  return y === new Date().getFullYear() ? md : md + "/" + String(y).slice(-2);
 }
 
 function escapeHtml(s) {
