@@ -295,3 +295,6 @@ tr.clickable:hover td { background: var(--brand-100); }
 .bldg[open] > summary > span:first-child::before { transform: rotate(90deg); }
 .bldg[open] > summary { margin-bottom: 12px; }
 .bldg > .pay-group { margin-left: 18px; }
+
+.contacts-building { font-size: 1rem; margin: 20px 0 8px; }
+.contacts-building:first-of-type { margin-top: 0; }

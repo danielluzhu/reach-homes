@@ -31,6 +31,7 @@ import {
   incomeByMonth, leasesFrom, loadLeaseEnds, paymentsFor, paymentsOfProperty, savePaymentExport,
   type KnownLeaseEnd, type Lease, type Payment, type Viewer,
 } from "./payments";
+import { contactsFor } from "./contacts";
 
 const PORT = Number(process.env.PORT ?? 8888);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
@@ -438,13 +439,19 @@ const server = Bun.serve({
         properties,
         income,
         buildings: investor.admin ? await wholePortfolio(data) : undefined,
+        contacts: await contactsFor(viewer!, await readRegistryFile()),
       });
     }
 
     // Rental payments: everything for the admin and team, an owner's own for an owner.
     if (pathname === "/api/payments") {
       if (!viewer) return json({ error: "Not signed in." }, 401);
-      return json({ viewer, ...(await paymentsFor(viewer, await readRegistryFile(), await knownLeaseEnds(data))) });
+      const registry = await readRegistryFile();
+      return json({
+        viewer,
+        ...(await paymentsFor(viewer, registry, await knownLeaseEnds(data))),
+        contacts: await contactsFor(viewer, registry),
+      });
     }
 
     if (pathname === "/api/admin/payments" && req.method === "POST") {

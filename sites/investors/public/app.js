@@ -158,6 +158,7 @@ function overview(data) {
       <div class="section-heading"><h2>Leases</h2><p>Every lease at your properties, as the rent payments show it: one row per TurboTenant lease, or per payer on CoStar. Select a property for its own.</p></div>
       ${leasesTable(props.flatMap((p) => p.leases || []), props.length > 1)}
     </section>`}
+    ${contactsSection(data.contacts)}
     ${data.buildings ? portfolioTable(data) : ""}
     ${ADMIN ? codesSection() + teamSection() + assistantSection() + uploadSection() : ""}`;
 }
@@ -856,6 +857,36 @@ function propertyView(p) {
     </section>` : ""}
 
     <section class="section">${building(p)}</section>`;
+}
+
+/**
+ * Tenants' contact details, from the rosters the admin has handed over. The
+ * server sends an owner only their own buildings' tenants, and the roster's
+ * working notes only to the admin and team.
+ */
+function contactsSection(contacts) {
+  if (!contacts || !contacts.length) return "";
+  const buildings = [...new Set(contacts.map((c) => c.address))];
+  const notes = contacts.some((c) => c.note);
+  const when = (d) => (d ? dateLabel(d) : "");
+  return `<section class="section">
+    <div class="section-heading"><h2>Tenant contacts</h2><p>From the tenant roster on file. Private: tenants' own details, for reaching them about their tenancy.</p></div>
+    ${buildings.map((b) => {
+      const rows = contacts.filter((c) => c.address === b);
+      return `<h3 class="contacts-building">${escapeHtml(b)}</h3>
+      <div class="panel table-scroll"><table>
+        <thead><tr><th>Unit</th><th>Tenant</th><th>Email</th><th>Phone</th><th>Lease</th>${notes ? "<th>Needs attention</th>" : ""}</tr></thead>
+        <tbody>${rows.map((c) => `<tr>
+          <td>${escapeHtml(c.unit)}</td>
+          <td>${escapeHtml(c.name)}${c.type && c.type !== "Financially Responsible" ? ` <span class="pill pill-market">${escapeHtml(c.type)}</span>` : ""}${c.status && c.status !== "Current" ? ` <span class="pill pill-vacant">${escapeHtml(c.status)}</span>` : ""}</td>
+          <td>${c.emails.map((e) => `<a href="mailto:${escapeHtml(e)}">${escapeHtml(e)}</a>`).join("<br />") || "—"}</td>
+          <td style="white-space:nowrap">${c.phones.map((p) => `<a href="tel:${escapeHtml(p.replace(/[^\d+]/g, ""))}">${escapeHtml(p)}</a>`).join("<br />") || "—"}</td>
+          <td style="white-space:nowrap">${c.leaseStart || c.leaseEnd ? `${escapeHtml(when(c.leaseStart))} – ${escapeHtml(when(c.leaseEnd))}` : "Not on file"}</td>
+          ${notes ? `<td class="sub">${escapeHtml(c.note)}</td>` : ""}
+        </tr>`).join("")}</tbody>
+      </table></div>`;
+    }).join("")}
+  </section>`;
 }
 
 /* ---------- Wiring ---------- */

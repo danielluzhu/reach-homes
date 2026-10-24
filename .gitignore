@@ -14,3 +14,7 @@ data/submissions.json
 # Source photo drops. The web-sized copies under public/images/photos are what
 # the site serves; the originals don't belong in the repo.
 *.zip
+
+# Spreadsheets dropped at the top level (tenant rosters and the like) hold
+# tenants' personal details; their data is copied where it is gitignored.
+/*.xlsx

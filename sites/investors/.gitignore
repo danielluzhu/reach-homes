@@ -22,3 +22,6 @@ data/team.json
 # README describing the folder is committed.
 data/payments/*
 !data/payments/README.md
+
+# Tenants' contact details (names, emails, phones), from the admin's rosters.
+data/contacts.json
