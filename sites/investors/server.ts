@@ -20,7 +20,7 @@
  * repo, and with neither set there is no admin sign-in at all.
  */
 
-import { file } from "bun";
+import { file, type Server } from "bun";
 import { mkdir, readdir, stat } from "node:fs/promises";
 import { loadPortfolio } from "../../lib/portfolio";
 import {
@@ -35,6 +35,12 @@ import { contactsFor } from "./contacts";
 import { leaseFileResponse, leaseFilesFor } from "./documents";
 
 const PORT = Number(process.env.PORT ?? 8888);
+/**
+ * The team's own port: the same server, sessions and data, listening a second
+ * time so the team has an address of its own; its front page is the payments
+ * page. Set TEAM_PORT=0 to leave it off.
+ */
+const TEAM_PORT = Number(process.env.TEAM_PORT ?? 1024);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
 const DATA_PATH = `${import.meta.dir}/data/portfolio.json`;
 const ROOMS_2120_PATH = `${import.meta.dir}/../2120/data/listings.json`;
@@ -367,9 +373,8 @@ async function holdingsFor(investor: Investor, data: Portfolio) {
   return out;
 }
 
-const server = Bun.serve({
-  port: PORT,
-  async fetch(req) {
+const routes = {
+  async fetch(req: Request, srv: Server) {
     const { pathname } = new URL(req.url);
     // The private copy once the assistant has applied anything, the sample before.
     const data = (await loadData()) as unknown as Portfolio;
@@ -701,7 +706,7 @@ const server = Bun.serve({
       return new Response(file(`${PUBLIC_DIR}/payments.html`), { headers: { "Cache-Control": "no-store" } });
     }
     if (pathname === "/") {
-      if (teamMember) return new Response(null, { status: 302, headers: { Location: "/payments" } });
+      if (teamMember || (srv.port === TEAM_PORT && viewer)) return new Response(null, { status: 302, headers: { Location: "/payments" } });
       // A relative Location, so the redirect holds behind a proxy or a forwarded
       // port, where the host and scheme this process sees aren't the visitor's.
       if (!investor) return new Response(null, { status: 302, headers: { Location: "/login" } });
@@ -714,6 +719,11 @@ const server = Bun.serve({
     }
     return new Response("Not found", { status: 404 });
   },
-});
+};
 
+const server = Bun.serve({ port: PORT, ...routes });
 console.log(`Investor site running at http://localhost:${server.port}`);
+if (TEAM_PORT && TEAM_PORT !== PORT) {
+  const team = Bun.serve({ port: TEAM_PORT, ...routes });
+  console.log(`Team payments page at http://localhost:${team.port}/payments`);
+}

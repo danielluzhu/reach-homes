@@ -1,4 +1,5 @@
-# Runs the investor site (sites/investors, port 8888) under systemd.
+# Runs the investor site (sites/investors, port 8888, and the team's payments
+# page on port 1024 -- TEAM_PORT) under systemd.
 #
 # The investor site is server-only: access is checked per request, so it must
 # never be served as static files. This unit keeps that server up.

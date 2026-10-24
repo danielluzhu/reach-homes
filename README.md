@@ -84,7 +84,7 @@ monthly statement and building record for the properties they hold, and
 nothing about anyone else's. It runs on its own port:
 
 ```sh
-cd sites/investors && bun run server.ts     # http://localhost:8888
+cd sites/investors && bun run server.ts     # http://localhost:8888, team: http://localhost:1024/payments
 ```
 
 It is a **demo**. `data/portfolio.json` holds two made-up investors, their
