@@ -32,6 +32,7 @@ import {
   type KnownLeaseEnd, type Lease, type Payment, type Viewer,
 } from "./payments";
 import { contactsFor } from "./contacts";
+import { leaseFileResponse, leaseFilesFor } from "./documents";
 
 const PORT = Number(process.env.PORT ?? 8888);
 const PUBLIC_DIR = `${import.meta.dir}/public`;
@@ -416,10 +417,13 @@ const server = Bun.serve({
       const mine = await paymentsFor(viewer!, await readRegistryFile(), known);
       const payments = mine.payments as Payment[];
       const ends = await loadLeaseEnds();
+      const leaseFiles = await leaseFilesFor(viewer!, await readRegistryFile());
       for (const p of properties) {
         const { house, prefix } = partOf(p as Property);
         const leases = leasesFrom(paymentsOfProperty(payments, house, prefix), ends, known);
-        Object.assign(p, { leases });
+        // The signed documents filed for this property: its folder is the house
+        // number with its part, "4316L" for the lower unit.
+        Object.assign(p, { leases, leaseFiles: leaseFiles.filter((f) => f.building === house + prefix) });
         if (data.properties.find((x) => x.id === p.id)?.unitsFrom === "payments") Object.assign(p, { units: unitsFromLeases(leases, mine.updated.through) });
       }
       // Income is the admin's alone: net income is all the rent collected,
@@ -440,10 +444,18 @@ const server = Bun.serve({
         income,
         buildings: investor.admin ? await wholePortfolio(data) : undefined,
         contacts: await contactsFor(viewer!, await readRegistryFile()),
+        leaseFiles,
       });
     }
 
     // Rental payments: everything for the admin and team, an owner's own for an owner.
+    // A signed lease or addendum, opened from the list the viewer was sent.
+    if (pathname.startsWith("/api/leases/")) {
+      if (!viewer) return json({ error: "Not signed in." }, 401);
+      const path = decodeURIComponent(pathname.slice("/api/leases/".length));
+      return (await leaseFileResponse(viewer, await readRegistryFile(), path)) ?? json({ error: "Not found." }, 404);
+    }
+
     if (pathname === "/api/payments") {
       if (!viewer) return json({ error: "Not signed in." }, 401);
       const registry = await readRegistryFile();

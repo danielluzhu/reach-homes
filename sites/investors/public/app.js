@@ -158,6 +158,7 @@ function overview(data) {
       <div class="section-heading"><h2>Leases</h2><p>Every lease at your properties, as the rent payments show it: one row per TurboTenant lease, or per payer on CoStar. Select a property for its own.</p></div>
       ${leasesTable(props.flatMap((p) => p.leases || []), props.length > 1)}
     </section>`}
+    ${leaseFilesSection(data.leaseFiles, true)}
     ${contactsSection(data.contacts)}
     ${data.buildings ? portfolioTable(data) : ""}
     ${ADMIN ? codesSection() + teamSection() + assistantSection() + uploadSection() : ""}`;
@@ -846,6 +847,8 @@ function propertyView(p) {
       ${leasesTable(p.leases || [], false)}
     </section>
 
+    ${leaseFilesSection(p.leaseFiles, false)}
+
     ${ADMIN && p.income ? `<section class="section">
       <div class="section-heading"><h2>Net income by month</h2><p>All the rent collected for this property, from the payment exports, in the month each payment is for.</p></div>
       ${netChart(p.title, p.income)}
@@ -886,6 +889,36 @@ function contactsSection(contacts) {
         </tr>`).join("")}</tbody>
       </table></div>`;
     }).join("")}
+  </section>`;
+}
+
+/**
+ * The signed leases and addenda on file, each opening as its PDF. Across
+ * properties, each building folds open on its own; one property's are listed
+ * by unit. The server sends only the documents this viewer may open.
+ */
+function leaseFilesSection(files, acrossBuildings) {
+  if (!files || !files.length) return "";
+  const link = (f) => `<a href="/api/leases/${f.path.split("/").map(encodeURIComponent).join("/")}" target="_blank" rel="noopener">${escapeHtml(f.name.replace(/\.pdf$/i, ""))}</a>`;
+  const byUnit = (fs) => {
+    const units = [...new Set(fs.map((f) => f.unit))];
+    return `<div class="panel table-scroll"><table>
+      <thead><tr><th>Unit</th><th>Document</th></tr></thead>
+      <tbody>${units.map((u) => fs.filter((f) => f.unit === u).map((f, i) => `<tr>
+        <td>${i === 0 ? escapeHtml(u || "Building") : ""}</td>
+        <td>${link(f)}</td>
+      </tr>`).join("")).join("")}</tbody>
+    </table></div>`;
+  };
+  const buildings = [...new Set(files.map((f) => f.address))];
+  return `<section class="section">
+    <div class="section-heading"><h2>Signed leases</h2><p>The leases and addenda on file${acrossBuildings ? ", by building" : ""}. Each opens as a PDF.</p></div>
+    ${acrossBuildings
+      ? buildings.map((b) => {
+          const fs = files.filter((f) => f.address === b);
+          return `<details class="bldg"><summary><span><strong>${escapeHtml(b)}</strong></span><span class="sub">${fs.length} document${fs.length === 1 ? "" : "s"}</span></summary>${byUnit(fs)}</details>`;
+        }).join("")
+      : byUnit(files)}
   </section>`;
 }
 
