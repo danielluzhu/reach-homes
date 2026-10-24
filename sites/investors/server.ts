@@ -450,6 +450,8 @@ const routes = {
         buildings: investor.admin ? await wholePortfolio(data) : undefined,
         contacts: await contactsFor(viewer!, await readRegistryFile()),
         leaseFiles,
+        // The newest payment on file, so "paying now" is measured from the exports, not today.
+        paymentsThrough: mine.updated.through,
       });
     }
 

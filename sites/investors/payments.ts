@@ -504,6 +504,13 @@ export type Lease = {
   last: string;
   paid: number;
   payments: number;
+  /**
+   * Last month's rent paid ahead on this lease: credit against the month it
+   * is for, the lease's final month ("" while that isn't known). "combined"
+   * was paid with the first month, and how much of it was the last month
+   * isn't in the export.
+   */
+  credits: { date: string; amount: number; appliesTo: string; kind: "last-month" | "combined"; basis: string }[];
 };
 
 /**
@@ -547,6 +554,9 @@ export function leasesFrom(payments: Payment[], ends: LeaseEnds, known: KnownLea
       last: newest.date,
       paid: ps.reduce((s, p) => s + p.amount, 0),
       payments: ps.length,
+      credits: ps.filter((p) => p.allocation).map((p) => ({
+        date: p.date, amount: p.amount, appliesTo: p.appliesTo, kind: p.allocation!.kind, basis: p.allocation!.basis,
+      })),
     });
   }
   return out.sort((a, b) =>

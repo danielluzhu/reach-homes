@@ -99,6 +99,7 @@ function nextLeaseEnd(p) {
 /* ---------- Overview ---------- */
 
 function overview(data) {
+  if (!ADMIN) return ownerOverview(data);
   const props = data.properties;
   const units = props.flatMap((p) => p.units);
   const paying = units.filter(isPaying).length;
@@ -162,6 +163,140 @@ function overview(data) {
     ${contactsSection(data.contacts)}
     ${data.buildings ? portfolioTable(data) : ""}
     ${ADMIN ? codesSection() + teamSection() + assistantSection() + uploadSection() : ""}`;
+}
+
+/* ---------- Owner's overview: current tenants and the rent to come ---------- */
+
+const ymPad = (n) => String(n).padStart(2, "0");
+
+function addMonths(ym, n) {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, m - 1 + n, 1);
+  return `${d.getFullYear()}-${ymPad(d.getMonth() + 1)}`;
+}
+
+/** A tenant still in place: paying now, with any lease end on file still ahead. */
+function isCurrentLease(l) {
+  return (!l.ends || endOf(l.ends) >= isoDate(0)) && payingRecently(l);
+}
+
+/** The monthly rent: TurboTenant's charge, else the rent the site records for that unit. */
+function rentOf(p, l) {
+  if (l.rent != null) return l.rent;
+  const tok = l.unit.split(/\s+/).pop();
+  const u = p.units.length === 1 ? p.units[0] : p.units.find((x) => x.label === l.unit || x.label === tok);
+  return u && u.rent != null ? u.rent : null;
+}
+
+/** Last month's rent paid ahead, counting against the given month. */
+function creditFor(l, ym) {
+  return l.credits.filter((c) => c.kind === "last-month" && c.appliesTo === ym).reduce((s, c) => s + c.amount, 0);
+}
+
+/**
+ * Every current tenant across the owner's properties, with the rent each
+ * month from next month to the lease's end. In a lease's final month, last
+ * month's rent paid ahead is credit: it comes off what is still to be paid,
+ * and the cell says so. A lease with no end on file isn't projected at all
+ * rather than guessed at, and neither is one with no rent on file.
+ */
+function ownerOverview(data) {
+  const props = data.properties;
+  const rows = props.flatMap((p) => (p.leases || []).filter(isCurrentLease).map((l) => ({ p, l, rent: rentOf(p, l) })));
+  const projected = rows.filter((r) => r.l.ends && r.rent != null);
+  const unprojected = rows.filter((r) => !(r.l.ends && r.rent != null));
+  const start = addMonths(isoDate(0).slice(0, 7), 1);
+  const lastMonth = projected.reduce((m, r) => (r.l.ends.slice(0, 7) > m ? r.l.ends.slice(0, 7) : m), "");
+  const months = [];
+  for (let m = start; lastMonth && m <= lastMonth && months.length < 24; m = addMonths(m, 1)) months.push(m);
+
+  // What each lease still owes each month: the rent, less any credit in its final month.
+  const cell = (r, m) => {
+    const end = r.l.ends.slice(0, 7);
+    if (m > end) return null;
+    const credit = m === end ? Math.min(creditFor(r.l, m), r.rent) : 0;
+    return { due: r.rent, credit, net: r.rent - credit, combined: m === end && r.l.credits.some((c) => c.kind === "combined") };
+  };
+  const grid = projected.map((r) => months.map((m) => cell(r, m)));
+  const col = (k, i) => grid.reduce((s, row) => s + (row[i] ? row[i][k] : 0), 0);
+  const rowNet = (row) => row.reduce((s, c) => s + (c ? c.net : 0), 0);
+  const totalNet = grid.reduce((s, row) => s + rowNet(row), 0);
+  const totalCredit = months.reduce((s, _, i) => s + col("credit", i), 0);
+
+  // With one property, the unit alone says where.
+  const placeOf = (r) => props.length === 1 && r.l.unit ? escapeHtml(r.l.unit)
+    : `<a href="#/p/${encodeURIComponent(r.p.id)}">${escapeHtml(r.p.title)}</a>${r.l.unit ? ` · ${escapeHtml(r.l.unit)}` : ""}`;
+  const table = projected.length ? `<div class="panel table-scroll"><table class="forecast">
+    <thead><tr><th>${props.length === 1 ? "Unit" : "Property · unit"}</th><th>Tenant</th><th class="num">Rent / mo</th><th>Lease ends</th>${months.map((m) => `<th class="num">${escapeHtml(monthLabel(m))}</th>`).join("")}<th class="num">Total</th></tr></thead>
+    <tbody>${projected.map((r, i) => `<tr>
+      <td>${placeOf(r)}</td>
+      <td>${escapeHtml(r.l.tenant || "Not named")}</td>
+      <td class="num">${money(r.rent)}</td>
+      <td style="white-space:nowrap">${escapeHtml(endLabel(r.l.ends))}</td>
+      ${grid[i].map((c) => !c ? "<td></td>"
+        : c.credit ? `<td class="num credit" title="Last month's rent paid ahead">${money(c.net)}<br /><span class="sub">credit −${money(c.credit)}</span></td>`
+        : c.combined ? `<td class="num credit" title="Paid with the first month; the export doesn't say how much was the last">${money(c.net)}<br /><span class="sub">paid with 1st month?</span></td>`
+        : `<td class="num">${money(c.net)}</td>`).join("")}
+      <td class="num"><strong>${money(rowNet(grid[i]))}</strong></td>
+    </tr>`).join("")}</tbody>
+    <tfoot>
+      <tr><td colspan="2">Rent due</td><td class="num">${money(projected.reduce((s, r) => s + r.rent, 0))}</td><td></td>${months.map((_, i) => `<td class="num">${money(col("due", i))}</td>`).join("")}<td class="num">${money(totalNet + totalCredit)}</td></tr>
+      <tr><td colspan="4">Credit applied (last month's rent paid ahead)</td>${months.map((_, i) => `<td class="num">${col("credit", i) ? "−" + money(col("credit", i)) : ""}</td>`).join("")}<td class="num">${totalCredit ? "−" + money(totalCredit) : ""}</td></tr>
+      <tr><td colspan="4"><strong>Anticipated payments</strong></td>${months.map((_, i) => `<td class="num"><strong>${money(col("net", i))}</strong></td>`).join("")}<td class="num"><strong>${money(totalNet)}</strong></td></tr>
+    </tfoot>
+  </table></div>` : `<div class="panel"><p class="sub">No current tenants with a lease end and rent on file.</p></div>`;
+
+  const others = unprojected.length ? `<div class="section-heading" style="margin-top:20px"><h2>Also in place, not projected</h2><p>Paying now, but with no lease end${unprojected.some((r) => r.rent == null) ? " or no rent" : ""} on file, so their months ahead aren't guessed at.</p></div>
+    <div class="panel table-scroll"><table>
+      <thead><tr><th>Property · unit</th><th>Tenant</th><th class="num">Rent / mo</th><th>Lease ends</th><th>Last paid</th></tr></thead>
+      <tbody>${unprojected.map((r) => `<tr>
+        <td>${placeOf(r)}</td>
+        <td>${escapeHtml(r.l.tenant || "Not named")}</td>
+        <td class="num">${r.rent == null ? "—" : money(r.rent)}</td>
+        <td>${r.l.ends ? escapeHtml(endLabel(r.l.ends)) : "Not on file"}</td>
+        <td>${escapeHtml(dateLabel(r.l.last))}</td>
+      </tr>`).join("")}</tbody>
+    </table></div>` : "";
+
+  return `
+    <h1>${escapeHtml(data.investor.name)}</h1>
+    <p class="sub">Your current tenants, their rent, and the rent still to come in each month to the end of their leases.</p>
+    ${creditSummary(props, start)}
+    <section class="section">
+      <div class="section-heading"><h2>Current tenants and anticipated payments</h2><p>${projected.length} tenant${projected.length === 1 ? "" : "s"}, from ${escapeHtml(monthLabel(start))}${lastMonth ? ` to ${escapeHtml(monthLabel(lastMonth))}` : ""}. Where a tenant paid last month's rent ahead, it is credited in the lease's final month and marked. ${props.length === 1 ? `Open <a href="#/p/${encodeURIComponent(props[0].id)}">${escapeHtml(props[0].title)}</a>` : "Select a property"} for its rent roll and every lease on file.</p></div>
+      ${table}
+      ${others}
+    </section>
+    ${leaseFilesSection(data.leaseFiles, true)}
+    ${contactsSection(data.contacts)}`;
+}
+
+/**
+ * How much last month's rent paid ahead the owner's leases hold, and where it
+ * goes: against months still to come, already used in a lease's final month,
+ * or held until the lease's end is known.
+ */
+function creditSummary(props, start) {
+  const credits = props.flatMap((p) => (p.leases || []).flatMap((l) => (l.credits || []).map((c) => ({ ...c, lease: l }))));
+  if (!credits.length) return "";
+  const sum = (cs) => cs.reduce((s, c) => s + c.amount, 0);
+  const ahead = credits.filter((c) => c.kind === "last-month" && c.appliesTo >= start);
+  const used = credits.filter((c) => c.kind === "last-month" && c.appliesTo && c.appliesTo < start);
+  const held = credits.filter((c) => c.kind === "last-month" && !c.appliesTo);
+  const combined = credits.filter((c) => c.kind === "combined");
+  const n = (cs) => {
+    const k = new Set(cs.map((c) => c.lease)).size;
+    return `${k} lease${k === 1 ? "" : "s"}`;
+  };
+  return `<section class="section">
+    <div class="section-heading"><h2>Credit allocated</h2><p>Last month's rent paid ahead, ${money(sum(ahead) + sum(used) + sum(held))} in all across your leases, credited in each lease's final month.</p></div>
+    <div class="tiles">
+      <div class="tile"><div class="tile-key">To be applied</div><div class="tile-val">${money(sum(ahead))}</div><div class="tile-note">${n(ahead)}, against final months from ${escapeHtml(monthLabel(start))}</div></div>
+      <div class="tile"><div class="tile-key">Already applied</div><div class="tile-val">${money(sum(used))}</div><div class="tile-note">${n(used)} whose final month has passed</div></div>
+      ${held.length ? `<div class="tile"><div class="tile-key">Held, end not on file</div><div class="tile-val">${money(sum(held))}</div><div class="tile-note">${n(held)}: applied once the lease end is known</div></div>` : ""}
+      ${combined.length ? `<div class="tile"><div class="tile-key">Paid with the first month</div><div class="tile-val">${money(sum(combined))}</div><div class="tile-note">${n(combined)}: first and last month together; the split isn't in the export</div></div>` : ""}
+    </div>
+  </section>`;
 }
 
 /**
@@ -714,8 +849,20 @@ function rentRoll(p) {
  * known is whether the rent is still coming in.
  */
 function leaseState(l) {
-  if (l.ends) return endOf(l.ends) >= isoDate(0) ? ["pill-occupied", "Current"] : ["pill-done", "Ended"];
-  return l.last >= isoDate(-45) ? ["pill-market", "Paying · end not on file"] : ["pill-vacant", "No recent payment"];
+  if (l.ends && endOf(l.ends) < isoDate(0)) return ["pill-done", "Ended"];
+  if (!payingRecently(l)) return ["pill-vacant", "No recent payment"];
+  return l.ends ? ["pill-occupied", "Current"] : ["pill-market", "Paying · end not on file"];
+}
+
+/**
+ * Rent paid within 45 days of the newest payment on file. A unit's recorded
+ * lease end belongs to whoever is in it now, so an earlier tenant who stopped
+ * paying isn't current just because the unit's lease runs on.
+ */
+function payingRecently(l) {
+  const through = (DATA && DATA.paymentsThrough) || isoDate(0);
+  const cutoff = new Date(Date.parse(through) - 45 * 86400e3).toISOString().slice(0, 10);
+  return l.last >= cutoff;
 }
 
 function leasesTable(leases, withBuilding) {

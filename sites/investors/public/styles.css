@@ -298,3 +298,7 @@ tr.clickable:hover td { background: var(--brand-100); }
 
 .contacts-building { font-size: 1rem; margin: 20px 0 8px; }
 .contacts-building:first-of-type { margin-top: 0; }
+
+.forecast td, .forecast th { white-space: nowrap; }
+.forecast td.credit { background: #e7f6ec; }
+.forecast td.credit .sub { color: #1c6b3a; }
