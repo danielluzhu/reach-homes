@@ -28,7 +28,8 @@ import {
   PRIVATE_PATH, resetConversation, runTurn,
 } from "./agent";
 import {
-  incomeByMonth, paymentsFor, paymentsOfProperty, savePaymentExport, type KnownLeaseEnd, type Viewer,
+  incomeByMonth, leasesFrom, loadLeaseEnds, paymentsFor, paymentsOfProperty, savePaymentExport,
+  type KnownLeaseEnd, type Payment, type Viewer,
 } from "./payments";
 
 const PORT = Number(process.env.PORT ?? 8888);
@@ -381,11 +382,21 @@ const server = Bun.serve({
       if (teamMember) return json({ error: "Not signed in.", go: "/payments" }, 401);
       if (!investor) return json({ error: "Not signed in." }, 401);
       const properties = await holdingsFor(investor, data);
+      // The viewer's own payments, filtered on the server as on /payments: an
+      // owner's leases are only ever drawn from the rows they may see.
+      const known = await knownLeaseEnds(data);
+      const mine = await paymentsFor(viewer!, await readRegistryFile(), known);
+      const payments = mine.payments as Payment[];
+      const ends = await loadLeaseEnds();
+      for (const p of properties) {
+        const { house, prefix } = partOf(p as Property);
+        const leases = leasesFrom(paymentsOfProperty(payments, house, prefix), ends, known);
+        Object.assign(p, { leases });
+      }
       // Income is the admin's alone: net income is all the rent collected,
       // from the payment exports, month by month, overall and per property.
       let income;
       if (investor.admin) {
-        const { payments } = await paymentsFor({ kind: "admin", name: ADMIN.name }, await readRegistryFile(), await knownLeaseEnds(data));
         income = incomeByMonth(payments);
         for (const p of properties) {
           const { house, prefix } = partOf(p as Property);

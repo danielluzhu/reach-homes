@@ -33,6 +33,20 @@ function monthLabel(ym) {
   return `${MONTHS[m - 1]} ${y}`;
 }
 
+/**
+ * A lease end the payments give only to the month ("2027-08", from a lease
+ * code) runs to that month's last day; the site's own records give the day.
+ */
+function endOf(d) {
+  if (d.length !== 7) return d;
+  const [y, m] = d.split("-").map(Number);
+  return `${d}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
+}
+
+function endLabel(d) {
+  return d.length === 7 ? monthLabel(d) : dateLabel(d);
+}
+
 /** The leasing sites put a room back on offer this far ahead of its lease ending. */
 const OPEN_WINDOW_DAYS = 90;
 
@@ -42,7 +56,7 @@ const OPEN_WINDOW_DAYS = 90;
  * ("marketing"), or nobody is in it ("vacant").
  */
 function unitState(u) {
-  const ends = u.leasedUntil;
+  const ends = u.leasedUntil && endOf(u.leasedUntil);
   if (ends && ends > isoDate(0)) return ends > isoDate(OPEN_WINDOW_DAYS) ? "occupied" : "marketing";
   // No end date on file: only an explicit status says someone is in it.
   if (!ends && (u.status === "leased" || u.status === "pending")) return u.status === "leased" ? "occupied" : "vacant";
@@ -79,7 +93,7 @@ function ownersLabel(p) {
 }
 
 function nextLeaseEnd(p) {
-  return p.units.map((u) => u.leasedUntil).filter((d) => d && d > isoDate(0)).sort()[0] || null;
+  return p.units.map((u) => u.leasedUntil).filter((d) => d && endOf(d) > isoDate(0)).sort()[0] || null;
 }
 
 /* ---------- Overview ---------- */
@@ -134,12 +148,16 @@ function overview(data) {
             <td><a href="#/p/${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a><br /><span class="sub">${escapeHtml(p.kind)} · ${escapeHtml(p.neighborhood)}</span></td>
             ${ADMIN ? `<td>${escapeHtml(ownersLabel(p))}</td>` : `<td class="num">${shareLabel(p.share)}</td>`}
             <td>${p.units.filter(isPaying).length} of ${p.units.length}</td>
-            <td>${end ? escapeHtml(dateLabel(end)) : "—"}</td>
+            <td>${end ? escapeHtml(endLabel(end)) : "—"}</td>
             ${income ? `<td class="num${n < 0 ? " neg" : ""}">${money(n)}</td>` : ""}
           </tr>`;
         }).join("")}</tbody>
       </table></div>
     </section>
+    ${ADMIN ? "" : `<section class="section">
+      <div class="section-heading"><h2>Leases</h2><p>Every lease at your properties, as the rent payments show it: one row per TurboTenant lease, or per payer on CoStar. Select a property for its own.</p></div>
+      ${leasesTable(props.flatMap((p) => p.leases || []), props.length > 1)}
+    </section>`}
     ${data.buildings ? portfolioTable(data) : ""}
     ${ADMIN ? codesSection() + teamSection() + assistantSection() + uploadSection() : ""}`;
 }
@@ -674,7 +692,7 @@ function rentRoll(p) {
       <thead><tr><th>${escapeHtml(p.unitNoun)}</th><th>Status</th><th>Lease ends</th><th class="num">Rent</th></tr></thead>
       <tbody>${p.units.map((u) => {
         const [cls, label] = STATE_PILLS[unitState(u)];
-        const ends = u.leasedUntil && u.leasedUntil > isoDate(0) ? dateLabel(u.leasedUntil) : "—";
+        const ends = u.leasedUntil && endOf(u.leasedUntil) > isoDate(0) ? endLabel(u.leasedUntil) : "—";
         return `<tr>
           <td>${escapeHtml(u.label)}${u.detail ? ` <span class="sub">· ${escapeHtml(u.detail)}</span>` : ""}</td>
           <td><span class="pill ${cls}">${escapeHtml(label)}</span></td>
@@ -684,6 +702,35 @@ function rentRoll(p) {
       }).join("")}</tbody>
       <tfoot><tr><td colspan="3">Rent on leased ${escapeHtml(p.unitNoun)}s, of ${money(potential)} if full</td><td class="num">${money(scheduled)}</td></tr></tfoot>
     </table></div>`;
+}
+
+/**
+ * Where a lease stands. An end on file decides it; with none, all that is
+ * known is whether the rent is still coming in.
+ */
+function leaseState(l) {
+  if (l.ends) return endOf(l.ends) >= isoDate(0) ? ["pill-occupied", "Current"] : ["pill-done", "Ended"];
+  return l.last >= isoDate(-45) ? ["pill-market", "Paying · end not on file"] : ["pill-vacant", "No recent payment"];
+}
+
+function leasesTable(leases, withBuilding) {
+  if (!leases.length) return `<div class="panel"><p class="sub">No leases in the payments on file yet.</p></div>`;
+  return `<div class="panel table-scroll"><table>
+    <thead><tr>${withBuilding ? "<th>Property</th>" : ""}<th>Unit</th><th>Tenant</th><th>Status</th><th>Lease ends</th><th class="num">Rent</th><th>Paid</th><th class="num">Collected</th></tr></thead>
+    <tbody>${leases.map((l) => {
+      const [cls, label] = leaseState(l);
+      return `<tr>
+        ${withBuilding ? `<td>${escapeHtml(l.building)}</td>` : ""}
+        <td>${escapeHtml(l.unit || "—")}</td>
+        <td>${escapeHtml(l.tenant || "Not named")}<br /><span class="sub">${escapeHtml(l.platforms.join(", "))}</span></td>
+        <td><span class="pill ${cls}">${escapeHtml(label)}</span></td>
+        <td>${l.ends ? `${escapeHtml(endLabel(l.ends))}<br /><span class="sub">${escapeHtml(l.endsBasis)}</span>` : "—"}</td>
+        <td class="num">${l.rent == null ? "—" : money(l.rent)}</td>
+        <td style="white-space:nowrap">${escapeHtml(dateLabel(l.first))}${l.last !== l.first ? ` – ${escapeHtml(dateLabel(l.last))}` : ""}</td>
+        <td class="num">${money(l.paid)}<br /><span class="sub">${l.payments} payment${l.payments === 1 ? "" : "s"}</span></td>
+      </tr>`;
+    }).join("")}</tbody>
+  </table></div>`;
 }
 
 /** "Later" and "unknown" are where last month's rent paid ahead waits, as on the payments page. */
@@ -788,6 +835,11 @@ function propertyView(p) {
     <section class="section">
       <div class="section-heading"><h2>Leasing</h2><p>Every ${escapeHtml(p.unitNoun)}, who is in it until when, and what is being advertised. A lease within ${OPEN_WINDOW_DAYS} days of ending is already on the leasing site.</p></div>
       ${rentRoll(p)}
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><h2>Leases</h2><p>Every lease here, as the rent payments show it: one row per TurboTenant lease, or per payer on CoStar.</p></div>
+      ${leasesTable(p.leases || [], false)}
     </section>
 
     ${ADMIN && p.income ? `<section class="section">

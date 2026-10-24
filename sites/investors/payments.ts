@@ -375,7 +375,7 @@ export type KnownLeaseEnd = { house: string; prefix: string; label: string; end:
 const LEASE_ENDS_PATH = `${PAYMENTS_DIR}/lease-ends.json`;
 type LeaseEnds = { codes: Record<string, string>; leases: Record<string, string> };
 
-async function loadLeaseEnds(): Promise<LeaseEnds> {
+export async function loadLeaseEnds(): Promise<LeaseEnds> {
   const f = file(LEASE_ENDS_PATH);
   const got = (await f.exists()) ? await f.json() : {};
   return { codes: got.codes ?? {}, leases: got.leases ?? {} };
@@ -383,6 +383,26 @@ async function loadLeaseEnds(): Promise<LeaseEnds> {
 
 const monthsBetween = (a: string, b: string) =>
   (Number(b.slice(0, 4)) - Number(a.slice(0, 4))) * 12 + Number(b.slice(5, 7)) - Number(a.slice(5, 7));
+
+/**
+ * The lease end the site records for a payment's unit, when it falls within a
+ * year after the payment: an older tenant's lease has since been replaced.
+ */
+function siteRecord(p: Payment, known: KnownLeaseEnd[]) {
+  const house = houseNumber(p.building);
+  const tokens = p.unit.replace(/#/g, " ").trim().split(/\s+/).filter(Boolean).map((t) => t.toLowerCase().replace(/^0+(?=\d)/, ""));
+  return known.find((k) => {
+    if (k.house !== house || !p.date || k.end < p.date || monthsBetween(p.date, k.end) > 12) return false;
+    if (k.single) return true;
+    const label = k.label.toLowerCase();
+    return k.prefix ? tokens[0] === k.prefix.toLowerCase() && tokens[1] === label : tokens[0] === label;
+  });
+}
+
+/** The term code in a TurboTenant lease title ("27" in "4544 104 27 Alex Smith"), or "". */
+function termCode(p: Payment) {
+  return (p.fields["Lease Title"] ?? "").trim().split(/\s+/).slice(1).find((t) => TERM.test(t)) ?? "";
+}
 
 /**
  * Last-month rent paid in advance counts in the month it pays for: the
@@ -407,20 +427,13 @@ function allocate(p: Payment, ends: LeaseEnds, known: KnownLeaseEnd[]) {
     p.allocation = { kind: "last-month", basis: `Lease ends ${given} (as given)` };
     return;
   }
-  const house = houseNumber(p.building);
-  const tokens = p.unit.replace(/#/g, " ").trim().split(/\s+/).filter(Boolean).map((t) => t.toLowerCase().replace(/^0+(?=\d)/, ""));
-  const record = known.find((k) => {
-    if (k.house !== house || !p.date || k.end < p.date || monthsBetween(p.date, k.end) > 12) return false;
-    if (k.single) return true;
-    const label = k.label.toLowerCase();
-    return k.prefix ? tokens[0] === k.prefix.toLowerCase() && tokens[1] === label : tokens[0] === label;
-  });
+  const record = siteRecord(p, known);
   if (record) {
     p.appliesTo = record.end.slice(0, 7);
     p.allocation = { kind: "last-month", basis: `Lease ends ${record.end} (site records)` };
     return;
   }
-  const code = (p.fields["Lease Title"] ?? "").trim().split(/\s+/).slice(1).find((t) => TERM.test(t));
+  const code = termCode(p);
   if (code && ends.codes[code]) {
     p.appliesTo = ends.codes[code];
     p.allocation = { kind: "last-month", basis: `Lease code ${code}: ends ${ends.codes[code]}` };
@@ -469,6 +482,76 @@ export function incomeByMonth(payments: Payment[], asOf?: string) {
 export function paymentsOfProperty(payments: Payment[], house: string, prefix: string) {
   return payments.filter((p) => houseNumber(p.building) === house &&
     (!prefix || p.unit.trim().split(/\s+/)[0]?.toUpperCase() === prefix));
+}
+
+/**
+ * One tenancy as the payments show it: a TurboTenant lease title, or a payer
+ * on CoStar. Rent paid outside CoStar and logged there by hand names no
+ * tenant, so it is kept as its own row.
+ */
+export type Lease = {
+  lease: string; // building and unit, as on the payments page
+  building: string;
+  unit: string;
+  tenant: string;
+  platforms: string[];
+  /** "YYYY-MM-DD" from the site's records, "YYYY-MM" from what the admin has said or the lease code; "" when not known. */
+  ends: string;
+  endsBasis: string;
+  /** The latest monthly rent charged on TurboTenant; null where the export doesn't say. */
+  rent: number | null;
+  first: string;
+  last: string;
+  paid: number;
+  payments: number;
+};
+
+/**
+ * Every tenancy in these payments, newest first within each unit. Ends come
+ * the way last month's rent is placed: what the admin has said for the lease,
+ * then the site's records, then the lease code -- never guessed beyond that.
+ */
+export function leasesFrom(payments: Payment[], ends: LeaseEnds, known: KnownLeaseEnd[]): Lease[] {
+  const groups = new Map<string, Payment[]>();
+  for (const p of payments) {
+    const title = (p.fields["Lease Title"] ?? "").trim();
+    const who = title || (/\(via /.test(p.platform) ? p.platform : p.payer.trim().toLowerCase());
+    const key = `${p.lease}\u0000${who}`;
+    (groups.get(key) ?? groups.set(key, []).get(key)!).push(p);
+  }
+  const out: Lease[] = [];
+  for (const ps of groups.values()) {
+    ps.sort((a, b) => a.date.localeCompare(b.date));
+    const newest = ps[ps.length - 1];
+    const latest = [...ps].reverse();
+    const given = ends.leases[newest.lease];
+    const record = siteRecord(newest, known);
+    const code = termCode(newest);
+    const [end, basis] = given ? [given.slice(0, 7), "as given"]
+      : record ? [record.end, "site records"]
+      : code && ends.codes[code] ? [ends.codes[code], `lease code ${code}`]
+      : ["", ""];
+    // A month's rent is due on the 1st; a charge due mid-month is a part month.
+    const rents = latest.filter((p) => p.category === "Rent" && p.fields["Amount"]);
+    const charged = rents.find((p) => p.date.endsWith("-01")) ?? rents[0];
+    out.push({
+      lease: newest.lease,
+      building: newest.building,
+      unit: newest.unit.trim().replace(/^#\s*/, ""),
+      tenant: /\(via /.test(newest.platform) ? "" : latest.find((p) => p.payer)?.payer ?? "",
+      platforms: [...new Set(ps.map((p) => p.platform))].sort(),
+      ends: end,
+      endsBasis: basis,
+      rent: charged ? parseAmount(charged.fields["Amount"]) : null,
+      first: ps[0].date,
+      last: newest.date,
+      paid: ps.reduce((s, p) => s + p.amount, 0),
+      payments: ps.length,
+    });
+  }
+  return out.sort((a, b) =>
+    a.building.localeCompare(b.building) || a.unit.localeCompare(b.unit, undefined, { numeric: true }) ||
+    b.last.localeCompare(a.last));
 }
 
 export type Viewer = { kind: "admin" | "team" | "owner"; name: string };
