@@ -198,7 +198,7 @@ function unitLabel(unit: string) {
 }
 
 /** "Lease 27" and its kin: the admin's own term codes in a TurboTenant lease title. */
-const TERM = /^2\d([A-Za-z][A-Za-z.]*\d*)?$/;
+export const TERM = /^2\d([A-Za-z][A-Za-z.]*\d*)?$/;
 
 /**
  * A TurboTenant lease title, which comes in two shapes:
@@ -511,6 +511,10 @@ export type Lease = {
    * isn't in the export.
    */
   credits: { date: string; amount: number; appliesTo: string; kind: "last-month" | "combined"; basis: string }[];
+  /** The signed lease filed for this tenancy's unit, when one is matched: it names the tenant. */
+  signed?: { tenant: string; code: string; file: string } | null;
+  /** Signed leases that could be this tenancy's, when more than one could and none is matched. */
+  signedCandidates?: string[];
 };
 
 /**

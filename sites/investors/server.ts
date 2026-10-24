@@ -32,7 +32,7 @@ import {
   type KnownLeaseEnd, type Lease, type Payment, type Viewer,
 } from "./payments";
 import { contactsFor } from "./contacts";
-import { leaseFileResponse, leaseFilesFor } from "./documents";
+import { leaseFileResponse, leaseFilesFor, signedLeaseOf, type LeaseFile } from "./documents";
 
 const PORT = Number(process.env.PORT ?? 8888);
 /**
@@ -321,6 +321,54 @@ async function knownLeaseEnds(data: Portfolio): Promise<KnownLeaseEnd[]> {
 const endOf = (d: string) => (d.length === 7 ? new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7), 0)).toISOString().slice(0, 10) : d);
 
 /**
+ * Who is in each unit, from the signed leases rather than the payment
+ * platform's own titles: each tenant paying now (within 45 days of the newest
+ * export) is matched to the newest signed lease filed for their unit that is
+ * still running at their latest payment. A lease naming them (by first name)
+ * wins; a tenancy the payments don't name takes the one lease left once
+ * leases naming someone paying in another unit are set aside (402's Kezia,
+ * now in 405). More than one left, and none is picked: the row lists them.
+ * A matched lease gives the end where nothing else on file does.
+ */
+function applySignedLeases(leases: Lease[], files: LeaseFile[], codes: Record<string, string>, through: string) {
+  const signed = files.flatMap((f) => {
+    const s = signedLeaseOf(f);
+    return s ? [{ f, s }] : [];
+  });
+  if (!signed.length) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const cutoff = new Date(Date.parse(through || today) - 45 * 86400e3).toISOString().slice(0, 10);
+  const unitKey = (u: string) => (u.replace(/#/g, " ").trim().split(/\s+/).pop() ?? "").toLowerCase();
+  const first = (n: string) => (n.trim().split(/\s+/)[0] ?? "").toLowerCase();
+  const byUnit = files.some((f) => f.unit);
+  // A code's end month as the admin has given it; one not given ends, at the
+  // latest, in the year it starts with ("25" -> 2025).
+  const endMonth = (code: string) => codes[code] ?? `20${code.slice(0, 2)}-12`;
+  const current = leases.filter((l) => l.last >= cutoff && (!l.ends || endOf(l.ends) >= today));
+  for (const l of current) {
+    const here = signed.filter(({ f, s }) =>
+      (!byUnit || (f.unit && unitKey(f.unit) === unitKey(l.unit))) &&
+      endMonth(s.code) >= l.last.slice(0, 7));
+    if (!here.length) continue;
+    const newest = here.reduce((m, x) => (endMonth(x.s.code) > m ? endMonth(x.s.code) : m), "");
+    const tops = here.filter((x) => endMonth(x.s.code) === newest);
+    const named = l.tenant && tops.find((x) => first(x.s.tenant) === first(l.tenant));
+    const elsewhere = new Set(current.filter((o) => o !== l && unitKey(o.unit) !== unitKey(l.unit)).map((o) => first(o.tenant)).filter(Boolean));
+    const free = tops.filter((x) => !elsewhere.has(first(x.s.tenant)));
+    const pick = named || (!l.tenant && free.length === 1 ? free[0] : null);
+    if (pick) {
+      l.signed = pick.s;
+      if (!l.ends && codes[pick.s.code]) {
+        l.ends = codes[pick.s.code];
+        l.endsBasis = `signed lease, code ${pick.s.code}`;
+      }
+    } else if (!l.tenant && free.length > 1) {
+      l.signedCandidates = free.map((x) => x.s.tenant);
+    }
+  }
+}
+
+/**
  * The units of a building whose rent roll comes from its payments (4544):
  * one per unit the leases name. A unit is leased until the latest end its
  * leases give; with no end on file, it is leased only while its rent is still
@@ -426,6 +474,7 @@ const routes = {
       for (const p of properties) {
         const { house, prefix } = partOf(p as Property);
         const leases = leasesFrom(paymentsOfProperty(payments, house, prefix), ends, known);
+        applySignedLeases(leases, leaseFiles.filter((f) => f.building === house + prefix), ends.codes, mine.updated.through);
         // The signed documents filed for this property: its folder is the house
         // number with its part, "4316L" for the lower unit.
         Object.assign(p, { leases, leaseFiles: leaseFiles.filter((f) => f.building === house + prefix) });

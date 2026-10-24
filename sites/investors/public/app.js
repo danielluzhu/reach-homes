@@ -188,6 +188,22 @@ function rentOf(p, l) {
   return u && u.rent != null ? u.rent : null;
 }
 
+/**
+ * Who the tenant is: the signed lease's name, linked to the lease, where the
+ * server matched one; else the payer the payments name.
+ */
+function tenantCell(l) {
+  if (l.signed) {
+    const href = "/api/leases/" + l.signed.file.split("/").map(encodeURIComponent).join("/");
+    // The same person in both: the fuller of the two names.
+    const first = (n) => (n || "").trim().split(/\s+/)[0].toLowerCase();
+    const name = l.tenant && first(l.tenant) === first(l.signed.tenant) && l.tenant.length > l.signed.tenant.length ? l.tenant : l.signed.tenant;
+    return `<a href="${href}" target="_blank" rel="noopener" title="Signed lease">${escapeHtml(name || "Signed lease")}</a>`;
+  }
+  if (l.signedCandidates && l.signedCandidates.length) return `<span class="sub">Signed leases: ${escapeHtml(l.signedCandidates.join(" or "))}</span>`;
+  return escapeHtml(l.tenant || "Not named");
+}
+
 /** Last month's rent paid ahead, counting against the given month. */
 function creditFor(l, ym) {
   return (l.credits || []).filter((c) => c.kind === "last-month" && c.appliesTo === ym).reduce((s, c) => s + c.amount, 0);
@@ -204,7 +220,10 @@ function ownerOverview(data) {
   const props = data.properties;
   const rows = props.flatMap((p) => (p.leases || []).filter(isCurrentLease).map((l) => ({ p, l, rent: rentOf(p, l) })));
   const projected = rows.filter((r) => r.l.ends && r.rent != null);
-  const unprojected = rows.filter((r) => !(r.l.ends && r.rent != null));
+  // A tenant with no end on file, in a unit where someone with a lease end
+  // has paid since, has moved out: 102's Amelia, after Zoe moved in.
+  const replaced = (r) => !r.l.ends && rows.some((o) => o !== r && o.p === r.p && o.l.unit === r.l.unit && o.l.ends && o.l.last > r.l.last);
+  const unprojected = rows.filter((r) => !(r.l.ends && r.rent != null) && !replaced(r));
   const start = addMonths(isoDate(0).slice(0, 7), 1);
   const lastMonth = projected.reduce((m, r) => (r.l.ends.slice(0, 7) > m ? r.l.ends.slice(0, 7) : m), "");
   const months = [];
@@ -230,7 +249,7 @@ function ownerOverview(data) {
     <thead><tr><th>${props.length === 1 ? "Unit" : "Property · unit"}</th><th>Tenant</th><th class="num">Rent / mo</th><th>Lease ends</th>${months.map((m) => `<th class="num">${escapeHtml(monthLabel(m))}</th>`).join("")}<th class="num">Total</th></tr></thead>
     <tbody>${projected.map((r, i) => `<tr>
       <td>${placeOf(r)}</td>
-      <td>${escapeHtml(r.l.tenant || "Not named")}</td>
+      <td>${tenantCell(r.l)}</td>
       <td class="num">${money(r.rent)}</td>
       <td style="white-space:nowrap">${escapeHtml(endLabel(r.l.ends))}</td>
       ${grid[i].map((c) => !c ? "<td></td>"
@@ -251,7 +270,7 @@ function ownerOverview(data) {
       <thead><tr><th>${props.length === 1 ? "Unit" : "Property · unit"}</th><th>Tenant</th><th class="num">Rent / mo</th><th>Lease ends</th><th>Last paid</th></tr></thead>
       <tbody>${unprojected.map((r) => `<tr>
         <td>${placeOf(r)}</td>
-        <td>${escapeHtml(r.l.tenant || "Not named")}</td>
+        <td>${tenantCell(r.l)}</td>
         <td class="num">${r.rent == null ? "—" : money(r.rent)}</td>
         <td>${r.l.ends ? escapeHtml(endLabel(r.l.ends)) : "Not on file"}</td>
         <td>${escapeHtml(dateLabel(r.l.last))}</td>
@@ -874,7 +893,7 @@ function leasesTable(leases, withBuilding) {
       return `<tr>
         ${withBuilding ? `<td>${escapeHtml(l.building)}</td>` : ""}
         <td>${escapeHtml(l.unit || "—")}</td>
-        <td>${escapeHtml(l.tenant || "Not named")}<br /><span class="sub">${escapeHtml(l.platforms.join(", "))}</span></td>
+        <td>${tenantCell(l)}<br /><span class="sub">${escapeHtml(l.platforms.join(", "))}</span></td>
         <td><span class="pill ${cls}">${escapeHtml(label)}</span></td>
         <td>${l.ends ? `${escapeHtml(endLabel(l.ends))}<br /><span class="sub">${escapeHtml(l.endsBasis)}</span>` : "—"}</td>
         <td class="num">${l.rent == null ? "—" : money(l.rent)}</td>

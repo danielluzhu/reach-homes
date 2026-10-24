@@ -12,7 +12,7 @@
 
 import { file } from "bun";
 import { readdir } from "node:fs/promises";
-import { resolveOwner, type Registry, type Viewer } from "./payments";
+import { resolveOwner, TERM, type Registry, type Viewer } from "./payments";
 
 const LEASES_DIR = `${import.meta.dir}/data/leases`;
 
@@ -68,4 +68,19 @@ export async function leaseFileResponse(viewer: Viewer, registry: Registry, path
       "Cache-Control": "private, no-store",
     },
   });
+}
+
+/**
+ * A signed lease's own name says who and for how long: "Lease 4544 102 27
+ * Zoe" is unit 102, term code 27, tenant Zoe. Addenda, extensions and unit
+ * changes ("Lease Extension ...", "Lease Unit Change ...") are not leases
+ * and give null, as does a name with no term code.
+ */
+export function signedLeaseOf(f: LeaseFile) {
+  const m = f.name.match(/^Lease (\d.*)\.pdf$/i);
+  if (!m) return null;
+  const tokens = m[1].trim().split(/\s+/);
+  const at = tokens.findIndex((t, i) => i > 0 && TERM.test(t));
+  if (at < 0) return null;
+  return { code: tokens[at], tenant: tokens.slice(at + 1).join(" "), file: f.path };
 }
