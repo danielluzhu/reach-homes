@@ -685,8 +685,11 @@ async function refreshQuietly() {
 /* ---------- One property ---------- */
 
 function rentRoll(p) {
-  const scheduled = p.units.filter(isPaying).reduce((s, u) => s + u.rent, 0);
-  const potential = p.units.reduce((s, u) => s + u.rent, 0);
+  // A rent roll drawn from the payments has no rent for a unit TurboTenant
+  // never charged; it shows as a dash and is left out of the totals.
+  const scheduled = p.units.filter(isPaying).reduce((s, u) => s + (u.rent || 0), 0);
+  const potential = p.units.reduce((s, u) => s + (u.rent || 0), 0);
+  const unpriced = p.units.filter((u) => u.rent == null).length;
   return `
     <div class="panel table-scroll"><table>
       <thead><tr><th>${escapeHtml(p.unitNoun)}</th><th>Status</th><th>Lease ends</th><th class="num">Rent</th></tr></thead>
@@ -697,10 +700,10 @@ function rentRoll(p) {
           <td>${escapeHtml(u.label)}${u.detail ? ` <span class="sub">· ${escapeHtml(u.detail)}</span>` : ""}</td>
           <td><span class="pill ${cls}">${escapeHtml(label)}</span></td>
           <td>${escapeHtml(ends)}</td>
-          <td class="num">${money(u.rent)}</td>
+          <td class="num">${u.rent == null ? "—" : money(u.rent)}</td>
         </tr>`;
       }).join("")}</tbody>
-      <tfoot><tr><td colspan="3">Rent on leased ${escapeHtml(p.unitNoun)}s, of ${money(potential)} if full</td><td class="num">${money(scheduled)}</td></tr></tfoot>
+      <tfoot><tr><td colspan="3">Rent on leased ${escapeHtml(p.unitNoun)}s, of ${money(potential)} if full${unpriced ? ` (${unpriced} with no rent on file)` : ""}</td><td class="num">${money(scheduled)}</td></tr></tfoot>
     </table></div>`;
 }
 

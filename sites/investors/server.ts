@@ -29,7 +29,7 @@ import {
 } from "./agent";
 import {
   incomeByMonth, leasesFrom, loadLeaseEnds, paymentsFor, paymentsOfProperty, savePaymentExport,
-  type KnownLeaseEnd, type Payment, type Viewer,
+  type KnownLeaseEnd, type Lease, type Payment, type Viewer,
 } from "./payments";
 
 const PORT = Number(process.env.PORT ?? 8888);
@@ -247,7 +247,7 @@ async function loadPlaces(): Promise<Record<string, Place>> {
   return (await readRegistryFile()).places;
 }
 
-type Unit = { label: string; detail?: string; rent: number; leasedUntil?: string; status?: string };
+type Unit = { label: string; detail?: string; rent: number | null; leasedUntil?: string; status?: string };
 type Holding = { property: string; share: number };
 type Investor = { id: string; name: string; code: string; admin?: boolean; holdings: Holding[] };
 type Property = { id: string; unitsFrom?: string; units?: Unit[]; [key: string]: unknown };
@@ -307,6 +307,33 @@ async function knownLeaseEnds(data: Portfolio): Promise<KnownLeaseEnd[]> {
     }
   }
   return out;
+}
+
+/** A lease end the payments give only to the month ("2027-08") runs to that month's last day. */
+const endOf = (d: string) => (d.length === 7 ? new Date(Date.UTC(+d.slice(0, 4), +d.slice(5, 7), 0)).toISOString().slice(0, 10) : d);
+
+/**
+ * The units of a building whose rent roll comes from its payments (4544):
+ * one per unit the leases name. A unit is leased until the latest end its
+ * leases give; with no end on file, it is leased only while its rent is still
+ * coming in (paid within 45 days of the newest export) and otherwise vacant.
+ * Rent is the latest TurboTenant charge, where there is one.
+ */
+function unitsFromLeases(leases: Lease[], through: string): Unit[] {
+  const today = new Date().toISOString().slice(0, 10);
+  const recent = through ? new Date(Date.parse(through) - 45 * 86400e3).toISOString().slice(0, 10) : today;
+  const byUnit = new Map<string, Lease[]>();
+  for (const l of leases) if (l.unit) (byUnit.get(l.unit) ?? byUnit.set(l.unit, []).get(l.unit)!).push(l);
+  return [...byUnit].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true })).map(([label, ls]) => {
+    const current = ls.filter((l) => l.ends && endOf(l.ends) >= today).sort((a, b) => b.ends.localeCompare(a.ends))[0];
+    const paying = ls.filter((l) => !l.ends && l.last >= recent).sort((a, b) => b.last.localeCompare(a.last))[0];
+    const lease = current ?? paying;
+    const rent = (lease ?? ls[0]).rent ?? ls.find((l) => l.rent != null)?.rent ?? null;
+    const unit: Unit = { label, rent };
+    if (current) unit.leasedUntil = current.ends;
+    else if (paying) unit.status = "leased";
+    return unit;
+  });
 }
 
 /**
@@ -392,6 +419,7 @@ const server = Bun.serve({
         const { house, prefix } = partOf(p as Property);
         const leases = leasesFrom(paymentsOfProperty(payments, house, prefix), ends, known);
         Object.assign(p, { leases });
+        if (data.properties.find((x) => x.id === p.id)?.unitsFrom === "payments") Object.assign(p, { units: unitsFromLeases(leases, mine.updated.through) });
       }
       // Income is the admin's alone: net income is all the rent collected,
       // from the payment exports, month by month, overall and per property.
