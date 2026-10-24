@@ -25,3 +25,7 @@ data/payments/*
 
 # Tenants' contact details (names, emails, phones), from the admin's rosters.
 data/contacts.json
+
+# Signed leases and addenda, filed by building and unit: tenants' names,
+# terms and signatures.
+data/leases/
