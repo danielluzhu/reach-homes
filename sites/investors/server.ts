@@ -504,14 +504,16 @@ const routes = {
       });
     }
 
-    // Rental payments: everything for the admin and team, an owner's own for an owner.
-    // A signed lease or addendum, opened from the list the viewer was sent.
+    // A signed lease or addendum, opened from the list the viewer was sent:
+    // shown in the browser, or saved with ?download=1.
     if (pathname.startsWith("/api/leases/")) {
       if (!viewer) return json({ error: "Not signed in." }, 401);
       const path = decodeURIComponent(pathname.slice("/api/leases/".length));
-      return (await leaseFileResponse(viewer, await readRegistryFile(), path)) ?? json({ error: "Not found." }, 404);
+      const download = new URL(req.url).searchParams.has("download");
+      return (await leaseFileResponse(viewer, await readRegistryFile(), path, download)) ?? json({ error: "Not found." }, 404);
     }
 
+    // Rental payments: everything for the admin and team, an owner's own for an owner.
     if (pathname === "/api/payments") {
       if (!viewer) return json({ error: "Not signed in." }, 401);
       const registry = await readRegistryFile();

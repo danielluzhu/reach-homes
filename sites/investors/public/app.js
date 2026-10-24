@@ -1065,20 +1065,23 @@ function contactsSection(contacts) {
  */
 function leaseFilesSection(files, acrossBuildings) {
   if (!files || !files.length) return "";
-  const link = (f) => `<a href="/api/leases/${f.path.split("/").map(encodeURIComponent).join("/")}" target="_blank" rel="noopener">${escapeHtml(f.name.replace(/\.pdf$/i, ""))}</a>`;
+  const href = (f) => "/api/leases/" + f.path.split("/").map(encodeURIComponent).join("/");
+  const link = (f) => `<a href="${href(f)}" target="_blank" rel="noopener">${escapeHtml(f.name.replace(/\.pdf$/i, ""))}</a>`;
+  const actions = (f) => `<a class="doc-action" href="${href(f)}" target="_blank" rel="noopener">View</a><a class="doc-action" href="${href(f)}?download=1" download="${escapeHtml(f.name)}">Download</a>`;
   const byUnit = (fs) => {
     const units = [...new Set(fs.map((f) => f.unit))];
     return `<div class="panel table-scroll"><table>
-      <thead><tr><th>Unit</th><th>Document</th></tr></thead>
+      <thead><tr><th>Unit</th><th>Document</th><th class="num">PDF</th></tr></thead>
       <tbody>${units.map((u) => fs.filter((f) => f.unit === u).map((f, i) => `<tr>
         <td>${i === 0 ? escapeHtml(u || "Building") : ""}</td>
         <td>${link(f)}</td>
+        <td class="num doc-actions">${actions(f)}</td>
       </tr>`).join("")).join("")}</tbody>
     </table></div>`;
   };
   const buildings = [...new Set(files.map((f) => f.address))];
   return `<section class="section">
-    <div class="section-heading"><h2>Signed leases</h2><p>The leases and addenda on file${acrossBuildings ? ", by building" : ""}. Each opens as a PDF.</p></div>
+    <div class="section-heading"><h2>Signed leases</h2><p>The leases and addenda on file${acrossBuildings ? ", by building: select one to open it" : ""}. View one in the browser, or download the PDF.</p></div>
     ${acrossBuildings
       ? buildings.map((b) => {
           const fs = files.filter((f) => f.address === b);

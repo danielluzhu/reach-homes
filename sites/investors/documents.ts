@@ -58,13 +58,13 @@ export async function leaseFilesFor(viewer: Viewer, registry: Registry): Promise
  * One document, when it is on this viewer's list -- matched against the list
  * itself, so a path can never reach outside it -- else null.
  */
-export async function leaseFileResponse(viewer: Viewer, registry: Registry, path: string) {
+export async function leaseFileResponse(viewer: Viewer, registry: Registry, path: string, download = false) {
   const hit = (await leaseFilesFor(viewer, registry)).find((f) => f.path === path);
   if (!hit) return null;
   return new Response(file(`${LEASES_DIR}/${hit.path}`), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(hit.name)}`,
+      "Content-Disposition": `${download ? "attachment" : "inline"}; filename*=UTF-8''${encodeURIComponent(hit.name)}`,
       "Cache-Control": "private, no-store",
     },
   });

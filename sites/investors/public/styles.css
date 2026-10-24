@@ -302,3 +302,7 @@ tr.clickable:hover td { background: var(--brand-100); }
 .forecast td, .forecast th { white-space: nowrap; }
 .forecast td.credit { background: #e7f6ec; }
 .forecast td.credit .sub { color: #1c6b3a; }
+
+.doc-actions { white-space: nowrap; }
+.doc-action { display: inline-block; font-size: 0.85rem; padding: 3px 10px; margin-left: 6px; border: 1px solid var(--border); border-radius: 999px; text-decoration: none; }
+.doc-action:hover { background: var(--brand-100); }
