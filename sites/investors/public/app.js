@@ -190,7 +190,7 @@ function rentOf(p, l) {
 
 /** Last month's rent paid ahead, counting against the given month. */
 function creditFor(l, ym) {
-  return l.credits.filter((c) => c.kind === "last-month" && c.appliesTo === ym).reduce((s, c) => s + c.amount, 0);
+  return (l.credits || []).filter((c) => c.kind === "last-month" && c.appliesTo === ym).reduce((s, c) => s + c.amount, 0);
 }
 
 /**
@@ -215,7 +215,7 @@ function ownerOverview(data) {
     const end = r.l.ends.slice(0, 7);
     if (m > end) return null;
     const credit = m === end ? Math.min(creditFor(r.l, m), r.rent) : 0;
-    return { due: r.rent, credit, net: r.rent - credit, combined: m === end && r.l.credits.some((c) => c.kind === "combined") };
+    return { due: r.rent, credit, net: r.rent - credit, combined: m === end && (r.l.credits || []).some((c) => c.kind === "combined") };
   };
   const grid = projected.map((r) => months.map((m) => cell(r, m)));
   const col = (k, i) => grid.reduce((s, row) => s + (row[i] ? row[i][k] : 0), 0);
@@ -248,7 +248,7 @@ function ownerOverview(data) {
 
   const others = unprojected.length ? `<div class="section-heading" style="margin-top:20px"><h2>Also in place, not projected</h2><p>Paying now, but with no lease end${unprojected.some((r) => r.rent == null) ? " or no rent" : ""} on file, so their months ahead aren't guessed at.</p></div>
     <div class="panel table-scroll"><table>
-      <thead><tr><th>Property · unit</th><th>Tenant</th><th class="num">Rent / mo</th><th>Lease ends</th><th>Last paid</th></tr></thead>
+      <thead><tr><th>${props.length === 1 ? "Unit" : "Property · unit"}</th><th>Tenant</th><th class="num">Rent / mo</th><th>Lease ends</th><th>Last paid</th></tr></thead>
       <tbody>${unprojected.map((r) => `<tr>
         <td>${placeOf(r)}</td>
         <td>${escapeHtml(r.l.tenant || "Not named")}</td>
