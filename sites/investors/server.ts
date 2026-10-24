@@ -345,26 +345,38 @@ function applySignedLeases(leases: Lease[], files: LeaseFile[], codes: Record<st
   // latest, in the year it starts with ("25" -> 2025).
   const endMonth = (code: string) => codes[code] ?? `20${code.slice(0, 2)}-12`;
   const current = leases.filter((l) => l.last >= cutoff && (!l.ends || endOf(l.ends) >= today));
-  for (const l of current) {
+  // The newest signed leases still running for a tenancy's unit.
+  const newestFor = (l: Lease) => {
     const here = signed.filter(({ f, s }) =>
       (!byUnit || (f.unit && unitKey(f.unit) === unitKey(l.unit))) &&
       endMonth(s.code) >= l.last.slice(0, 7));
-    if (!here.length) continue;
     const newest = here.reduce((m, x) => (endMonth(x.s.code) > m ? endMonth(x.s.code) : m), "");
-    const tops = here.filter((x) => endMonth(x.s.code) === newest);
-    const named = l.tenant && tops.find((x) => first(x.s.tenant) === first(l.tenant));
-    const elsewhere = new Set(current.filter((o) => o !== l && unitKey(o.unit) !== unitKey(l.unit)).map((o) => first(o.tenant)).filter(Boolean));
-    const free = tops.filter((x) => !elsewhere.has(first(x.s.tenant)));
-    const pick = named || (!l.tenant && free.length === 1 ? free[0] : null);
-    if (pick) {
-      l.signed = pick.s;
-      if (!l.ends && codes[pick.s.code]) {
-        l.ends = codes[pick.s.code];
-        l.endsBasis = `signed lease, code ${pick.s.code}`;
-      }
-    } else if (!l.tenant && free.length > 1) {
-      l.signedCandidates = free.map((x) => x.s.tenant);
+    return here.filter((x) => endMonth(x.s.code) === newest);
+  };
+  const take = (l: Lease, s: NonNullable<Lease["signed"]>) => {
+    l.signed = s;
+    if (!l.ends && codes[s.code]) {
+      l.ends = codes[s.code];
+      l.endsBasis = `signed lease, code ${s.code}`;
     }
+  };
+  // First, tenants the payments name, to a lease naming them.
+  for (const l of current) {
+    const named = l.tenant && newestFor(l).find((x) => first(x.s.tenant) === first(l.tenant));
+    if (named) take(l, named.s);
+  }
+  // Then the unnamed, setting aside leases for someone paying in another unit
+  // who has no signed lease of their own there: 405's Kezia, whose lease is
+  // still filed under 402. Someone covered by their own unit's lease (401's
+  // Andrea) is a different lease, so 207's Andrea still counts.
+  for (const l of current) {
+    if (l.tenant) continue;
+    const elsewhere = new Set(current
+      .filter((o) => o !== l && !o.signed && unitKey(o.unit) !== unitKey(l.unit))
+      .map((o) => first(o.tenant)).filter(Boolean));
+    const free = newestFor(l).filter((x) => !elsewhere.has(first(x.s.tenant)));
+    if (free.length === 1) take(l, free[0].s);
+    else if (free.length > 1) l.signedCandidates = free.map((x) => x.s.tenant);
   }
 }
 
